@@ -88,5 +88,14 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $helpers = [];
+    public $helpers = [
+    'Rembesan/thomson', 
+    'Rembesan/sr', 
+    'Rembesan/bocoran', 
+    'Rembesan/ambang', 
+    'Rembesan/spillway',
+    'Rembesan/TebingKanan', 
+    'Rembesan/totalBocoran', 
+    'Rembesan/BatasMaksimal'
+];
 }

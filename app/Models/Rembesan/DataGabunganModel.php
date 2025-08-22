@@ -1,5 +1,5 @@
 <?php
-namespace App\Models;
+namespace App\Models\Rembesan;
 
 use CodeIgniter\Model;
 
@@ -21,7 +21,7 @@ class DataGabunganModel extends Model
             ->join('t_sr sr', 'sr.pengukuran_id = p.id', 'left')
             ->join('t_thomson_weir thomson', 'thomson.pengukuran_id = p.id', 'left')
             ->join('t_bocoran_baru bocoran', 'bocoran.pengukuran_id = p.id', 'left')
-            ->join('t_ambang_batas ambang', 'ambang.id = p.id', 'left');
+            ->join('t_ambang_batas ambang', 'ambang.pengukuran_id = p.id', 'left'); // FIXED JOIN
 
         $results = $builder->get()->getResultArray();
         $final = [];
