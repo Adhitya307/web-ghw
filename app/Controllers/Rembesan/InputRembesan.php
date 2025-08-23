@@ -313,7 +313,8 @@ class InputRembesan extends Controller
                 ]);
             }
 
-            Events::trigger('dataSR:insert', $pengukuran_id);
+            // Trigger SR (berdiri sendiri)
+Events::trigger('dataSR:insert', $pengukuran_id);
 
             $this->db->transComplete();
 

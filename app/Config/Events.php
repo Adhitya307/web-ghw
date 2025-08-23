@@ -5,6 +5,7 @@ namespace Config;
 use CodeIgniter\Events\Events;
 use CodeIgniter\Exceptions\FrameworkException;
 use CodeIgniter\HotReloader\HotReloader;
+use App\Controllers\Rembesan\SRController;
 
 /*
  * --------------------------------------------------------------------
@@ -82,5 +83,17 @@ Events::on('dataThomson:insert', function($pengukuran_id) {
     } catch (\Exception $e) {
         log_message('error', "🔥 Error in dataThomson:insert event: " . $e->getMessage());
         log_message('error', "Stack trace: " . $e->getTraceAsString());
+    }
+});
+
+// 🔹 Listener untuk event dataSR:insert
+Events::on('dataSR:insert', function($pengukuran_id) {
+    log_message('debug', "[Events] Trigger dataSR:insert untuk ID: {$pengukuran_id}");
+    try {
+        $srCtrl = new SRController();
+        $srCtrl->hitung($pengukuran_id); // jalankan perhitungan SR
+        log_message('debug', "[Events] SRController::hitung berhasil untuk ID: {$pengukuran_id}");
+    } catch (\Exception $e) {
+        log_message('error', "[Events] SRController gagal: " . $e->getMessage());
     }
 });
