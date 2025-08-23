@@ -31,4 +31,12 @@ class PerhitunganThomsonModel extends Model
 
     protected $validationMessages = [];
     protected $skipValidation     = false;
+
+        public function getAllWithPengukuran()
+    {
+        return $this->select("p_thomson_weir.*, CONCAT(t_data_pengukuran.tanggal, ' - ', t_data_pengukuran.periode) AS nama_pengukuran")
+                    ->join('t_data_pengukuran', 't_data_pengukuran.id = p_thomson_weir.pengukuran_id')
+                    ->orderBy('p_thomson_weir.id', 'DESC')
+                    ->findAll();
+    }
 }
