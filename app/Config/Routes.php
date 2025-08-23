@@ -14,3 +14,7 @@ $routes->post('rembesan/input', 'Rembesan\InputRembesan::index');
 $routes->get('rembesan/get_pengukuran', 'Rembesan\GetPengukuran::index');
 
 $routes->get('rembesan/cek-data', 'Rembesan\CekDataController::index');
+
+// Routes untuk hitung Thomson
+$routes->get('rembesan/hitungthomson/hitungSemua', 'Rembesan\HitungThomson::hitungSemua');
+$routes->get('rembesan/hitungthomson/cekStatus', 'Rembesan\HitungThomson::cekStatus');

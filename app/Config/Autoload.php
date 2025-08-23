@@ -75,7 +75,10 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $files = [];
+public $files = [
+    __DIR__ . '/Events.php',
+];
+
 
     /**
      * -------------------------------------------------------------------
@@ -88,13 +91,13 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $helpers = [
-    'Rembesan/thomson', 
+public $helpers = [
+    'Rembesan/thomson',
     'Rembesan/sr', 
     'Rembesan/bocoran', 
     'Rembesan/ambang', 
     'Rembesan/spillway',
-    'Rembesan/TebingKanan', 
+    'Rembesan/tebingkanan', // Perhatikan case sensitivity!
     'Rembesan/totalBocoran', 
     'Rembesan/BatasMaksimal'
 ];

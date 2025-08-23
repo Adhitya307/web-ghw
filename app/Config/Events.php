@@ -58,10 +58,29 @@ Events::on('pre_system', static function (): void {
  * Tambahkan semua event yang ingin dijalankan saat runtime di sini
  */
 
-// Event ketika data pengukuran baru disimpan
-// Event otomatis ketika data pengukuran masuk
-Events::on('dataPengukuran:insert', function($pengukuran_id) {
-    $rumusController = new \App\Controllers\Rembesan\RumusRembesan();
-    $rumusController->inputDataForId($pengukuran_id);
-});
+// Config/Events.php
 
+Events::on('dataThomson:insert', function($pengukuran_id) {
+    log_message('debug', "🎯 Event dataThomson:insert triggered for ID: {$pengukuran_id}");
+    
+    try {
+        // Gunakan service locator untuk menghindari dependency issues
+        $rumusController = new \App\Controllers\Rembesan\RumusRembesan();
+        
+        // Pastikan controller berhasil dibuat
+        if (!$rumusController) {
+            throw new \Exception("Failed to instantiate RumusRembesan controller");
+        }
+        
+        $result = $rumusController->inputDataForId($pengukuran_id);
+        
+        if ($result && isset($result['success']) && $result['success']) {
+            log_message('debug', "✅ Perhitungan Thomson completed for ID: {$pengukuran_id}");
+        } else {
+            log_message('error', "❌ Perhitungan Thomson failed for ID: {$pengukuran_id}");
+        }
+    } catch (\Exception $e) {
+        log_message('error', "🔥 Error in dataThomson:insert event: " . $e->getMessage());
+        log_message('error', "Stack trace: " . $e->getTraceAsString());
+    }
+});
