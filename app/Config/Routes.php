@@ -20,3 +20,5 @@ $routes->get('/data/tabel_thomson', 'ExcelViewerController::tabelThomson');
 $routes->get('lihat/tabel_ambang', 'ExcelViewerController::tabelAmbangBatas');
 $routes->get('perhitungan-sr/hitung/(:num)', 'PerhitunganSRController::hitung/$1');
 $routes->get('api/rembesan', 'Api\Rembesan::index');
+
+$routes->get('get-latest-data', 'DataInputController::getLatestData');

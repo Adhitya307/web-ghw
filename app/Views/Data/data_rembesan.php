@@ -107,6 +107,14 @@
         </div>
     </div>
 
+    <!-- Status Update -->
+    <div id="updateStatus" class="alert alert-info d-flex align-items-center" style="display: none !important;">
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <span>Memperbarui data...</span>
+    </div>
+
     <!-- Table -->
     <div class="table-responsive">
         <table class="data-table" id="exportTable">
@@ -130,7 +138,7 @@
             $tebingKananBy           = $tebing_kanan ? $indexBy($tebing_kanan) : [];
             $totalBocoranBy          = $total_bocoran ? $indexBy($total_bocoran) : [];
             $ambangBy                = $ambang ? $indexBy($ambang) : [];
-            $perhitunganBatasBy      = $perhitungan_batas ? $indexBy($perhitungan_batas) : []; // ✅ Tambah
+            $perhitunganBatasBy      = $perhitungan_batas ? $indexBy($perhitungan_batas) : [];
 
             // Format angka
             $fmt = fn($v, $dec = 2) => isset($v) && $v !== '' && $v !== null && $v != 0 ? number_format((float)$v, $dec, '.', '') : '-';
@@ -194,13 +202,17 @@
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody id="dataTableBody">
             <?php if (!empty($pengukuran)):
                 $tahunCounts = [];
-                foreach ($pengukuran as $p) $tahunCounts[$p['tahun'] ?? '-'] = ($tahunCounts[$p['tahun'] ?? '-'] ?? 0) + 1;
-                $tahunRowspans = [];
+                foreach ($pengukuran as $p) {
+                    $tahun = $p['tahun'] ?? '-';
+                    $tahunCounts[$tahun] = ($tahunCounts[$tahun] ?? 0) + 1;
+                }
+                
+                $processedYears = [];
 
-                foreach ($pengukuran as $p):
+                foreach ($pengukuran as $index => $p):
                     $tahun   = $p['tahun'] ?? '-';
                     $bulan   = $p['bulan'] ?? '-';
                     $periode = $p['periode'] ?? '-';
@@ -216,11 +228,16 @@
                     $psp    = $pid ? ($perhitunganSpillwayBy[$pid] ?? []) : [];
                     $tk     = $pid ? ($tebingKananBy[$pid] ?? []) : [];
                     $tbTot  = $pid ? ($totalBocoranBy[$pid] ?? []) : [];
+                    $pbatas = $pid ? ($perhitunganBatasBy[$pid] ?? []) : [];
+                    
+                    $showTahun = !in_array($tahun, $processedYears);
+                    if ($showTahun) {
+                        $processedYears[] = $tahun;
+                    }
             ?>
-                <tr data-tahun="<?= esc($tahun) ?>" data-bulan="<?= esc($bulan) ?>" data-periode="<?= esc($periode) ?>">
-                    <?php if (!isset($tahunRowspans[$tahun])): ?>
+                <tr data-tahun="<?= esc($tahun) ?>" data-bulan="<?= esc($bulan) ?>" data-periode="<?= esc($periode) ?>" data-pid="<?= esc($pid) ?>">
+                    <?php if ($showTahun): ?>
                         <td rowspan="<?= $tahunCounts[$tahun] ?>" class="sticky"><?= esc($tahun) ?></td>
-                        <?php $tahunRowspans[$tahun] = true; ?>
                     <?php endif; ?>
                     <td class="sticky-2"><?= esc($bulan) ?></td>
                     <td class="sticky-3"><?= esc($periode) ?></td>
@@ -273,7 +290,7 @@
 
                     <td><?= $fmt($tbTot['R1'] ?? ($tbTot['r1'] ?? null), 2) ?></td>
 
-                    <td><?= $fmt($perhitunganBatasBy[$pid]['batas_maksimal'] ?? null, 2) ?></td>
+                    <td><?= $fmt($pbatas['batas_maksimal'] ?? null, 2) ?></td>
                 </tr>
             <?php endforeach; endif; ?>
             </tbody>
@@ -301,47 +318,377 @@ document.addEventListener('DOMContentLoaded', function () {
     const bulanFilter = document.getElementById('bulanFilter');
     const periodeFilter = document.getElementById('periodeFilter');
     const resetFilter = document.getElementById('resetFilter');
-    const tableBody = document.querySelector('#exportTable tbody');
+    const tableBody = document.querySelector('#dataTableBody');
+    const updateStatus = document.getElementById('updateStatus');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Daftar SR
+    const srList = [1, 40, 66, 68, 70, 79, 81, 83, 85, 92, 94, 96, 98, 100, 102, 104, 106];
+    
+    // Format angka helper
+    const fmt = (v, dec = 2) => {
+        if (v === null || v === undefined || v === '' || v == 0) return '-';
+        return parseFloat(v).toFixed(dec);
+    };
 
+    // Ambil Q SR
+    const getSrQ = (row, num) => {
+        if (!row) return null;
+        for (const k of [`q_sr_${num}`, `sr_${num}_q`, `sr${num}_q`, `q${num}`, `sr_${num}`]) {
+            if (row[k] !== undefined) return row[k];
+        }
+        return null;
+    };
+
+    // Fungsi filter tabel
     function filterTable() {
         const tVal = tahunFilter.value;
         const bVal = bulanFilter.value;
         const pVal = periodeFilter.value;
+        const searchVal = searchInput.value.toLowerCase();
 
         tableBody.querySelectorAll('tr').forEach(tr => {
-            const match = (!tVal || tr.dataset.tahun === tVal) &&
-                          (!bVal || tr.dataset.bulan === bVal) &&
-                          (!pVal || tr.dataset.periode === pVal);
-            tr.style.display = match ? '' : 'none';
+            const tahunMatch = !tVal || tr.dataset.tahun === tVal;
+            const bulanMatch = !bVal || tr.dataset.bulan === bVal;
+            const periodeMatch = !pVal || tr.dataset.periode === pVal;
+            
+            // Pencarian teks
+            let searchMatch = true;
+            if (searchVal) {
+                const rowText = tr.textContent.toLowerCase();
+                searchMatch = rowText.includes(searchVal);
+            }
+
+            tr.style.display = (tahunMatch && bulanMatch && periodeMatch && searchMatch) ? '' : 'none';
         });
     }
 
+    // Event listeners untuk filter
     tahunFilter.addEventListener('change', filterTable);
     bulanFilter.addEventListener('change', filterTable);
     periodeFilter.addEventListener('change', filterTable);
+    searchInput.addEventListener('input', filterTable);
+    
     resetFilter.addEventListener('click', () => {
         tahunFilter.value = '';
         bulanFilter.value = '';
         periodeFilter.value = '';
+        searchInput.value = '';
         filterTable();
     });
 
+    // Simpan state rowspan tahun
+    const tahunRowspans = {};
+
+    // Fungsi untuk AJAX polling
+    function pollData() {
+        fetch('<?= base_url('get-latest-data') ?>')
+            .then(response => response.json())
+            .then(data => {
+                updateTable(data);
+                setTimeout(pollData, 5000); // Poll setiap 5 detik
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                setTimeout(pollData, 10000); // Coba lagi setelah 10 detik jika error
+            });
+    }
+
+    // Fungsi untuk memperbarui tabel dengan data baru
+    function updateTable(data) {
+        updateStatus.style.display = 'flex';
+        
+        // Simpan state filter sebelum update
+        const tVal = tahunFilter.value;
+        const bVal = bulanFilter.value;
+        const pVal = periodeFilter.value;
+        const sVal = searchInput.value;
+        
+        // Hitung rowspan untuk tahun
+        const tahunCounts = {};
+        data.forEach(item => {
+            const tahun = item.pengukuran.tahun || '-';
+            tahunCounts[tahun] = (tahunCounts[tahun] || 0) + 1;
+        });
+        
+        // Update atau tambah data di tabel
+        data.forEach(item => {
+            const pid = item.pengukuran.id;
+            const tahun = item.pengukuran.tahun || '-';
+            const bulan = item.pengukuran.bulan || '-';
+            const periode = item.pengukuran.periode || '-';
+            
+            let row = tableBody.querySelector(`tr[data-pid="${pid}"]`);
+            
+            if (!row) {
+                // Buat baris baru jika tidak ada
+                row = createNewRow(item, pid, tahun, bulan, periode, tahunCounts);
+                tableBody.appendChild(row);
+            } else {
+                // Update baris yang sudah ada
+                updateExistingRow(row, item);
+            }
+        });
+        
+        // Perbarui rowspan untuk tahun
+        updateTahunRowspans(tahunCounts);
+        
+        // Terapkan filter kembali setelah update
+        tahunFilter.value = tVal;
+        bulanFilter.value = bVal;
+        periodeFilter.value = pVal;
+        searchInput.value = sVal;
+        filterTable();
+        
+        // Sembunyikan status update setelah 1 detik
+        setTimeout(() => {
+            updateStatus.style.display = 'none';
+        }, 1000);
+    }
+
+    // Fungsi untuk membuat baris baru
+    function createNewRow(item, pid, tahun, bulan, periode, tahunCounts) {
+        const row = document.createElement('tr');
+        row.dataset.tahun = tahun;
+        row.dataset.bulan = bulan;
+        row.dataset.periode = periode;
+        row.dataset.pid = pid;
+        
+        // Tambahkan sel untuk tahun (dengan rowspan jika tahun pertama)
+        if (!tahunRowspans[tahun]) {
+            const tahunCell = document.createElement('td');
+            tahunCell.className = 'sticky';
+            tahunCell.rowSpan = tahunCounts[tahun];
+            tahunCell.textContent = tahun;
+            row.appendChild(tahunCell);
+            tahunRowspans[tahun] = true;
+        }
+        
+        // Tambahkan sel lainnya
+        addCellsToRow(row, item);
+        
+        return row;
+    }
+
+    // Fungsi untuk menambahkan sel ke baris
+// Fungsi untuk menambahkan sel ke baris
+function addCellsToRow(row, item) {
+    const p = item.pengukuran;
+    const thom = item.thomson || {};
+    const srRow = item.sr || {};
+    const boco = item.bocoran || {};
+    const pth = item.perhitungan_thomson || {};
+    const psr = item.perhitungan_sr || {};
+    const pbb = item.perhitungan_bocoran || {};
+    const pig = item.perhitungan_ig || {};
+    const psp = item.perhitungan_spillway || {};
+    const tk = item.tebing_kanan || {};
+    const tbTot = item.total_bocoran || {};
+    const pbatas = item.perhitungan_batas || {};
+    
+    // Bulan, Periode, Tanggal, TMA, Curah Hujan
+    appendCell(row, p.bulan, 'sticky-2');
+    appendCell(row, p.periode, 'sticky-3');
+    appendCell(row, p.tanggal, 'sticky-4');
+    appendCell(row, p.tma_waduk, 'sticky-5');
+    appendCell(row, p.curah_hujan, 'sticky-6');
+    
+    // Thomson Weir - PERBAIKAN: Pastikan menggunakan nilai default jika undefined
+    appendCell(row, thom.a1_r || '-');
+    appendCell(row, thom.a1_l || '-');
+    appendCell(row, thom.b1 || '-');
+    appendCell(row, thom.b3 || '-');
+    appendCell(row, thom.b5 || '-');
+    
+    // SR Data
+    srList.forEach(num => {
+        appendCell(row, srRow[`sr_${num}_nilai`] || '-');
+        appendCell(row, srRow[`sr_${num}_kode`] || '-');
+    });
+    
+    // Bocoran Baru
+    appendCell(row, boco.elv_624_t1 || '-');
+    appendCell(row, boco.elv_624_t1_kode || '-');
+    appendCell(row, boco.elv_615_t2 || '-');
+    appendCell(row, boco.elv_615_t2_kode || '-');
+    appendCell(row, boco.pipa_p1 || '-');
+    appendCell(row, boco.pipa_p1_kode || '-');
+    
+    // Perhitungan Thomson
+    appendCell(row, pth.r || '-');
+    appendCell(row, pth.l || '-');
+    appendCell(row, pth.b1 || '-');
+    appendCell(row, pth.b3 || '-');
+    appendCell(row, pth.b5 || '-');
+    
+    // Perhitungan SR
+    srList.forEach(num => {
+        const q = getSrQ(psr, num);
+        appendCell(row, q === null ? '-' : fmt(q, 6));
+    });
+    
+    // Perhitungan Bocoran Baru
+    appendCell(row, fmt(pbb.talang1, 2));
+    appendCell(row, fmt(pbb.talang2, 2));
+    appendCell(row, fmt(pbb.pipa, 2));
+    
+    // Perhitungan Inti Galery
+    appendCell(row, fmt(pig.a1, 2));
+    appendCell(row, fmt(pig.ambang_a1, 2));
+    
+    // Perhitungan Spillway
+    appendCell(row, fmt(psp.B3 || psp.b3, 2));
+    appendCell(row, fmt(psp.ambang, 2));
+    
+    // Perhitungan Tebing Kanan
+    appendCell(row, fmt(tk.sr, 2));
+    appendCell(row, fmt(tk.ambang, 2));
+    appendCell(row, tk.B5 || tk.b5 || '-');
+    
+    // Total Bocoran
+    appendCell(row, fmt(tbTot.R1 || tbTot.r1, 2));
+    
+    // Batas Maksimal
+    appendCell(row, fmt(pbatas.batas_maksimal, 2));
+}
+
+    // Helper untuk menambahkan sel
+    function appendCell(row, value, className = '') {
+        const cell = document.createElement('td');
+        if (className) cell.className = className;
+        cell.textContent = value || '-';
+        row.appendChild(cell);
+    }
+
+// Fungsi untuk memperbarui baris yang sudah ada
+function updateExistingRow(row, item) {
+    const thom = item.thomson || {};
+    const srRow = item.sr || {};
+    const boco = item.bocoran || {};
+    const pth = item.perhitungan_thomson || {};
+    const psr = item.perhitungan_sr || {};
+    const pbb = item.perhitungan_bocoran || {};
+    const pig = item.perhitungan_ig || {};
+    const psp = item.perhitungan_spillway || {};
+    const tk = item.tebing_kanan || {};
+    const tbTot = item.total_bocoran || {};
+    const pbatas = item.perhitungan_batas || {};
+    
+    // Pastikan urutan kolom sesuai dengan struktur header
+    // PERBAIKAN: Mulai dari kolom setelah "Curah Hujan" (kolom ke-6)
+    let cellIndex = 6; // Kolom 0-5: Tahun, Bulan, Periode, Tanggal, TMA Waduk, Curah Hujan
+    
+    // Update Thomson Weir (5 kolom) - A1 {R}, A1 {L}, B1, B3, B5
+    updateCell(row, cellIndex++, thom.a1_r || '-');
+    updateCell(row, cellIndex++, thom.a1_l || '-');
+    updateCell(row, cellIndex++, thom.b1 || '-');
+    updateCell(row, cellIndex++, thom.b3 || '-');
+    updateCell(row, cellIndex++, thom.b5 || '-');
+    
+    // Update SR data (34 kolom: 17 SR × 2) - Nilai dan Kode untuk setiap SR
+    srList.forEach(num => {
+        updateCell(row, cellIndex++, srRow[`sr_${num}_nilai`] || '-');
+        updateCell(row, cellIndex++, srRow[`sr_${num}_kode`] || '-');
+    });
+    
+    // Update Bocoran Baru (6 kolom) - ELV 624 T1, Kode, ELV 615 T2, Kode, Pipa P1, Kode
+    updateCell(row, cellIndex++, boco.elv_624_t1 || '-');
+    updateCell(row, cellIndex++, boco.elv_624_t1_kode || '-');
+    updateCell(row, cellIndex++, boco.elv_615_t2 || '-');
+    updateCell(row, cellIndex++, boco.elv_615_t2_kode || '-');
+    updateCell(row, cellIndex++, boco.pipa_p1 || '-');
+    updateCell(row, cellIndex++, boco.pipa_p1_kode || '-');
+    
+    // Update Perhitungan Thomson (5 kolom) - R, L, B-1, B-3, B-5
+    updateCell(row, cellIndex++, pth.r || '-');
+    updateCell(row, cellIndex++, pth.l || '-');
+    updateCell(row, cellIndex++, pth.b1 || '-');
+    updateCell(row, cellIndex++, pth.b3 || '-');
+    updateCell(row, cellIndex++, pth.b5 || '-');
+    
+    // Update Perhitungan SR (17 kolom) - SR 1, SR 40, SR 66, dst...
+    srList.forEach(num => {
+        const q = getSrQ(psr, num);
+        updateCell(row, cellIndex++, q === null ? '-' : fmt(q, 6));
+    });
+    
+    // Update Perhitungan Bocoran Baru (3 kolom) - Talang 1, Talang 2, Pipa
+    updateCell(row, cellIndex++, fmt(pbb.talang1, 2));
+    updateCell(row, cellIndex++, fmt(pbb.talang2, 2));
+    updateCell(row, cellIndex++, fmt(pbb.pipa, 2));
+    
+    // Update Perhitungan Inti Galery (2 kolom) - A1, Ambang
+    updateCell(row, cellIndex++, fmt(pig.a1, 2));
+    updateCell(row, cellIndex++, fmt(pig.ambang_a1, 2));
+    
+    // Update Perhitungan Spillway (2 kolom) - B3, Ambang
+    updateCell(row, cellIndex++, fmt(psp.B3 || psp.b3, 2));
+    updateCell(row, cellIndex++, fmt(psp.ambang, 2));
+    
+    // Update Perhitungan Tebing Kanan (3 kolom) - SR, Ambang, B5
+    updateCell(row, cellIndex++, fmt(tk.sr, 2));
+    updateCell(row, cellIndex++, fmt(tk.ambang, 2));
+    updateCell(row, cellIndex++, tk.B5 || tk.b5 || '-');
+    
+    // Update Total Bocoran (1 kolom) - R1
+    updateCell(row, cellIndex++, fmt(tbTot.R1 || tbTot.r1, 2));
+    
+    // Update Batas Maksimal (1 kolom)
+    updateCell(row, cellIndex, fmt(pbatas.batas_maksimal, 2));
+}
+    // Helper untuk update cell
+// Helper untuk update cell - PERBAIKAN: Handle undefined values
+function updateCell(row, cellIndex, value) {
+    if (row.cells.length > cellIndex) {
+        const cell = row.cells[cellIndex];
+        cell.textContent = value !== undefined && value !== null ? value : '-';
+    } else {
+        console.error('Cell index out of bounds:', cellIndex, 'for row with', row.cells.length, 'cells');
+    }
+}
+
+    // Fungsi untuk memperbarui rowspan tahun
+    function updateTahunRowspans(tahunCounts) {
+        // Reset semua rowspan tahun
+        Object.keys(tahunRowspans).forEach(tahun => {
+            tahunRowspans[tahun] = false;
+        });
+        
+        // Set rowspan untuk tahun yang ada
+        tableBody.querySelectorAll('tr').forEach((row, index) => {
+            const tahun = row.dataset.tahun;
+            if (tahun && tahunCounts[tahun] && !tahunRowspans[tahun]) {
+                // Cari sel tahun di baris ini
+                const tahunCell = row.querySelector('td.sticky');
+                if (tahunCell) {
+                    tahunCell.rowSpan = tahunCounts[tahun];
+                    tahunRowspans[tahun] = true;
+                }
+            }
+        });
+    }
+
+    // Mulai polling saat halaman dimuat
+    pollData();
+
     // Export Excel
     document.getElementById('exportExcel').addEventListener('click', () => {
-        const wb = XLSX.utils.table_to_book(document.getElementById('exportTable'), { sheet: "Data Rembesan" });
-        XLSX.writeFile(wb, 'data_rembesan.xlsx');
+        const wb = XLSX.utils.table_to_book(document.getElementById('exportTable'), {sheet: "Data Rembesan"});
+        XLSX.writeFile(wb, "data_rembesan.xlsx");
     });
 
     // Export PDF
     document.getElementById('exportPDF').addEventListener('click', () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        
         html2canvas(document.getElementById('exportTable')).then(canvas => {
             const imgData = canvas.toDataURL('image/png');
-            const pdf = new jspdf.jsPDF('l', 'pt', 'a4');
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save("data_rembesan.pdf");
+            const imgWidth = doc.internal.pageSize.getWidth();
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            
+            doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            doc.save('data_rembesan.pdf');
         });
     });
 });
@@ -367,6 +714,5 @@ document.addEventListener('DOMContentLoaded', function () {
 .section-bocoran { background: #f1f8e9; }
 .section-inti { background: #fce4ec; }
 </style>
-
 </body>
 </html>

@@ -40,34 +40,64 @@ class DataInputController extends BaseController
         return view('Data/data_rembesan', $data);
     }
 
-    public function streamRembesan()
-{
-    // Set headers SSE
-    header('Content-Type: text/event-stream');
-    header('Cache-Control: no-cache');
-    header('Connection: keep-alive');
+    // Method untuk AJAX polling - DIREVISI
+    public function getLatestData()
+    {
+        $modelPengukuran      = new MDataPengukuran();
+        $modelThomson         = new MThomsonWeir();
+        $modelSR              = new MSR();
+        $modelBocoran         = new MBocoranBaru();
+        $modelPerhitunganThomson = new PerhitunganThomsonModel();
+        $modelPerhitunganSR   = new PerhitunganSRModel();
+        $modelPerhitunganBocoran = new PerhitunganBocoranModel();
+        $modelPerhitunganIG   = new PerhitunganIntiGaleryModel();
+        $modelPerhitunganSpillway = new PerhitunganSpillwayModel();
+        $modelTebingKanan     = new TebingKananModel();
+        $modelTotalBocoran    = new TotalBocoranModel();
+        $modelPerhitunganBatas = new PerhitunganBatasMaksimalModel();
 
-    $modelPengukuran      = new MDataPengukuran();
-    $modelThomson         = new MThomsonWeir();
-    $modelSR              = new MSR();
-    $modelBocoran         = new MBocoranBaru();
-
-    // Looping untuk push data terus
-    while (true) {
         $pengukuran = $modelPengukuran->findAll();
         $thomson    = $modelThomson->findAll();
         $sr         = $modelSR->findAll();
         $bocoran    = $modelBocoran->findAll();
+        $perhitunganThomson = $modelPerhitunganThomson->getAllWithPengukuran();
+        $perhitunganSR = $modelPerhitunganSR->findAll();
+        $perhitunganBocoran = $modelPerhitunganBocoran->findAll();
+        $perhitunganIG = $modelPerhitunganIG->findAll();
+        $perhitunganSpillway = $modelPerhitunganSpillway->findAll();
+        $tebingKanan = $modelTebingKanan->findAll();
+        $totalBocoran = $modelTotalBocoran->findAll();
+        $perhitunganBatas = $modelPerhitunganBatas->getAllWithPengukuran();
 
-        // Index data by pengukuran_id untuk mudah mapping
-        $indexById = fn($arr) => array_reduce($arr, function($carry, $item) {
-            if (isset($item['pengukuran_id'])) $carry[$item['pengukuran_id']] = $item;
-            return $carry;
-        }, []);
+        // Fungsi indexing yang lebih robust
+        $indexBy = function(array $rows, $idField = 'pengukuran_id') {
+            $result = [];
+            foreach ($rows as $row) {
+                // Coba beberapa kemungkinan nama field ID
+                $possibleIdFields = [$idField, 'id_pengukuran', 'pengukuranId', 'pengukuran'];
+                
+                foreach ($possibleIdFields as $field) {
+                    if (isset($row[$field])) {
+                        $result[$row[$field]] = $row;
+                        break;
+                    }
+                }
+            }
+            return $result;
+        };
 
-        $thomsonBy = $thomson ? $indexById($thomson) : [];
-        $srBy      = $sr ? $indexById($sr) : [];
-        $bocoranBy = $bocoran ? $indexById($bocoran) : [];
+        // Index semua data dengan field yang sesuai
+        $thomsonBy = $indexBy($thomson);
+        $srBy = $indexBy($sr);
+        $bocoranBy = $indexBy($bocoran);
+        $perhitunganThomsonBy = $indexBy($perhitunganThomson);
+        $perhitunganSrBy = $indexBy($perhitunganSR);
+        $perhitunganBocoranBy = $indexBy($perhitunganBocoran);
+        $perhitunganIgBy = $indexBy($perhitunganIG);
+        $perhitunganSpillwayBy = $indexBy($perhitunganSpillway);
+        $tebingKananBy = $indexBy($tebingKanan);
+        $totalBocoranBy = $indexBy($totalBocoran);
+        $perhitunganBatasBy = $indexBy($perhitunganBatas);
 
         $dataToSend = [];
 
@@ -77,20 +107,52 @@ class DataInputController extends BaseController
                 'pengukuran' => $p,
                 'thomson'    => $thomsonBy[$pid] ?? [],
                 'sr'         => $srBy[$pid] ?? [],
-                'bocoran'    => $bocoranBy[$pid] ?? []
+                'bocoran'    => $bocoranBy[$pid] ?? [],
+                'perhitungan_thomson' => $perhitunganThomsonBy[$pid] ?? [],
+                'perhitungan_sr' => $perhitunganSrBy[$pid] ?? [],
+                'perhitungan_bocoran' => $perhitunganBocoranBy[$pid] ?? [],
+                'perhitungan_ig' => $perhitunganIgBy[$pid] ?? [],
+                'perhitungan_spillway' => $perhitunganSpillwayBy[$pid] ?? [],
+                'tebing_kanan' => $tebingKananBy[$pid] ?? [],
+                'total_bocoran' => $totalBocoranBy[$pid] ?? [],
+                'perhitungan_batas' => $perhitunganBatasBy[$pid] ?? []
             ];
         }
 
-        echo "event: update\n";
-        echo 'data: ' . json_encode($dataToSend) . "\n\n";
-
-        // Flush output
-        ob_flush();
-        flush();
-
-        // Delay 2 detik
-        sleep(2);
+        return $this->response->setJSON($dataToSend);
     }
-}
 
+    // Method untuk debugging - bisa dihapus setelah fix
+    public function debugData()
+    {
+        $modelThomson = new MThomsonWeir();
+        $thomson = $modelThomson->findAll();
+        
+        // Lihat struktur data Thomson
+        echo "<pre>";
+        echo "THOMSON DATA STRUCTURE:\n";
+        if (!empty($thomson)) {
+            print_r($thomson[0]);
+            echo "\nTHOMSON KEYS: ";
+            print_r(array_keys($thomson[0]));
+        } else {
+            echo "No Thomson data found";
+        }
+        echo "</pre>";
+        
+        // Lihat struktur data SR
+        $modelSR = new MSR();
+        $sr = $modelSR->findAll();
+        
+        echo "<pre>";
+        echo "SR DATA STRUCTURE:\n";
+        if (!empty($sr)) {
+            print_r($sr[0]);
+            echo "\nSR KEYS: ";
+            print_r(array_keys($sr[0]));
+        } else {
+            echo "No SR data found";
+        }
+        echo "</pre>";
+    }
 }
