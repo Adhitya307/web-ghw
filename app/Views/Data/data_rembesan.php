@@ -19,14 +19,12 @@
 <?= $this->include('layouts/header'); ?>
 
 <div class="data-container">
-    <!-- Header -->
     <div class="table-header">
         <h2 class="table-title">
             <i class="fas fa-table me-2"></i>Data Input Rembesan Bendungan
         </h2>
 
-        <!-- Navigasi Cepat -->
-        <div class="btn-group mb-3" role="group" aria-label="Navigasi Tabel">
+        <div class="btn-group mb-3" role="group">
             <a href="<?= base_url('input-data') ?>" class="btn btn-outline-primary">
                 <i class="fas fa-table"></i> Tabel Gabungan
             </a>
@@ -38,7 +36,6 @@
             </a>
         </div>
 
-        <!-- Filter -->
         <div class="table-controls">
             <div class="input-group" style="max-width: 300px;">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -58,6 +55,7 @@
                     <?php
                     if (!empty($pengukuran)):
                         $uniqueYears = array_unique(array_map(fn($p) => $p['tahun'] ?? '-', $pengukuran));
+                        sort($uniqueYears);
                         foreach ($uniqueYears as $year):
                             if ($year === '-') continue;
                     ?>
@@ -72,13 +70,14 @@
                 <select id="bulanFilter" class="form-select">
                     <option value="">Semua Bulan</option>
                     <?php
-                    if (!empty($pengukuran)):
-                        $uniqueMonths = array_unique(array_map(fn($p) => $p['bulan'] ?? '-', $pengukuran));
-                        foreach ($uniqueMonths as $month):
-                            if ($month === '-') continue;
+                    $bulanArr = [
+                        'Januari','Februari','Maret','April','Mei','Juni',
+                        'Juli','Agustus','September','Oktober','November','Desember'
+                    ];
+                    foreach ($bulanArr as $month):
                     ?>
-                        <option value="<?= esc($month) ?>"><?= esc($month) ?></option>
-                    <?php endforeach; endif; ?>
+                        <option value="<?= $month ?>"><?= $month ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -90,6 +89,7 @@
                     <?php
                     if (!empty($pengukuran)):
                         $uniquePeriods = array_unique(array_map(fn($p) => $p['periode'] ?? '-', $pengukuran));
+                        sort($uniquePeriods);
                         foreach ($uniquePeriods as $period):
                             if ($period === '-') continue;
                     ?>
@@ -107,43 +107,27 @@
         </div>
     </div>
 
-    <!-- Status Update -->
-    <div id="updateStatus" class="alert alert-info d-flex align-items-center" style="display: none !important;">
-        <div class="spinner-border spinner-border-sm me-2" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <span>Memperbarui data...</span>
-    </div>
-
-    <!-- Table -->
     <div class="table-responsive">
         <table class="data-table" id="exportTable">
             <?php
-            // List SR
             $srList = [1, 40, 66, 68, 70, 79, 81, 83, 85, 92, 94, 96, 98, 100, 102, 104, 106];
             $srColspan = count($srList) * 2;
             $twHeaders = ['A1 {R}', 'A1 {L}', 'B1', 'B3', 'B5'];
 
-            // Index helper
             $indexBy = fn(array $rows) => array_reduce($rows, fn($carry, $item) => isset($item['pengukuran_id']) ? $carry + [$item['pengukuran_id'] => $item] : $carry, []);
+            $thomsonBy = $thomson ? $indexBy($thomson) : [];
+            $srBy = $sr ? $indexBy($sr) : [];
+            $bocoranBy = $bocoran ? $indexBy($bocoran) : [];
+            $perhitunganThomsonBy = $perhitungan_thomson ? $indexBy($perhitungan_thomson) : [];
+            $perhitunganSrBy = $perhitungan_sr ? $indexBy($perhitungan_sr) : [];
+            $perhitunganBocoranBy = $perhitungan_bocoran ? $indexBy($perhitungan_bocoran) : [];
+            $perhitunganIgBy = $perhitungan_ig ? $indexBy($perhitungan_ig) : [];
+            $perhitunganSpillwayBy = $perhitungan_spillway ? $indexBy($perhitungan_spillway) : [];
+            $tebingKananBy = $tebing_kanan ? $indexBy($tebing_kanan) : [];
+            $totalBocoranBy = $total_bocoran ? $indexBy($total_bocoran) : [];
+            $perhitunganBatasBy = $perhitungan_batas ? $indexBy($perhitungan_batas) : [];
 
-            $thomsonBy               = $thomson ? $indexBy($thomson) : [];
-            $srBy                    = $sr ? $indexBy($sr) : [];
-            $bocoranBy               = $bocoran ? $indexBy($bocoran) : [];
-            $perhitunganThomsonBy    = $perhitungan_thomson ? $indexBy($perhitungan_thomson) : [];
-            $perhitunganSrBy         = $perhitungan_sr ? $indexBy($perhitungan_sr) : [];
-            $perhitunganBocoranBy    = $perhitungan_bocoran ? $indexBy($perhitungan_bocoran) : [];
-            $perhitunganIgBy         = $perhitungan_ig ? $indexBy($perhitungan_ig) : [];
-            $perhitunganSpillwayBy   = $perhitungan_spillway ? $indexBy($perhitungan_spillway) : [];
-            $tebingKananBy           = $tebing_kanan ? $indexBy($tebing_kanan) : [];
-            $totalBocoranBy          = $total_bocoran ? $indexBy($total_bocoran) : [];
-            $ambangBy                = $ambang ? $indexBy($ambang) : [];
-            $perhitunganBatasBy      = $perhitungan_batas ? $indexBy($perhitungan_batas) : [];
-
-            // Format angka
             $fmt = fn($v, $dec = 2) => isset($v) && $v !== '' && $v !== null && $v != 0 ? number_format((float)$v, $dec, '.', '') : '-';
-
-            // Ambil Q SR
             $getSrQ = function($row, $num) {
                 if (!$row) return null;
                 foreach (["q_sr_$num", "sr_{$num}_q", "sr{$num}_q", "q{$num}", "sr_$num"] as $k) {
@@ -151,6 +135,24 @@
                 }
                 return null;
             };
+
+            // ✅ Sort pengukuran by tahun ASC, bulan ASC
+            if (!empty($pengukuran)) {
+                usort($pengukuran, function($a, $b) {
+                    $bulanMap = [
+                        'Januari'=>1,'Februari'=>2,'Maret'=>3,'April'=>4,'Mei'=>5,'Juni'=>6,
+                        'Juli'=>7,'Agustus'=>8,'September'=>9,'Oktober'=>10,'November'=>11,'Desember'=>12
+                    ];
+                    $tahunA = (int)($a['tahun'] ?? 0);
+                    $tahunB = (int)($b['tahun'] ?? 0);
+                    if ($tahunA === $tahunB) {
+                        $bulanA = $bulanMap[$a['bulan']] ?? 13;
+                        $bulanB = $bulanMap[$b['bulan']] ?? 13;
+                        return $bulanA <=> $bulanB;
+                    }
+                    return $tahunA <=> $tahunB;
+                });
+            }
             ?>
 
             <thead>
@@ -161,18 +163,18 @@
                     <th rowspan="3" class="sticky-4">Tanggal</th>
                     <th rowspan="3" class="sticky-5">TMA Waduk</th>
                     <th rowspan="3" class="sticky-6">Curah Hujan</th>
-                    <th rowspan="2" colspan="<?= count($twHeaders) ?>" class="section-thomson">Thomson Weir</th>
-                    <th colspan="<?= $srColspan ?>" class="section-sr">SR</th>
-                    <th colspan="6" rowspan="2" class="section-bocoran">Bocoran Baru</th>
-                    <th colspan="5" class="section-bocoran">Perhitungan Q Thompson Weir (Liter/Menit)</th>
-                    <th rowspan="2" colspan="<?= count($srList) ?>" class="section-sr">Perhitungan Q SR (Liter/Menit)</th>
-                    <th rowspan="2" colspan="3" class="section-sr">Perhitungan Bocoran Baru</th>
-                    <th rowspan="2" colspan="2" class="section-inti">Perhitungan Inti Galery</th>
-                    <th rowspan="2" colspan="2" class="section-inti">Perhitungan Bawah Bendungan/Spillway</th>
-                    <th rowspan="2" colspan="2" class="section-inti">Perhitungan Tebing Kanan</th>
-                    <th rowspan="2" colspan="1" class="section-inti">Perhitungan Tebing Kanan</th>
-                    <th rowspan="2" colspan="1" class="section-inti">Total Bocoran</th>
-                    <th rowspan="2" colspan="1" class="section-inti">Batasan Maksimal (Tahun)</th>
+                    <th rowspan="2" colspan="<?= count($twHeaders) ?>">Thomson Weir</th>
+                    <th colspan="<?= $srColspan ?>">SR</th>
+                    <th colspan="6" rowspan="2">Bocoran Baru</th>
+                    <th colspan="5">Perhitungan Q Thompson Weir (Liter/Menit)</th>
+                    <th rowspan="2" colspan="<?= count($srList) ?>">Perhitungan Q SR (Liter/Menit)</th>
+                    <th rowspan="2" colspan="3">Perhitungan Bocoran Baru</th>
+                    <th rowspan="2" colspan="2">Perhitungan Inti Galery</th>
+                    <th rowspan="2" colspan="2">Perhitungan Bawah Bendungan/Spillway</th>
+                    <th rowspan="2" colspan="2">Perhitungan Tebing Kanan</th>
+                    <th rowspan="2" colspan="1">Perhitungan Tebing Kanan</th>
+                    <th rowspan="2" colspan="1">Total Bocoran</th>
+                    <th rowspan="2" colspan="1">Batasan Maksimal (Tahun)</th>
                 </tr>
                 <tr>
                     <?php foreach ($srList as $num): ?>
@@ -201,7 +203,6 @@
                     <th></th>
                 </tr>
             </thead>
-
             <tbody id="dataTableBody">
             <?php if (!empty($pengukuran)):
                 $tahunCounts = [];
@@ -209,10 +210,8 @@
                     $tahun = $p['tahun'] ?? '-';
                     $tahunCounts[$tahun] = ($tahunCounts[$tahun] ?? 0) + 1;
                 }
-                
                 $processedYears = [];
-
-                foreach ($pengukuran as $index => $p):
+                foreach ($pengukuran as $p):
                     $tahun   = $p['tahun'] ?? '-';
                     $bulan   = $p['bulan'] ?? '-';
                     $periode = $p['periode'] ?? '-';
@@ -229,11 +228,9 @@
                     $tk     = $pid ? ($tebingKananBy[$pid] ?? []) : [];
                     $tbTot  = $pid ? ($totalBocoranBy[$pid] ?? []) : [];
                     $pbatas = $pid ? ($perhitunganBatasBy[$pid] ?? []) : [];
-                    
+
                     $showTahun = !in_array($tahun, $processedYears);
-                    if ($showTahun) {
-                        $processedYears[] = $tahun;
-                    }
+                    if ($showTahun) $processedYears[] = $tahun;
             ?>
                 <tr data-tahun="<?= esc($tahun) ?>" data-bulan="<?= esc($bulan) ?>" data-periode="<?= esc($periode) ?>" data-pid="<?= esc($pid) ?>">
                     <?php if ($showTahun): ?>
@@ -263,8 +260,8 @@
                     <td><?= esc($boco['pipa_p1'] ?? '-') ?></td>
                     <td><?= esc($boco['pipa_p1_kode'] ?? '-') ?></td>
 
-                    <td><?= esc($pth['r'] ?? '-') ?></td>
-                    <td><?= esc($pth['l'] ?? '-') ?></td>
+                    <td><?= esc($pth['a1_r'] ?? '-') ?></td>
+                    <td><?= esc($pth['a1_l'] ?? '-') ?></td>
                     <td><?= esc($pth['b1'] ?? '-') ?></td>
                     <td><?= esc($pth['b3'] ?? '-') ?></td>
                     <td><?= esc($pth['b5'] ?? '-') ?></td>
@@ -296,14 +293,10 @@
             </tbody>
         </table>
     </div>
-
-    <div class="export-buttons mt-3">
-        <button id="exportExcel" class="btn btn-success"><i class="fas fa-file-excel me-1"></i> Export Excel</button>
-        <button id="exportPDF" class="btn btn-primary"><i class="fas fa-file-pdf me-1"></i> Export PDF</button>
-    </div>
 </div>
 
 <?= $this->include('layouts/footer'); ?>
+
 
 <!-- Bootstrap & Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
