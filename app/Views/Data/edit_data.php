@@ -196,6 +196,42 @@
             border-left: 4px solid var(--primary-color);
         }
         
+        /* Gaya untuk grup nilai dan kode yang berdampingan */
+        .value-code-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        .value-code-group .form-group {
+            flex: 2;
+        }
+        
+        .value-code-group .code-group {
+            flex: 1;
+        }
+        
+        .value-code-group .form-label {
+            white-space: nowrap;
+        }
+        
+        /* Gaya untuk grup SR */
+        .sr-group {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+        }
+        
+        .sr-group-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #ced4da;
+        }
+        
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -213,6 +249,11 @@
                 left: 15px;
                 right: 15px;
                 min-width: auto;
+            }
+            
+            .value-code-group {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
         
@@ -381,64 +422,7 @@
                         </div>
                     </div>
                     
-                    <!-- Data Bocoran Baru -->
-                    <div class="form-section">
-                        <h4 class="section-title"><i class="fas fa-water"></i> Data Bocoran Baru</h4>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="elv_624_t1" class="form-label">ELV 624 T1 (m)</label>
-                                <input type="number" step="0.001" class="form-control numeric-input" id="elv_624_t1" name="elv_624_t1" 
-                                       value="<?= isset($bocoran['elv_624_t1']) && $bocoran['elv_624_t1'] != 0 ? $bocoran['elv_624_t1'] : '' ?>">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="elv_624_t1_kode" class="form-label">ELV 624 T1 Kode</label>
-                                <select class="form-select" id="elv_624_t1_kode" name="elv_624_t1_kode">
-                                    <option value="">Pilih Kode</option>
-                                    <option value="S" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'S') ? 'selected' : '' ?>>S</option>
-                                    <option value="M" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'M') ? 'selected' : '' ?>>M</option>
-                                    <option value="L" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'L') ? 'selected' : '' ?>>L</option>
-                                    <option value="E" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'E') ? 'selected' : '' ?>>E</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="elv_615_t2" class="form-label">ELV 615 T2 (m)</label>
-                                <input type="number" step="0.001" class="form-control numeric-input" id="elv_615_t2" name="elv_615_t2" 
-                                       value="<?= isset($bocoran['elv_615_t2']) && $bocoran['elv_615_t2'] != 0 ? $bocoran['elv_615_t2'] : '' ?>">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="elv_615_t2_kode" class="form-label">ELV 615 T2 Kode</label>
-                                <select class="form-select" id="elv_615_t2_kode" name="elv_615_t2_kode">
-                                    <option value="">Pilih Kode</option>
-                                    <option value="S" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'S') ? 'selected' : '' ?>>S</option>
-                                    <option value="M" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'M') ? 'selected' : '' ?>>M</option>
-                                    <option value="L" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'L') ? 'selected' : '' ?>>L</option>
-                                    <option value="E" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'E') ? 'selected' : '' ?>>E</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="pipa_p1" class="form-label">Pipa P1 (m)</label>
-                                <input type="number" step="0.001" class="form-control numeric-input" id="pipa_p1" name="pipa_p1" 
-                                       value="<?= isset($bocoran['pipa_p1']) && $bocoran['pipa_p1'] != 0 ? $bocoran['pipa_p1'] : '' ?>">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="pipa_p1_kode" class="form-label">Pipa P1 Kode</label>
-                                <select class="form-select" id="pipa_p1_kode" name="pipa_p1_kode">
-                                    <option value="">Pilih Kode</option>
-                                    <option value="S" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'S') ? 'selected' : '' ?>>S</option>
-                                    <option value="M" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'M') ? 'selected' : '' ?>>M</option>
-                                    <option value="L" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'L') ? 'selected' : '' ?>>L</option>
-                                    <option value="E" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'E') ? 'selected' : '' ?>>E</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Data SR -->
+                    <!-- Data SR - DIUBAH: Dipindahkan sebelum Bocoran Baru -->
                     <div class="form-section">
                         <h4 class="section-title"><i class="fas fa-map-marked-alt"></i> Data SR</h4>
                         <div class="form-grid">
@@ -448,25 +432,92 @@
                                 $srNilai = isset($sr["sr_{$srNum}_nilai"]) ? $sr["sr_{$srNum}_nilai"] : '';
                                 $srKode = isset($sr["sr_{$srNum}_kode"]) ? $sr["sr_{$srNum}_kode"] : '';
                             ?>
-                            <div class="form-group">
-                                <label for="sr_<?= $srNum ?>_nilai" class="form-label">SR <?= $srNum ?> Nilai</label>
-                                <input type="number" step="0.01" class="form-control numeric-input" 
-                                       id="sr_<?= $srNum ?>_nilai" 
-                                       name="sr_<?= $srNum ?>_nilai" 
-                                       value="<?= !empty($srNilai) && $srNilai != 0 ? $srNilai : '' ?>">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="sr_<?= $srNum ?>_kode" class="form-label">SR <?= $srNum ?> Kode</label>
-                                <select class="form-select" id="sr_<?= $srNum ?>_kode" name="sr_<?= $srNum ?>_kode">
-                                    <option value="">Pilih Kode</option>
-                                    <option value="S" <?= $srKode == 'S' ? 'selected' : '' ?>>S</option>
-                                    <option value="M" <?= $srKode == 'M' ? 'selected' : '' ?>>M</option>
-                                    <option value="L" <?= $srKode == 'L' ? 'selected' : '' ?>>L</option>
-                                    <option value="E" <?= $srKode == 'E' ? 'selected' : '' ?>>E</option>
-                                </select>
+                            <div class="sr-group">
+                                <div class="sr-group-title">SR <?= $srNum ?></div>
+                                <div class="value-code-group">
+                                    <div class="form-group">
+                                        <label for="sr_<?= $srNum ?>_nilai" class="form-label">Nilai</label>
+                                        <input type="number" step="0.01" class="form-control numeric-input" 
+                                               id="sr_<?= $srNum ?>_nilai" 
+                                               name="sr_<?= $srNum ?>_nilai" 
+                                               value="<?= !empty($srNilai) && $srNilai != 0 ? $srNilai : '' ?>">
+                                    </div>
+                                    <div class="form-group code-group">
+                                        <label for="sr_<?= $srNum ?>_kode" class="form-label">Kode</label>
+                                        <select class="form-select" id="sr_<?= $srNum ?>_kode" name="sr_<?= $srNum ?>_kode">
+                                            <option value="">Pilih</option>
+                                            <option value="S" <?= $srKode == 'S' ? 'selected' : '' ?>>S</option>
+                                            <option value="M" <?= $srKode == 'M' ? 'selected' : '' ?>>M</option>
+                                            <option value="L" <?= $srKode == 'L' ? 'selected' : '' ?>>L</option>
+                                            <option value="E" <?= $srKode == 'E' ? 'selected' : '' ?>>E</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                             <?php endforeach; ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Bocoran Baru - DIUBAH: Dipindahkan setelah SR -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-water"></i> Data Bocoran Baru</h4>
+                        <div class="form-grid">
+                            <!-- ELV 624 T1 - Nilai dan Kode berdampingan -->
+                            <div class="value-code-group">
+                                <div class="form-group">
+                                    <label for="elv_624_t1" class="form-label">ELV 624 T1 (m)</label>
+                                    <input type="number" step="0.001" class="form-control numeric-input" id="elv_624_t1" name="elv_624_t1" 
+                                           value="<?= isset($bocoran['elv_624_t1']) && $bocoran['elv_624_t1'] != 0 ? $bocoran['elv_624_t1'] : '' ?>">
+                                </div>
+                                <div class="form-group code-group">
+                                    <label for="elv_624_t1_kode" class="form-label">Kode</label>
+                                    <select class="form-select" id="elv_624_t1_kode" name="elv_624_t1_kode">
+                                        <option value="">Pilih</option>
+                                        <option value="S" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'S') ? 'selected' : '' ?>>S</option>
+                                        <option value="M" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'M') ? 'selected' : '' ?>>M</option>
+                                        <option value="L" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'L') ? 'selected' : '' ?>>L</option>
+                                        <option value="E" <?= (isset($bocoran['elv_624_t1_kode']) && $bocoran['elv_624_t1_kode'] == 'E') ? 'selected' : '' ?>>E</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- ELV 615 T2 - Nilai dan Kode berdampingan -->
+                            <div class="value-code-group">
+                                <div class="form-group">
+                                    <label for="elv_615_t2" class="form-label">ELV 615 T2 (m)</label>
+                                    <input type="number" step="0.001" class="form-control numeric-input" id="elv_615_t2" name="elv_615_t2" 
+                                           value="<?= isset($bocoran['elv_615_t2']) && $bocoran['elv_615_t2'] != 0 ? $bocoran['elv_615_t2'] : '' ?>">
+                                </div>
+                                <div class="form-group code-group">
+                                    <label for="elv_615_t2_kode" class="form-label">Kode</label>
+                                    <select class="form-select" id="elv_615_t2_kode" name="elv_615_t2_kode">
+                                        <option value="">Pilih</option>
+                                        <option value="S" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'S') ? 'selected' : '' ?>>S</option>
+                                        <option value="M" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'M') ? 'selected' : '' ?>>M</option>
+                                        <option value="L" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'L') ? 'selected' : '' ?>>L</option>
+                                        <option value="E" <?= (isset($bocoran['elv_615_t2_kode']) && $bocoran['elv_615_t2_kode'] == 'E') ? 'selected' : '' ?>>E</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Pipa P1 - Nilai dan Kode berdampingan -->
+                            <div class="value-code-group">
+                                <div class="form-group">
+                                    <label for="pipa_p1" class="form-label">Pipa P1 (m)</label>
+                                    <input type="number" step="0.001" class="form-control numeric-input" id="pipa_p1" name="pipa_p1" 
+                                           value="<?= isset($bocoran['pipa_p1']) && $bocoran['pipa_p1'] != 0 ? $bocoran['pipa_p1'] : '' ?>">
+                                </div>
+                                <div class="form-group code-group">
+                                    <label for="pipa_p1_kode" class="form-label">Kode</label>
+                                    <select class="form-select" id="pipa_p1_kode" name="pipa_p1_kode">
+                                        <option value="">Pilih</option>
+                                        <option value="S" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'S') ? 'selected' : '' ?>>S</option>
+                                        <option value="M" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'M') ? 'selected' : '' ?>>M</option>
+                                        <option value="L" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'L') ? 'selected' : '' ?>>L</option>
+                                        <option value="E" <?= (isset($bocoran['pipa_p1_kode']) && $bocoran['pipa_p1_kode'] == 'E') ? 'selected' : '' ?>>E</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
