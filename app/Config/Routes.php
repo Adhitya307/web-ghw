@@ -28,3 +28,7 @@ $routes->get('data/edit/(:num)', 'DataInputController::edit/$1');
 $routes->post('data/update/(:num)', 'DataInputController::update/$1');
 $routes->delete('data/delete/(:num)', 'DataInputController::delete/$1');
 $routes->get('get-latest-data', 'DataInputController::getLatestData');
+
+$routes->post('import-sql', 'ImportController::importSQL');
+$routes->post('import-sql-advanced', 'ImportController::importSQLAdvanced');
+$routes->post('import-sql-file', 'ImportController::importSQLFile');

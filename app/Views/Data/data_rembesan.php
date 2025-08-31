@@ -77,6 +77,20 @@
             color: white;
             filter: invert(1);
         }
+        
+        /* Styling untuk modal import */
+        #importModal .modal-dialog {
+            max-width: 500px;
+        }
+
+        #importProgress {
+            height: 20px;
+            margin: 15px 0;
+        }
+
+        #importStatus {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -98,12 +112,54 @@
             <a href="<?= base_url('lihat/tabel_ambang') ?>" class="btn btn-outline-warning">
                 <i class="fas fa-ruler"></i> Rumus Ambang Batas
             </a>
+            
+            <!-- Tombol Import SQL -->
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-database"></i> Import SQL
+            </button>
         </div>
 
         <div class="table-controls">
             <div class="input-group" style="max-width: 300px;">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                 <input type="text" class="form-control" placeholder="Cari data..." id="searchInput">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import SQL -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">
+                        <i class="fas fa-database me-2"></i>Import Database SQL
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Upload file SQL yang telah diexport dari aplikasi Android. File akan diproses dan data akan diimpor ke database.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sqlFile" class="form-label">Pilih File SQL</label>
+                        <input class="form-control" type="file" id="sqlFile" accept=".sql">
+                    </div>
+                    
+                    <div class="progress mb-3" style="display: none;" id="importProgress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    
+                    <div id="importStatus" class="alert" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="btnImportSQL">
+                        <i class="fas fa-upload me-1"></i> Import
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -347,14 +403,13 @@
                     <td><?= $fmt($psp['ambang'] ?? null, 2) ?></td>
 
                     <td><?= $fmt($tk['sr'] ?? null, 2) ?></td>
-                    <td><?= $fmt($tk['ambang'] ?? null, 2) ?></td>
-                    <td><?= esc($tk['B5'] ?? ($tk['b5'] ?? '-')) ?></td>
+<td><?= $fmt($tk['ambang'] ?? null, 2) ?></td>
+<td><?= esc($tk['B5'] ?? ($tk['b5'] ?? '-')) ?></td>
 
-                    <td><?= $fmt($tbTot['R1'] ?? ($tbTot['r1'] ?? null), 2) ?></td>
+<td><?= $fmt($tbTot['R1'] ?? ($tbTot['r1'] ?? null), 2) ?></td>
 
-                    <td><?= $fmt($pbatas['batas_maksimal'] ?? null, 2) ?></td>
-                    
-                    <!-- Kolom Aksi dengan Tombol Edit dan Hapus yang Diperbaiki -->
+<td><?= $fmt($pbatas['batas_maksimal'] ?? null, 2) ?></td>
+
                     <td class="action-cell">
                         <div class="d-flex justify-content-center">
                             <a href="<?= base_url('data/edit/' . $pid) ?>" class="btn-action btn-edit" 
@@ -413,6 +468,186 @@ document.addEventListener('DOMContentLoaded', function () {
             deleteModal.show();
         });
     });
+    
+// ============ IMPORT SQL FUNCTIONALITY ============
+const sqlFileInput = document.getElementById('sqlFile');
+const btnImportSQL = document.getElementById('btnImportSQL');
+const importProgress = document.getElementById('importProgress');
+const importStatus = document.getElementById('importStatus');
+
+// Handle import button click
+btnImportSQL.addEventListener('click', function() {
+    const file = sqlFileInput.files[0];
+    if (!file) {
+        showStatus('Pilih file SQL terlebih dahulu', 'warning');
+        return;
+    }
+
+    if (!file.name.endsWith('.sql')) {
+        showStatus('File harus berformat .sql', 'warning');
+        return;
+    }
+
+    // Tampilkan progress bar
+    importProgress.style.display = 'block';
+    importProgress.querySelector('.progress-bar').style.width = '0%';
+    btnImportSQL.disabled = true;
+    showStatus('Memproses file...', 'info');
+
+    // Baca file
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const sqlContent = e.target.result;
+        processSQLImport(sqlContent);
+    };
+    reader.onerror = function() {
+        showStatus('Gagal membaca file', 'danger');
+        importProgress.style.display = 'none';
+        btnImportSQL.disabled = false;
+    };
+    reader.readAsText(file);
+});
+
+// Fungsi untuk memproses import SQL
+function processSQLImport(sqlContent) {
+    // Tampilkan progress
+    importProgress.querySelector('.progress-bar').style.width = '30%';
+    showStatus('Mengekstrak data dari file...', 'info');
+    
+    // Parse SQL content
+    try {
+        const sqlStatements = parseSQL(sqlContent);
+        importProgress.querySelector('.progress-bar').style.width = '60%';
+        showStatus(`Mengimport ${sqlStatements.length} data...`, 'info');
+        
+        // Kirim ke server untuk diproses
+        fetch('<?= base_url() ?>import-sql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                sql: sqlStatements
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                importProgress.querySelector('.progress-bar').style.width = '100%';
+                
+                if (data.imported > 0) {
+                    showStatus(`✅ ${data.message}`, 'success');
+                    
+                    // Refresh data setelah 2 detik jika ada data baru
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showStatus(`ℹ️ ${data.message}`, 'info');
+                }
+            } else {
+                showStatus('❌ Import gagal: ' + data.message, 'danger');
+                importProgress.style.display = 'none';
+            }
+            btnImportSQL.disabled = false;
+        })
+        .catch(error => {
+            showStatus('❌ Error: ' + error.message, 'danger');
+            importProgress.style.display = 'none';
+            btnImportSQL.disabled = false;
+        });
+        
+    } catch (error) {
+        showStatus('❌ Error parsing SQL: ' + error.message, 'danger');
+        importProgress.style.display = 'none';
+        btnImportSQL.disabled = false;
+    }
+}
+
+// Fungsi untuk parsing SQL (sederhana)
+function parseSQL(sql) {
+    // Hapus komentar
+    sql = sql.replace(/--.*$/gm, '');
+    sql = sql.replace(/\/\*[\s\S]*?\*\//g, '');
+    
+    // Pisahkan per statement
+    const statements = sql.split(';')
+        .filter(stmt => stmt.trim().length > 0)
+        .map(stmt => stmt.trim() + ';');
+    
+    return statements;
+}
+
+// Fungsi untuk menampilkan status
+function showStatus(message, type) {
+    importStatus.innerHTML = message;
+    importStatus.className = 'alert alert-' + type;
+    importStatus.style.display = 'block';
+}
+
+// Reset status ketika modal ditutup
+document.getElementById('importModal').addEventListener('hidden.bs.modal', function() {
+    sqlFileInput.value = '';
+    importProgress.style.display = 'none';
+    importStatus.style.display = 'none';
+    btnImportSQL.disabled = false;
+});
+
+// Tombol untuk mode advanced (opsional)
+document.getElementById('btnAdvancedImport').addEventListener('click', function() {
+    const file = sqlFileInput.files[0];
+    if (!file) {
+        showStatus('Pilih file SQL terlebih dahulu', 'warning');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const sqlContent = e.target.result;
+        processAdvancedImport(sqlContent);
+    };
+    reader.readAsText(file);
+});
+
+// Fungsi untuk import advanced (replace instead of insert)
+function processAdvancedImport(sqlContent) {
+    showStatus('Memproses dengan mode advanced...', 'info');
+    
+    try {
+        const sqlStatements = parseSQL(sqlContent);
+        
+        fetch('<?= base_url() ?>import-sql-advanced', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                sql: sqlStatements
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showStatus(`✅ ${data.message}`, 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                showStatus('❌ Advanced import gagal: ' + data.message, 'danger');
+            }
+        });
+        
+    } catch (error) {
+        showStatus('❌ Error: ' + error.message, 'danger');
+    }
+}
     
     // Kode lainnya tetap sama...
     const tahunFilter = document.getElementById('tahunFilter');
@@ -924,8 +1159,5 @@ document.addEventListener('DOMContentLoaded', function() {
     startPolling();
 });
 </script>
-        </div>
-    </div>
-</div>
 </body>
 </html>
