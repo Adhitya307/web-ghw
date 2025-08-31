@@ -161,139 +161,136 @@ class DataInputController extends BaseController
 
 public function update($id)
 {
-    // Enable debug untuk melihat error
     ini_set('display_errors', 1);
     error_reporting(E_ALL);
-    
+
     $modelPengukuran = new MDataPengukuran();
-    $modelThomson = new MThomsonWeir();
-    $modelBocoran = new MBocoranBaru();
-    $modelSR = new MSR();
-    
-    // Validasi data
+    $modelThomson    = new MThomsonWeir();
+    $modelBocoran    = new MBocoranBaru();
+    $modelSR         = new MSR();
+
     $validation = \Config\Services::validation();
     $validation->setRules([
-        'tahun' => 'required|numeric',
-        'bulan' => 'required',
+        'tahun'   => 'required|numeric',
+        'bulan'   => 'required',
         'periode' => 'required'
     ]);
-    
+
     if (!$validation->withRequest($this->request)->run()) {
         $errors = $validation->getErrors();
         log_message('error', 'Validation errors: ' . print_r($errors, true));
-        
+
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Validasi gagal',
-                'errors' => $errors
+                'errors'  => $errors
             ]);
         }
         return redirect()->back()->withInput()->with('errors', $errors);
     }
-    
-    // Helper function untuk menangani nilai kosong
-    $parseEmptyValue = function($value) {
+
+    $parseEmptyValue = function ($value) {
         if ($value === '' || $value === null || $value === '0' || $value === '0.00' || $value === '0.0') {
             return null;
         }
-        return is_numeric($value) ? (float) $value : $value;
+        return is_numeric($value) ? (float)$value : $value;
     };
-    
+
     try {
-        // Update data pengukuran
+        // 🔹 Update data pengukuran
         $pengukuranData = [
-            'tahun' => $this->request->getPost('tahun'),
-            'bulan' => $this->request->getPost('bulan'),
-            'periode' => $this->request->getPost('periode'),
-            'tanggal' => $this->request->getPost('tanggal'),
-            'tma_waduk' => $parseEmptyValue($this->request->getPost('tma_waduk')),
+            'tahun'       => $this->request->getPost('tahun'),
+            'bulan'       => $this->request->getPost('bulan'),
+            'periode'     => $this->request->getPost('periode'),
+            'tanggal'     => $this->request->getPost('tanggal'),
+            'tma_waduk'   => $parseEmptyValue($this->request->getPost('tma_waduk')),
             'curah_hujan' => $parseEmptyValue($this->request->getPost('curah_hujan'))
         ];
-        
-        log_message('debug', 'Updating pengukuran with data: ' . print_r($pengukuranData, true));
         $modelPengukuran->update($id, $pengukuranData);
-        
-        // Update data thomson
+
+        // 🔹 Update / Insert Thomson
         $thomsonData = [
             'a1_r' => $parseEmptyValue($this->request->getPost('a1_r')),
             'a1_l' => $parseEmptyValue($this->request->getPost('a1_l')),
-            'b1' => $parseEmptyValue($this->request->getPost('b1')),
-            'b3' => $parseEmptyValue($this->request->getPost('b3')),
-            'b5' => $parseEmptyValue($this->request->getPost('b5'))
+            'b1'   => $parseEmptyValue($this->request->getPost('b1')),
+            'b3'   => $parseEmptyValue($this->request->getPost('b3')),
+            'b5'   => $parseEmptyValue($this->request->getPost('b5'))
         ];
-        
         $existingThomson = $modelThomson->where('pengukuran_id', $id)->first();
         if ($existingThomson) {
-            log_message('debug', 'Updating thomson with data: ' . print_r($thomsonData, true));
             $modelThomson->update($existingThomson['id'], $thomsonData);
         } else {
             $thomsonData['pengukuran_id'] = $id;
-            log_message('debug', 'Inserting new thomson with data: ' . print_r($thomsonData, true));
             $modelThomson->insert($thomsonData);
         }
-        
-        // Update data bocoran
+
+        // 🔹 Update / Insert Bocoran
         $bocoranData = [
-            'elv_624_t1' => $parseEmptyValue($this->request->getPost('elv_624_t1')),
-            'elv_624_t1_kode' => $this->request->getPost('elv_624_t1_kode'),
-            'elv_615_t2' => $parseEmptyValue($this->request->getPost('elv_615_t2')),
-            'elv_615_t2_kode' => $this->request->getPost('elv_615_t2_kode'),
-            'pipa_p1' => $parseEmptyValue($this->request->getPost('pipa_p1')),
-            'pipa_p1_kode' => $this->request->getPost('pipa_p1_kode')
+            'elv_624_t1'     => $parseEmptyValue($this->request->getPost('elv_624_t1')),
+            'elv_624_t1_kode'=> $this->request->getPost('elv_624_t1_kode'),
+            'elv_615_t2'     => $parseEmptyValue($this->request->getPost('elv_615_t2')),
+            'elv_615_t2_kode'=> $this->request->getPost('elv_615_t2_kode'),
+            'pipa_p1'        => $parseEmptyValue($this->request->getPost('pipa_p1')),
+            'pipa_p1_kode'   => $this->request->getPost('pipa_p1_kode')
         ];
-        
         $existingBocoran = $modelBocoran->where('pengukuran_id', $id)->first();
         if ($existingBocoran) {
-            log_message('debug', 'Updating bocoran with data: ' . print_r($bocoranData, true));
             $modelBocoran->update($existingBocoran['id'], $bocoranData);
         } else {
             $bocoranData['pengukuran_id'] = $id;
-            log_message('debug', 'Inserting new bocoran with data: ' . print_r($bocoranData, true));
             $modelBocoran->insert($bocoranData);
         }
-        
-        // Update data SR
+
+        // 🔹 Update / Insert SR
         $srList = [1, 40, 66, 68, 70, 79, 81, 83, 85, 92, 94, 96, 98, 100, 102, 104, 106];
         $srData = [];
-        
         foreach ($srList as $srNum) {
             $srData["sr_{$srNum}_nilai"] = $parseEmptyValue($this->request->getPost("sr_{$srNum}_nilai"));
-            $srData["sr_{$srNum}_kode"] = $this->request->getPost("sr_{$srNum}_kode");
+            $srData["sr_{$srNum}_kode"]  = $this->request->getPost("sr_{$srNum}_kode");
         }
-        
         $existingSR = $modelSR->where('pengukuran_id', $id)->first();
         if ($existingSR) {
-            log_message('debug', 'Updating SR with data: ' . print_r($srData, true));
             $modelSR->update($existingSR['id'], $srData);
         } else {
             $srData['pengukuran_id'] = $id;
-            log_message('debug', 'Inserting new SR with data: ' . print_r($srData, true));
             $modelSR->insert($srData);
         }
-        
-        // Response untuk AJAX
+
+        // 🔥 Trigger API RumusRembesan di API_Android
+        $apiUrl = "http://localhost/API_Android/public/rembesan/Rumus-Rembesan";
+        $ch = curl_init($apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['pengukuran_id' => $id]));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        $result   = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        log_message('debug', "[UPDATE] Trigger RumusRembesan untuk ID={$id} | Status={$httpCode} | Response={$result}");
+
+        // 🔹 Response untuk AJAX / redirect
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Data berhasil diperbarui'
+                'message' => 'Data berhasil diperbarui & RumusRembesan dijalankan',
+                'api_status' => $httpCode,
+                'api_result' => $result
             ]);
         }
-        
-        return redirect()->to('input-data')->with('success', 'Data berhasil diperbarui');
-        
+        return redirect()->to('input-data')->with('success', 'Data berhasil diperbarui & RumusRembesan dijalankan');
+
     } catch (\Exception $e) {
         log_message('error', 'Update error: ' . $e->getMessage());
         log_message('error', 'Stack trace: ' . $e->getTraceAsString());
-        
-        // Response error untuk AJAX
+
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ]);
         }
-        
         return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
 }
