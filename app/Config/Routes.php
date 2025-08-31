@@ -22,3 +22,9 @@ $routes->get('perhitungan-sr/hitung/(:num)', 'PerhitunganSRController::hitung/$1
 $routes->get('api/rembesan', 'Api\Rembesan::index');
 
 $routes->get('get-latest-data', 'DataInputController::getLatestData');
+
+// Data Input Routes
+$routes->get('data/edit/(:num)', 'DataInputController::edit/$1');
+$routes->post('data/update/(:num)', 'DataInputController::update/$1');
+$routes->delete('data/delete/(:num)', 'DataInputController::delete/$1');
+$routes->get('get-latest-data', 'DataInputController::getLatestData');
