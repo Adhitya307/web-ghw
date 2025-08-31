@@ -28,22 +28,33 @@ class ImportController extends Controller
             $skipped   = 0;
             $errors    = [];
 
-            // daftar tabel yang perlu auto-fix
-            $tablesToFix = [
+            // Daftar semua tabel yang didukung
+            $supportedTables = [
                 't_data_pengukuran',
                 't_thomson_weir',
                 't_sr',
-                't_bocoran_baru'
+                't_bocoran_baru',
+                'ambang',
+                'p_batasmaksimal',
+                'p_intigalery',
+                'p_spillway',
+                'p_sr',
+                'p_tebingkanan',
+                'p_thomson_weir',
+                'p_totalbocoran',
+                'thomson',
+                't_ambang_batas',
+                'p_bocoran_baru'
             ];
 
             foreach ($sqlData['sql'] as $statement) {
                 $statement = trim($statement);
                 if (empty($statement)) continue;
 
-                // ✅ buang ; di akhir biar regex bisa jalan
+                // buang ; di akhir
                 $statement = rtrim($statement, ";");
 
-                // ✅ skip query bawaan SQLite
+                // skip query SQLite khusus
                 if (
                     stripos($statement, 'android_metadata') !== false ||
                     stripos($statement, 'sqlite_sequence') !== false ||
@@ -54,20 +65,34 @@ class ImportController extends Controller
                     continue;
                 }
 
-                // ✅ cek apakah insert ke tabel yg harus difix
-                foreach ($tablesToFix as $table) {
-                    if (preg_match('/INSERT\s+INTO\s+' . $table . '\s+VALUES\s*\((.+)\)/is', $statement, $matches)) {
-                        $values = $matches[1];
-                        $parts  = array_map('trim', explode(',', $values));
+                // cek apakah insert ke tabel yang didukung
+                foreach ($supportedTables as $table) {
+                    if (preg_match('/INSERT\s+INTO\s+`?' . $table . '`?\s*(\([^\)]*\))?\s*VALUES\s*\((.+)\)/is', $statement, $matches)) {
+                        $columns = isset($matches[1]) ? trim($matches[1], '() ') : '';
+                        $values  = $matches[2];
 
-                        // hitung jumlah kolom di MySQL
-                        $fields      = $db->getFieldNames($table);
-                        $fieldCount  = count($fields);
+                        $parts = array_map('trim', explode(',', $values));
 
-                        if (count($parts) > $fieldCount) {
-                            $parts = array_slice($parts, 0, $fieldCount);
-                            $statement = "INSERT INTO $table VALUES(" . implode(', ', $parts) . ")";
-                            log_message('debug', "[IMPORT SQL] Fixed INSERT mismatch for $table → trimmed to $fieldCount values");
+                        // ambil nama field asli dari database
+                        $fields = $db->getFieldNames($table);
+
+                        if (!empty($columns)) {
+                            $colArray = array_map('trim', explode(',', str_replace('`','',$columns)));
+                            $filteredParts = [];
+                            foreach ($fields as $f) {
+                                $idx = array_search($f, $colArray);
+                                $filteredParts[] = $idx !== false ? $parts[$idx] : 'NULL';
+                            }
+                            $parts = $filteredParts;
+                            $statement = "INSERT INTO $table (`" . implode('`,`', $fields) . "`) VALUES(" . implode(',', $parts) . ")";
+                        } else {
+                            // jika tidak ada kolom di query, sesuaikan jumlah values
+                            if (count($parts) > count($fields)) {
+                                $parts = array_slice($parts, 0, count($fields));
+                            } elseif (count($parts) < count($fields)) {
+                                while (count($parts) < count($fields)) $parts[] = 'NULL';
+                            }
+                            $statement = "INSERT INTO $table (`" . implode('`,`', $fields) . "`) VALUES(" . implode(',', $parts) . ")";
                         }
                         break;
                     }
