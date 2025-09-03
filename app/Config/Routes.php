@@ -4,7 +4,7 @@
     /**
      * @var RouteCollection $routes
      */
-    $routes->get('/', 'Home::index');
+
     $routes->setAutoRoute(false);
 
 
@@ -39,4 +39,8 @@
     $routes->get('grafik/panel/(:num)', 'Grafik::panel/$1');
 
     
+// Pastikan route untuk grafik ada di atas route default
 $routes->get('grafik', 'Grafik::index');
+$routes->get('grafik/(:num)', 'Grafik::index/$1');
+
+    $routes->get('/', 'Home::index');
