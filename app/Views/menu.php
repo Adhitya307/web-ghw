@@ -26,7 +26,7 @@
 
         <!-- Menu 2: Lihat Grafik -->
         <div class="col-12 col-md-5 col-lg-4">
-            <a href="<?= base_url('/grafik-data') ?>" class="text-decoration-none">
+            <a href="<?= base_url('/grafik') ?>" class="text-decoration-none">
                 <div class="card menu-card shadow-sm h-100 border-0">
                     <div class="card-body d-flex flex-column align-items-center py-4">
                         <div class="menu-icon bg-success bg-opacity-10 p-3 rounded-circle">
