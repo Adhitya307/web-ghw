@@ -39,8 +39,12 @@
     $routes->get('grafik/panel/(:num)', 'Grafik::panel/$1');
 
     
-// Pastikan route untuk grafik ada di atas route default
-$routes->get('grafik', 'Grafik::index');
-$routes->get('grafik/(:num)', 'Grafik::index/$1');
+    // Pastikan route untuk grafik ada di atas route default
+    $routes->get('grafik', 'Grafik::index');
+    $routes->get('grafik/(:num)', 'Grafik::index/$1');
 
     $routes->get('/', 'Home::index');
+
+    // Analisa Look Burt
+    $routes->get('/analisaLookBurt', 'AnalisaLookBurt::index');
+    $routes->post('/analisaLookBurt/save', 'AnalisaLookBurt::save');

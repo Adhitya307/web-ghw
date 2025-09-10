@@ -112,6 +112,9 @@
             <a href="<?= base_url('lihat/tabel_ambang') ?>" class="btn btn-outline-warning">
                 <i class="fas fa-ruler"></i> Rumus Ambang Batas
             </a>
+            <a href="<?= base_url('analisaLookBurt') ?>" class="btn btn-outline-danger">
+                <i class="fas fa-chart-line"></i> Analisa Look Burt
+            </a>
             
             <!-- Tombol Import SQL -->
             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importModal">
