@@ -44,7 +44,8 @@ class ImportController extends Controller
                 'p_totalbocoran',
                 'thomson',
                 't_ambang_batas',
-                'p_bocoran_baru'
+                'p_bocoran_baru',
+                'analisa_look_burt'
             ];
 
             foreach ($sqlData['sql'] as $statement) {
@@ -78,13 +79,19 @@ class ImportController extends Controller
 
                         if (!empty($columns)) {
                             $colArray = array_map('trim', explode(',', str_replace('`','',$columns)));
+
+                            // skip kolom yang tidak ada di database
                             $filteredParts = [];
+                            $filteredCols  = [];
                             foreach ($fields as $f) {
                                 $idx = array_search($f, $colArray);
-                                $filteredParts[] = $idx !== false ? $parts[$idx] : 'NULL';
+                                if ($idx !== false) {
+                                    $filteredParts[] = $parts[$idx];
+                                    $filteredCols[]  = $f;
+                                }
                             }
-                            $parts = $filteredParts;
-                            $statement = "INSERT INTO $table (`" . implode('`,`', $fields) . "`) VALUES(" . implode(',', $parts) . ")";
+
+                            $statement = "INSERT INTO $table (`" . implode('`,`', $filteredCols) . "`) VALUES(" . implode(',', $filteredParts) . ")";
                         } else {
                             // jika tidak ada kolom di query, sesuaikan jumlah values
                             if (count($parts) > count($fields)) {
