@@ -11,7 +11,7 @@
     <!-- Navigasi grafik -->
     <div class="graph-nav mb-4">
         <div class="btn-group w-100" role="group">
-            <?php for($i=1;$i<=4;$i++): ?>
+            <?php for($i=1;$i<=2;$i++): ?>
                 <a href="<?= base_url('grafik/'.$i) ?>" class="btn <?= $current_graph_set==$i ? 'btn-primary':'btn-outline-primary' ?>">
                     <i class="fas fa-chart-simple me-1"></i> Set Grafik <?= $i ?>
                 </a>
@@ -19,18 +19,19 @@
         </div>
     </div>
 
-    <!-- Tombol tahun hanya untuk Set Grafik 2 -->
-    <?php if($current_graph_set == 2): ?>
+    <!-- Dropdown tahun untuk Set Grafik 1 -->
+    <?php if($current_graph_set == 1 && !empty($tahunAvailable)): ?>
     <div class="mb-4">
-        <div class="btn-group" role="group" id="tahun-buttons">
-            <?php 
-            $tahunAvailable = [2023, 2024]; // bisa diganti fetch dari DB
-            foreach($tahunAvailable as $tahun): 
-            ?>
-                <button type="button" class="btn btn-outline-secondary tahun-btn" data-tahun="<?= $tahun ?>">
-                    <?= $tahun ?>
-                </button>
-            <?php endforeach; ?>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownTahun" data-bs-toggle="dropdown" aria-expanded="false">
+                Pilih Tahun
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownTahun">
+                <li><a class="dropdown-item tahun-btn" href="#" data-tahun="all">All</a></li>
+                <?php foreach($tahunAvailable as $tahun): ?>
+                    <li><a class="dropdown-item tahun-btn" href="#" data-tahun="<?= $tahun ?>"><?= $tahun ?></a></li>
+                <?php endforeach; ?>
+            </ul>
         </div>
     </div>
     <?php endif; ?>
@@ -41,41 +42,75 @@
         <?= $grafana_title ?>
     </div>
 
-    <!-- Container untuk 4 grafik -->
-    <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
-        <?php foreach ($grafana_urls as $index => $url): ?>
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-light">
-                        <h6 class="card-title mb-0">
-                            <i class="fas fa-chart-simple me-1"></i>
-                            <?= $panel_titles[$index] ?? 'Panel '.$index ?>
-                        </h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="graph-iframe-container" style="height: 300px;">
-                            <?php if (!empty($url)): ?>
-                                <iframe class="graph-iframe h-100 w-100" src="<?= $url ?>" frameborder="0"></iframe>
-                            <?php else: ?>
-                                <div class="d-flex justify-content-center align-items-center h-100">
-                                    <div class="text-center text-muted">
-                                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                                        <p>Grafik tidak tersedia</p>
+    <!-- Container grafik -->
+    <?php if($current_graph_set == 2): ?>
+        <!-- Hanya 1 grafik penuh -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-simple me-1"></i>
+                    <?= $panel_titles[0] ?? 'Grafik Utama' ?>
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="graph-iframe-container" style="height: 600px;">
+                    <?php if (!empty($grafana_urls[0])): ?>
+                        <iframe 
+                            class="graph-iframe h-100 w-100" 
+                            src="<?= $grafana_urls[0] ?>" 
+                            data-index="0"
+                            frameborder="0"></iframe>
+                    <?php else: ?>
+                        <div class="d-flex justify-content-center align-items-center h-100">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                <p>Grafik tidak tersedia</p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    <?php else: ?>
+        <!-- Set grafik normal (4 grafik grid) -->
+        <div class="row row-cols-1 row-cols-md-2 g-4 mb-4" id="grafik-container">
+            <?php foreach ($grafana_urls as $index => $url): ?>
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-chart-simple me-1"></i>
+                                <?= $panel_titles[$index] ?? 'Panel '.($index+1) ?>
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="graph-iframe-container" style="height: 300px;">
+                                <?php if (!empty($url)): ?>
+                                    <iframe 
+                                        class="graph-iframe h-100 w-100" 
+                                        src="<?= $url ?>" 
+                                        data-index="<?= $index ?>"
+                                        frameborder="0"></iframe>
+                                <?php else: ?>
+                                    <div class="d-flex justify-content-center align-items-center h-100">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                            <p>Grafik tidak tersedia</p>
+                                        </div>
                                     </div>
-                                </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Keterangan grafik -->
     <div class="alert alert-secondary">
         <i class="fas fa-database me-2"></i>
         Data grafik ditampilkan langsung dari sistem monitoring Grafana. 
-        Setiap set grafik menampilkan 4 visualisasi berbeda yang terkait dengan tema yang sama.
         Grafik akan diperbarui secara otomatis sesuai dengan data terbaru.
     </div>
 </div>
@@ -89,20 +124,25 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.graph-iframe').forEach(iframe => {
             if (iframe.src) iframe.src = iframe.src;
         });
-    }, 300000); // 5 menit
+    }, 300000);
 
-    // Tombol tahun untuk Set Grafik 2
+    // Dropdown tahun (hanya untuk set 1)
     document.querySelectorAll('.tahun-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
             const tahun = this.dataset.tahun;
-            document.querySelectorAll('.graph-iframe').forEach(iframe => {
-                let src = iframe.src;
-                if(src.includes('var-tahun=')) {
-                    src = src.replace(/var-tahun=\d+/, 'var-tahun=' + tahun);
+            document.querySelectorAll('.tahun-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            document.querySelectorAll('.graph-iframe').forEach((iframe) => {
+                const idx = iframe.dataset.index;
+                <?php if(isset($grafanaUrlsTahun) && isset($grafanaUrlsAll)): ?>
+                if(tahun === 'all') {
+                    iframe.src = <?= json_encode($grafanaUrlsAll) ?>[idx];
                 } else {
-                    src += '&var-tahun=' + tahun;
+                    iframe.src = <?= json_encode($grafanaUrlsTahun) ?>[idx].replace('2023', tahun);
                 }
-                iframe.src = src;
+                <?php endif; ?>
             });
         });
     });
