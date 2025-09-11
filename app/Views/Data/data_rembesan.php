@@ -115,6 +115,10 @@
             <a href="<?= base_url('analisaLookBurt') ?>" class="btn btn-outline-danger">
                 <i class="fas fa-chart-line"></i> Analisa Look Burt
             </a>
+
+            <a href="<?= base_url('data/create') ?>" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-1"></i> Add Data
+            </a>
             
             <!-- Tombol Import SQL -->
             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importModal">

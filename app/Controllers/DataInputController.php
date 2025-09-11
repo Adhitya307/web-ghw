@@ -337,4 +337,137 @@ public function update($id)
             return redirect()->to('input-data')->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
+    public function create()
+{
+    $modelPengukuran = new MDataPengukuran();
+    
+    $data = [
+        'periode_options' => $modelPengukuran->distinct()->select('periode')->orderBy('periode', 'ASC')->findAll()
+    ];
+    
+    return view('Data/add_data', $data);
+}
+
+public function store()
+{
+    ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+
+    $modelPengukuran = new MDataPengukuran();
+    $modelThomson    = new MThomsonWeir();
+    $modelBocoran    = new MBocoranBaru();
+    $modelSR         = new MSR();
+
+    $validation = \Config\Services::validation();
+    $validation->setRules([
+        'tahun'   => 'required|numeric',
+        'bulan'   => 'required',
+        'periode' => 'required'
+    ]);
+
+    if (!$validation->withRequest($this->request)->run()) {
+        $errors = $validation->getErrors();
+        log_message('error', 'Validation errors: ' . print_r($errors, true));
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors'  => $errors
+            ]);
+        }
+        return redirect()->back()->withInput()->with('errors', $errors);
+    }
+
+    $parseEmptyValue = function ($value) {
+        if ($value === '' || $value === null || $value === '0' || $value === '0.00' || $value === '0.0') {
+            return null;
+        }
+        return is_numeric($value) ? (float)$value : $value;
+    };
+
+    try {
+        // 🔹 Insert data pengukuran
+        $pengukuranData = [
+            'tahun'       => $this->request->getPost('tahun'),
+            'bulan'       => $this->request->getPost('bulan'),
+            'periode'     => $this->request->getPost('periode'),
+            'tanggal'     => $this->request->getPost('tanggal'),
+            'tma_waduk'   => $parseEmptyValue($this->request->getPost('tma_waduk')),
+            'curah_hujan' => $parseEmptyValue($this->request->getPost('curah_hujan'))
+        ];
+        $pengukuranId = $modelPengukuran->insert($pengukuranData, true);
+
+        // 🔹 Insert Thomson
+        $thomsonData = [
+            'pengukuran_id' => $pengukuranId,
+            'a1_r' => $parseEmptyValue($this->request->getPost('a1_r')),
+            'a1_l' => $parseEmptyValue($this->request->getPost('a1_l')),
+            'b1'   => $parseEmptyValue($this->request->getPost('b1')),
+            'b3'   => $parseEmptyValue($this->request->getPost('b3')),
+            'b5'   => $parseEmptyValue($this->request->getPost('b5'))
+        ];
+        $modelThomson->insert($thomsonData);
+
+        // 🔹 Insert Bocoran
+        $bocoranData = [
+            'pengukuran_id'      => $pengukuranId,
+            'elv_624_t1'         => $parseEmptyValue($this->request->getPost('elv_624_t1')),
+            'elv_624_t1_kode'    => $this->request->getPost('elv_624_t1_kode'),
+            'elv_615_t2'         => $parseEmptyValue($this->request->getPost('elv_615_t2')),
+            'elv_615_t2_kode'    => $this->request->getPost('elv_615_t2_kode'),
+            'pipa_p1'            => $parseEmptyValue($this->request->getPost('pipa_p1')),
+            'pipa_p1_kode'       => $this->request->getPost('pipa_p1_kode')
+        ];
+        $modelBocoran->insert($bocoranData);
+
+        // 🔹 Insert SR
+        $srList = [1, 40, 66, 68, 70, 79, 81, 83, 85, 92, 94, 96, 98, 100, 102, 104, 106];
+        $srData = ['pengukuran_id' => $pengukuranId];
+        
+        foreach ($srList as $srNum) {
+            $srData["sr_{$srNum}_nilai"] = $parseEmptyValue($this->request->getPost("sr_{$srNum}_nilai"));
+            $srData["sr_{$srNum}_kode"]  = $this->request->getPost("sr_{$srNum}_kode");
+        }
+        $modelSR->insert($srData);
+
+        // 🔥 Trigger API RumusRembesan di API_Android
+        $apiUrl = "http://localhost/API_Android/public/rembesan/Rumus-Rembesan";
+        $ch = curl_init($apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['pengukuran_id' => $pengukuranId]));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        $result   = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        log_message('debug', "[STORE] Trigger RumusRembesan untuk ID={$pengukuranId} | Status={$httpCode} | Response={$result}");
+
+        // 🔹 Response untuk AJAX / redirect
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Data berhasil ditambahkan & RumusRembesan dijalankan',
+                'pengukuran_id' => $pengukuranId,
+                'api_status' => $httpCode,
+                'api_result' => $result
+            ]);
+        }
+        return redirect()->to('input-data')->with('success', 'Data berhasil ditambahkan & RumusRembesan dijalankan');
+
+    } catch (\Exception $e) {
+        log_message('error', 'Store error: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+        }
+        return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+    }
+}
 }

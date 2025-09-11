@@ -26,6 +26,8 @@
     $routes->get('get-latest-data', 'DataInputController::getLatestData');
 
     // Data Input Routes
+    $routes->get('data/create', 'DataInputController::create');
+    $routes->post('data/store', 'DataInputController::store');
     $routes->get('data/edit/(:num)', 'DataInputController::edit/$1');
     $routes->post('data/update/(:num)', 'DataInputController::update/$1');
     $routes->delete('data/delete/(:num)', 'DataInputController::delete/$1');

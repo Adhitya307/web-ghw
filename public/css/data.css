@@ -251,6 +251,16 @@ body {
   z-index: 230;
 }
 
+/* ==== Variables ==== */
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #198754;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --info-color: #0dcaf0;
+  --border-radius: 6px;
+}
+
 /* ==== Buttons ==== */
 .btn {
   padding: 8px 16px;
@@ -263,18 +273,41 @@ body {
   align-items: center;
   gap: 5px;
   font-size: 0.9rem;
+  text-decoration: none;
 }
 
+/* Solid buttons */
 .btn-primary { 
   background-color: var(--primary-color); 
   color: white; 
+  border: 1px solid var(--primary-color);
 }
 
 .btn-success { 
   background-color: var(--secondary-color); 
   color: white; 
+  border: 1px solid var(--secondary-color);
 }
 
+.btn-warning { 
+  background-color: var(--warning-color); 
+  color: black; 
+  border: 1px solid var(--warning-color);
+}
+
+.btn-danger { 
+  background-color: var(--danger-color); 
+  color: white; 
+  border: 1px solid var(--danger-color);
+}
+
+.btn-info { 
+  background-color: var(--info-color); 
+  color: white; 
+  border: 1px solid var(--info-color);
+}
+
+/* Outline buttons */
 .btn-outline-primary { 
   border: 1px solid var(--primary-color); 
   color: var(--primary-color); 
@@ -287,16 +320,37 @@ body {
   background: transparent; 
 }
 
+.btn-outline-warning { 
+  border: 1px solid var(--warning-color); 
+  color: var(--warning-color); 
+  background: transparent; 
+}
+
+.btn-outline-danger { 
+  border: 1px solid var(--danger-color); 
+  color: var(--danger-color); 
+  background: transparent; 
+}
+
+.btn-outline-info { 
+  border: 1px solid var(--info-color); 
+  color: var(--info-color); 
+  background: transparent; 
+}
+
+/* Hover effects */
 .btn:hover { 
   opacity: 0.9; 
   transform: translateY(-2px); 
   box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
 }
 
+/* Button group */
 .btn-group { 
   display: flex; 
   gap: 8px; 
   flex-wrap: wrap; 
+  margin-bottom: 1rem;
 }
 
 /* ==== Form Elements ==== */
