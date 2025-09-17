@@ -476,6 +476,54 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
     
+    // ============ FILTER FUNCTIONALITY ============
+    const tahunFilter = document.getElementById('tahunFilter');
+    const bulanFilter = document.getElementById('bulanFilter');
+    const periodeFilter = document.getElementById('periodeFilter');
+    const resetFilter = document.getElementById('resetFilter');
+    const tableBody = document.querySelector('#dataTableBody');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Fungsi filter tabel
+    function filterTable() {
+        const tVal = tahunFilter.value;
+        const bVal = bulanFilter.value;
+        const pVal = periodeFilter.value;
+        const searchVal = searchInput.value.toLowerCase();
+
+        tableBody.querySelectorAll('tr').forEach(tr => {
+            const tahunMatch = !tVal || tr.dataset.tahun === tVal;
+            const bulanMatch = !bVal || tr.dataset.bulan === bVal;
+            const periodeMatch = !pVal || tr.dataset.periode === pVal;
+            
+            // Pencarian teks
+            let searchMatch = true;
+            if (searchVal) {
+                const rowText = tr.textContent.toLowerCase();
+                searchMatch = rowText.includes(searchVal);
+            }
+
+            tr.style.display = (tahunMatch && bulanMatch && periodeMatch && searchMatch) ? '' : 'none';
+        });
+    }
+
+    // Event listeners untuk filter
+    tahunFilter.addEventListener('change', filterTable);
+    bulanFilter.addEventListener('change', filterTable);
+    periodeFilter.addEventListener('change', filterTable);
+    searchInput.addEventListener('input', filterTable);
+    
+    resetFilter.addEventListener('click', () => {
+        tahunFilter.value = '';
+        bulanFilter.value = '';
+        periodeFilter.value = '';
+        searchInput.value = '';
+        filterTable();
+    });
+    
+    // Jalankan filter saat halaman pertama kali dimuat
+    filterTable();
+
 // ============ IMPORT SQL FUNCTIONALITY ============
 const sqlFileInput = document.getElementById('sqlFile');
 const btnImportSQL = document.getElementById('btnImportSQL');
@@ -656,15 +704,6 @@ function processAdvancedImport(sqlContent) {
     }
 }
     
-    // Kode lainnya tetap sama...
-    const tahunFilter = document.getElementById('tahunFilter');
-    const bulanFilter = document.getElementById('bulanFilter');
-    const periodeFilter = document.getElementById('periodeFilter');
-    const resetFilter = document.getElementById('resetFilter');
-    const tableBody = document.querySelector('#dataTableBody');
-    const updateStatus = document.getElementById('updateStatus');
-    const searchInput = document.getElementById('searchInput');
-    
     // Daftar SR
     const srList = [1, 40, 66, 68, 70, 79, 81, 83, 85, 92, 94, 96, 98, 100, 102, 104, 106];
     
@@ -682,43 +721,6 @@ function processAdvancedImport(sqlContent) {
         }
         return null;
     };
-
-    // Fungsi filter tabel
-    function filterTable() {
-        const tVal = tahunFilter.value;
-        const bVal = bulanFilter.value;
-        const pVal = periodeFilter.value;
-        const searchVal = searchInput.value.toLowerCase();
-
-        tableBody.querySelectorAll('tr').forEach(tr => {
-            const tahunMatch = !tVal || tr.dataset.tahun === tVal;
-            const bulanMatch = !bVal || tr.dataset.bulan === bVal;
-            const periodeMatch = !pVal || tr.dataset.periode === pVal;
-            
-            // Pencarian teks
-            let searchMatch = true;
-            if (searchVal) {
-                const rowText = tr.textContent.toLowerCase();
-                searchMatch = rowText.includes(searchVal);
-            }
-
-            tr.style.display = (tahunMatch && bulanMatch && periodeMatch && searchMatch) ? '' : 'none';
-        });
-    }
-
-    // Event listeners untuk filter
-    tahunFilter.addEventListener('change', filterTable);
-    bulanFilter.addEventListener('change', filterTable);
-    periodeFilter.addEventListener('change', filterTable);
-    searchInput.addEventListener('input', filterTable);
-    
-    resetFilter.addEventListener('click', () => {
-        tahunFilter.value = '';
-        bulanFilter.value = '';
-        periodeFilter.value = '';
-        searchInput.value = '';
-        filterTable();
-    });
 
     // Simpan state rowspan tahun
     const tahunRowspans = {};
@@ -739,7 +741,8 @@ function processAdvancedImport(sqlContent) {
 
     // Fungsi untuk memperbarui tabel dengan data baru
     function updateTable(data) {
-        updateStatus.style.display = 'flex';
+        const updateStatus = document.getElementById('updateStatus');
+        if (updateStatus) updateStatus.style.display = 'flex';
         
         // Simpan state filter sebelum update
         const tVal = tahunFilter.value;
@@ -784,9 +787,11 @@ function processAdvancedImport(sqlContent) {
         filterTable();
         
         // Sembunyikan status update setelah 1 detik
-        setTimeout(() => {
-            updateStatus.style.display = 'none';
-        }, 1000);
+        if (updateStatus) {
+            setTimeout(() => {
+                updateStatus.style.display = 'none';
+            }, 1000);
+        }
     }
 
     // Fungsi untuk membuat baris baru
