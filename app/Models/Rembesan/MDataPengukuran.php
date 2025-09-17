@@ -31,4 +31,12 @@ class MDataPengukuran extends Model
             'valid_date' => 'Format tanggal tidak valid'
         ]
     ];
+
+    public function getAllOrdered()
+{
+    return $this->orderBy('bulan', 'ASC')
+                ->orderBy('tanggal', 'ASC')
+                ->findAll();
+}
+
 }

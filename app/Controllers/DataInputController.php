@@ -26,7 +26,11 @@ class DataInputController extends BaseController
             'gabungan'               => (new DataGabunganModel())->findAll(),
             'ambang'                 => (new MAmbangBatas())->findAll(),
             'bocoran'                => (new MBocoranBaru())->findAll(),
-            'pengukuran'             => $modelPengukuran->findAll(),
+            'pengukuran' => $modelPengukuran
+                                    ->orderBy("FIELD(bulan, 'JAN','FEB','MAR','APR','MEI','JUN','JUL','AGS','SEP','OKT','NOV','DES')", '', false)
+                                    ->orderBy('tanggal', 'ASC')
+                                    ->findAll(),
+
             'sr'                     => (new MSR())->findAll(),
             'thomson'                => (new MThomsonWeir())->findAll(),
             'perhitungan_bocoran'    => (new PerhitunganBocoranModel())->findAll(),
@@ -295,48 +299,52 @@ public function update($id)
     }
 }
 
-    public function delete($id)
-    {
-        $modelPengukuran = new MDataPengukuran();
-        $modelThomson = new MThomsonWeir();
-        $modelBocoran = new MBocoranBaru();
-        $modelSR = new MSR();
-        
-        try {
-            // Hapus data terkait terlebih dahulu
-            $modelThomson->where('pengukuran_id', $id)->delete();
-            $modelBocoran->where('pengukuran_id', $id)->delete();
-            $modelSR->where('pengukuran_id', $id)->delete();
-            
-            // Hapus data utama
-            if ($modelPengukuran->delete($id)) {
-                if ($this->request->isAJAX()) {
-                    return $this->response->setJSON([
-                        'success' => true,
-                        'message' => 'Data berhasil dihapus'
-                    ]);
-                }
-                return redirect()->to('input-data')->with('success', 'Data berhasil dihapus');
-            }
-            
+public function delete($id)
+{
+    $modelPengukuran = new MDataPengukuran();
+    $modelThomson    = new MThomsonWeir();
+    $modelBocoran    = new MBocoranBaru();
+    $modelSR         = new MSR();
+    $modelLookBurt   = new \App\Models\Rembesan\AnalisaLookBurtModel();
+    $modelTebingKanan = new \App\Models\Rembesan\TebingKananModel(); // ✅ ditambahkan
+
+    try {
+        // Hapus data terkait terlebih dahulu
+        $modelThomson->where('pengukuran_id', $id)->delete();
+        $modelBocoran->where('pengukuran_id', $id)->delete();
+        $modelSR->where('pengukuran_id', $id)->delete();
+        $modelLookBurt->where('pengukuran_id', $id)->delete();
+        $modelTebingKanan->where('pengukuran_id', $id)->delete(); // ✅ hapus tebing kanan juga
+
+        // Hapus data utama
+        if ($modelPengukuran->delete($id)) {
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Gagal menghapus data'
+                    'success' => true,
+                    'message' => 'Data berhasil dihapus'
                 ]);
             }
-            return redirect()->to('input-data')->with('error', 'Gagal menghapus data');
-            
-        } catch (\Exception $e) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-                ]);
-            }
-            return redirect()->to('input-data')->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->to('input-data')->with('success', 'Data berhasil dihapus');
         }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Gagal menghapus data'
+            ]);
+        }
+        return redirect()->to('input-data')->with('error', 'Gagal menghapus data');
+
+    } catch (\Exception $e) {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+        }
+        return redirect()->to('input-data')->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
+}
 
     public function create()
 {
