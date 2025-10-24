@@ -50,3 +50,16 @@
     // Analisa Look Burt
     $routes->get('/analisaLookBurt', 'AnalisaLookBurt::index');
     $routes->post('/analisaLookBurt/save', 'AnalisaLookBurt::save');
+
+    // HDM Routes
+$routes->get('horizontal-displacement', '\App\Controllers\HDM\HDMController::index');
+$routes->get('horizontal-displacement/data', '\App\Controllers\HDM\HDMController::getData');
+$routes->get('horizontal-displacement/detail/(:num)', '\App\Controllers\HDM\HDMController::detail');
+$routes->get('horizontal-displacement/export-excel', '\App\Controllers\HDM\HDMController::exportExcel');
+$routes->delete('horizontal-displacement/delete/(:num)', '\App\Controllers\HDM\HDMController::delete/$1');
+$routes->get('horizontal-displacement/data-lengkap', '\App\Controllers\HDM\HDMController::dataLengkap');
+
+// Add Data Routes
+$routes->get('horizontal-displacement/create', '\App\Controllers\HDM\HDMController::create');
+$routes->post('horizontal-displacement/store', '\App\Controllers\HDM\HDMController::store');
+$routes->post('horizontal-displacement/check-duplicate', '\App\Controllers\HDM\HDMController::checkDuplicate');

@@ -1,0 +1,1347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="1uhozhs_56CYsDXY-fBod-hluvbQshz0">
+	<name>Instrumentasi</name>
+	<Schema name="__managed_schema" id="__managed_schema">
+		<SimpleField type="string" name="str:bmFtZQ==">
+			<displayName>name</displayName>
+		</SimpleField>
+		<SimpleField type="string" name="str:ZGVzY3JpcHRpb24=">
+			<displayName>description</displayName>
+		</SimpleField>
+	</Schema>
+	<gx:CascadingStyle kml:id="__managed_style_26F31A253830F2998A25">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=0288d1&amp;id=1899&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff000000</color>
+				<width>1.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4d000000</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_17D32F794130F2998A1D">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0163FA7DEA30F2998A25">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1D8319FE4030F2998A25</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_26F31A253830F2998A25</styleUrl>
+		</Pair>
+	</StyleMap>
+	<StyleMap id="__managed_style_3635B1CB1B30F2998A1E">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_4846B948B430F2998A1E</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_527D0D54B230F2998A1E</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_27632A440630F2998A24">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=ff5252&amp;id=1723&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff5252ff</color>
+				<width>1.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c5252ff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_0B5D0ECE5D30F2998A23">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=7cb342&amp;id=1502&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff42b37c</color>
+				<width>1.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c42b37c</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_2A69742F0E30F2998A22">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=c2185b&amp;id=1634&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff5b18c2</color>
+				<width>1.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c5b18c2</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_09A98C586030F2998A22">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_103AC9662B30F2998A22</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_2A69742F0E30F2998A22</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_2F32694F9930F2998A21">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=9c27b0&amp;id=1846&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffb0279c</color>
+				<width>1.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4cb0279c</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_31E26E29D730F2998A22">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_48273823E830F2998A22</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_0B5D0ECE5D30F2998A23</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_241360277D30F2998A20">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=0288d1&amp;id=1610&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd18802</color>
+				<width>1.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4cd18802</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_024BDCACC530F2998A21">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1DC913496C30F2998A21</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_2F32694F9930F2998A21</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_1D8319FE4030F2998A25">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=0288d1&amp;id=1899&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff000000</color>
+				<width>1.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4d000000</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_083DEDE15130F2998A1D">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_17D32F794130F2998A1D</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_25B8D7FFE930F2998A1D</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_1436C1163E30F2998A20">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=0288d1&amp;id=1610&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd18802</color>
+				<width>1.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4cd18802</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_25B8D7FFE930F2998A1D">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_033BC4928130F2998A20">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1436C1163E30F2998A20</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_241360277D30F2998A20</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_527D0D54B230F2998A1E">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=f9a825&amp;id=1501&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff25a8f9</color>
+				<width>1.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c25a8f9</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_075F0F7C0930F2998A24">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1D428A4CA830F2998A24</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_27632A440630F2998A24</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_103AC9662B30F2998A22">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=c2185b&amp;id=1634&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff5b18c2</color>
+				<width>1.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c5b18c2</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1DC913496C30F2998A21">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=9c27b0&amp;id=1846&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffb0279c</color>
+				<width>1.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4cb0279c</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_48273823E830F2998A22">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=7cb342&amp;id=1502&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff42b37c</color>
+				<width>1.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c42b37c</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_4846B948B430F2998A1E">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=f9a825&amp;id=1501&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff25a8f9</color>
+				<width>1.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c25a8f9</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1D428A4CA830F2998A24">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=ff5252&amp;id=1723&amp;scale=4</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff5252ff</color>
+				<width>1.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>4c5252ff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<Folder id="19f036e9_1">
+		<name>Inclinometer</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_083DEDE15130F2998A1D</styleUrl>
+		<Placemark id="19f036e9_4A8E112BEC000001">
+			<name>SPI-1</name>
+			<description><![CDATA[<div><b>name</b>: SPI-1</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-1</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364775,-6.914631,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000002">
+			<name>SPI-3</name>
+			<description><![CDATA[<div><b>name</b>: SPI-3</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-3</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.36455,-6.914307,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000003">
+			<name>SPI-5(R)</name>
+			<description><![CDATA[<div><b>name</b>: SPI-5(R)</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-5(R)</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364473,-6.914198,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000004">
+			<name>SPI-10</name>
+			<description><![CDATA[<div><b>name</b>: SPI-10</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-10</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365107,-6.914749,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000005">
+			<name>SPI-9</name>
+			<description><![CDATA[<div><b>name</b>: SPI-9</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-9</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364413,-6.913772,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000006">
+			<name>SPI-6</name>
+			<description><![CDATA[<div><b>name</b>: SPI-6</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-6</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364847,-6.913703,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000007">
+			<name>SPI-4</name>
+			<description><![CDATA[<div><b>name</b>: SPI-4</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-4</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365015,-6.914013999999999,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000008">
+			<name>SPI-8</name>
+			<description><![CDATA[<div><b>name</b>: SPI-8</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-8</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364294,-6.912039,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC000009">
+			<name>SPI-7</name>
+			<description><![CDATA[<div><b>name</b>: SPI-7</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-7</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364223,-6.912077000000001,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC00000A">
+			<name>SPI-2</name>
+			<description><![CDATA[<div><b>name</b>: SPI-2</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPI-2</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365235,-6.91433,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E112BEC00000B">
+			<name>I-9</name>
+			<description><![CDATA[<div><b>name</b>: I-9</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_3635B1CB1B30F2998A1E</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">I-9</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.366971,-6.911374,0</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+	<Folder id="19f036e9_2">
+		<name>Bubble Tiltmeter</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_083DEDE15130F2998A1D</styleUrl>
+		<Placemark id="19f036e9_4A8E143453000004">
+			<name>BT-8</name>
+			<description><![CDATA[<div><b>name</b>: BT-8</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_033BC4928130F2998A20</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">BT-8</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365536,-6.914446000000001,644.5</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E143453000005">
+			<name>BT-7</name>
+			<description><![CDATA[<div><b>name</b>: BT-7</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_033BC4928130F2998A20</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">BT-7</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364221,-6.912076,616.71</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E143453000006">
+			<name>BT-6</name>
+			<description><![CDATA[<div><b>name</b>: BT-6</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_033BC4928130F2998A20</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">BT-6</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364212,-6.912441000000001,637.58</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E143453000007">
+			<name>BT-1</name>
+			<description><![CDATA[<div><b>name</b>: BT-1</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_033BC4928130F2998A20</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">BT-1</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364917,-6.914653,690.3200000000001</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E143453000008">
+			<name>BT-2</name>
+			<description><![CDATA[<div><b>name</b>: BT-2</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_033BC4928130F2998A20</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">BT-2</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364588,-6.914062,690.11</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E143453000009">
+			<name>BT-4</name>
+			<description><![CDATA[<div><b>name</b>: BT-4</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_033BC4928130F2998A20</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">BT-4</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364854,-6.913903,669.64</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4A8E14345300000A">
+			<name>BT-3</name>
+			<description><![CDATA[<div><b>name</b>: BT-3</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_033BC4928130F2998A20</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">BT-3</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365137,-6.914621,670.72</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+	<Folder id="19f036e9_3">
+		<name>Rod Extensometer</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_083DEDE15130F2998A1D</styleUrl>
+		<Placemark id="19f036e9_4B0042FFA9179225">
+			<name>EX-1</name>
+			<description><![CDATA[<div><b>name</b>: EX-1</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_024BDCACC530F2998A21</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">EX-1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3654281,-6.9146055,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B0043CCB40AD6C5">
+			<name>EX-2</name>
+			<description><![CDATA[<div><b>name</b>: EX-2</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_024BDCACC530F2998A21</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">EX-2</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3650325,-6.9137974,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B004417E8328F47">
+			<name>EX-3</name>
+			<description><![CDATA[<div><b>name</b>: EX-3</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_024BDCACC530F2998A21</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">EX-3</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3647495,-6.914345900000001,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B004691F785C0D4">
+			<name>EX-4</name>
+			<description><![CDATA[<div><b>name</b>: EX-4</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_024BDCACC530F2998A21</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">EX-4</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3646087,-6.9125885,0</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+	<Folder id="19f036e9_4">
+		<name>HDM</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_083DEDE15130F2998A1D</styleUrl>
+		<Placemark id="19f036e9_4B0F08AEFCBB4DE2">
+			<name>625 mdpl</name>
+			<description><![CDATA[<div><b>name</b>: 625 mdpl
+</div><div><b>description</b>: 3 wire
+</div>]]></description>
+			<styleUrl>#__managed_style_09A98C586030F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">625 mdpl</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">3 wire</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3660635,-6.912065699999999,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B0F0914BCCBDFC2">
+			<name>600 mdpl</name>
+			<description><![CDATA[<div><b>name</b>: 600 mdpl
+</div><div><b>description</b>: 5 wire
+</div>]]></description>
+			<styleUrl>#__managed_style_09A98C586030F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">600 mdpl</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">5 wire</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3657752,-6.911739600000001,0</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+	<Folder id="19f036e9_5">
+		<name>Piezo Gallery</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_083DEDE15130F2998A1D</styleUrl>
+		<Placemark id="19f036e9_4B100E6D58DD5B87">
+			<name>RP-7</name>
+			<description><![CDATA[<div><b>name</b>: RP-7</div><div><b>description</b>: dipmeter</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">RP-7</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dipmeter</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3674113,-6.9115425,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B101013DB692EE7">
+			<name>RP-6</name>
+			<description><![CDATA[<div><b>name</b>: RP-6</div><div><b>description</b>: dipmeter</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">RP-6</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dipmeter</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3672316,-6.9117249,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1010A0C3ECABF9">
+			<name>RP-5</name>
+			<description><![CDATA[<div><b>name</b>: RP-5</div><div><b>description</b>: dial gauge
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">RP-5</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dial gauge</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3670941,-6.9118687,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1010D7DB28B61B">
+			<name>RP-4</name>
+			<description><![CDATA[<div><b>name</b>: RP-4</div><div><b>description</b>: dipmeter
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">RP-4</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dipmeter</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3669761,-6.9119965,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B10118BC3CD792C">
+			<name>RP-3</name>
+			<description><![CDATA[<div><b>name</b>: RP-3</div><div><b>description</b>: dial gauge
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">RP-3</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dial gauge</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3668802,-6.912097700000001,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B10121E53D8A879">
+			<name>RP-2</name>
+			<description><![CDATA[<div><b>name</b>: RP-2</div><div><b>description</b>: dipmeter</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">RP-2</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dipmeter</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3667568,-6.9122042,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1012AA45776298">
+			<name>RP-1</name>
+			<description><![CDATA[<div><b>name</b>: RP-1</div><div><b>description</b>: dial gauge
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">RP-1</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dial gauge</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.366612,-6.9123586,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1013B61F1ABD68">
+			<name>LP-1</name>
+			<description><![CDATA[<div><b>name</b>: LP-1</div><div><b>description</b>: dial gauge
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">LP-1</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dial gauge</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3663921,-6.9125397,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B10140D66B582DB">
+			<name>LP-2</name>
+			<description><![CDATA[<div><b>name</b>: LP-2</div><div><b>description</b>: dial gauge
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">LP-2</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dial gauge</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3662177,-6.9126462,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B101493F798A4C0">
+			<name>LP-3</name>
+			<description><![CDATA[<div><b>name</b>: LP-3</div><div><b>description</b>: dipmeter</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">LP-3</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dipmeter</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3660594,-6.912723400000001,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1014D257BC7A15">
+			<name>LP-4</name>
+			<description><![CDATA[<div><b>name</b>: LP-4</div><div><b>description</b>: dipmeter</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">LP-4</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dipmeter</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3658502,-6.9128299,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B101504E21E0B5A">
+			<name>LP-5</name>
+			<description><![CDATA[<div><b>name</b>: LP-5</div><div><b>description</b>: dial gauge
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">LP-5</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dial gauge</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3656088,-6.912963100000001,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B10155E060D4FBA">
+			<name>LP-6</name>
+			<description><![CDATA[<div><b>name</b>: LP-6</div><div><b>description</b>: dial gauge
+</div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">LP-6</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24=">dial gauge</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3653889,-6.9130909,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B101EFECF03ED3E">
+			<name>Talang 1</name>
+			<description><![CDATA[<div><b>name</b>: Talang 1
+</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">Talang 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3672272,-6.911777799999999,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B101F2DFEB454C1">
+			<name>Talang 2</name>
+			<description><![CDATA[<div><b>name</b>: Talang 2
+</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">Talang 2</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3671856,-6.9118257,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B101F7543FD368A">
+			<name>Pipa 1</name>
+			<description><![CDATA[<div><b>name</b>: Pipa 1
+</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_31E26E29D730F2998A22</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">Pipa 1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3671427,-6.9118763,0</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+	<Folder id="19f036e9_6">
+		<name>V-notch (Thompson)</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_083DEDE15130F2998A1D</styleUrl>
+		<Placemark id="19f036e9_4B10178B6E9078CE">
+			<name>R</name>
+			<description><![CDATA[<div><b>name</b>: R</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_075F0F7C0930F2998A24</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">R</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3665487,-6.9124623,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1017AC863F38C3">
+			<name>L</name>
+			<description><![CDATA[<div><b>name</b>: L</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_075F0F7C0930F2998A24</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3664844,-6.9125049,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1017D160800AC5">
+			<name>B1</name>
+			<description><![CDATA[<div><b>name</b>: B1</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_075F0F7C0930F2998A24</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">B1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3652881,-6.913404799999999,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B10188E6FBFBA7A">
+			<name>B3</name>
+			<description><![CDATA[<div><b>name</b>: B3</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_075F0F7C0930F2998A24</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">B3</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3649662,-6.9116262,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B1018BE3DEE4C64">
+			<name>B5</name>
+			<description><![CDATA[<div><b>name</b>: B5</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_075F0F7C0930F2998A24</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">B5</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365036,-6.9115303,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4B101905F677059D">
+			<name>B6</name>
+			<description><![CDATA[<div><b>name</b>: B6</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_075F0F7C0930F2998A24</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">B6</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.3647517,-6.910550400000001,0</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+	<Folder id="19f036e9_7">
+		<name>PIZ Piezometer</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_083DEDE15130F2998A1D</styleUrl>
+		<Placemark id="19f036e9_4C1B0949CF000001">
+			<name>L-5</name>
+			<description><![CDATA[<div><b>name</b>: L-5</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-5</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365028,-6.915093,700.1</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000002">
+			<name>SPZ-12</name>
+			<description><![CDATA[<div><b>name</b>: SPZ-12</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">SPZ-12</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364489,-6.914169,699.0599999999999</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000003">
+			<name>L-6</name>
+			<description><![CDATA[<div><b>name</b>: L-6</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-6</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364508,-6.913956000000001,692.17</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000004">
+			<name>L-1</name>
+			<description><![CDATA[<div><b>name</b>: L-1</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-1</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364947,-6.91367,651.78</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000005">
+			<name>L-2</name>
+			<description><![CDATA[<div><b>name</b>: L-2</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-2</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.365286,-6.914455000000001,651.61</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000006">
+			<name>L-8</name>
+			<description><![CDATA[<div><b>name</b>: L-8</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-8</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.363795,-6.912424,657.14</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000007">
+			<name>L-7</name>
+			<description><![CDATA[<div><b>name</b>: L-7</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-7</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364201,-6.913056000000001,654.16</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000008">
+			<name>L-4</name>
+			<description><![CDATA[<div><b>name</b>: L-4</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-4</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364555,-6.911599,578.47</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000009">
+			<name>L-9</name>
+			<description><![CDATA[<div><b>name</b>: L-9</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-9</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.36522,-6.912633,619.38</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF00000A">
+			<name>L-10</name>
+			<description><![CDATA[<div><b>name</b>: L-10</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-10</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.364979,-6.911519000000001,576.9400000000001</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF00000B">
+			<name>R-3</name>
+			<description><![CDATA[<div><b>name</b>: R-3</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">R-3</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.366677,-6.911417999999999,630.55</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF00000C">
+			<name>R-11</name>
+			<description><![CDATA[<div><b>name</b>: R-11</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">R-11</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.366998,-6.911508,643.8099999999999</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF00000D">
+			<name>PZ-4</name>
+			<description><![CDATA[<div><b>name</b>: PZ-4</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">PZ-4</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.367421,-6.911662,650.3099999999999</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF00000E">
+			<name>R-1</name>
+			<description><![CDATA[<div><b>name</b>: R-1</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">R-1</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.367639,-6.911317,651</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF000010">
+			<name>R-5</name>
+			<description><![CDATA[<div><b>name</b>: R-5</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">R-5</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.368206,-6.910636,655.77</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark id="19f036e9_4C1B0949CF00001A">
+			<name>L-3</name>
+			<description><![CDATA[<div><b>name</b>: L-3</div><div><b>description</b>: <i>kosong</i></div>]]></description>
+			<styleUrl>#__managed_style_0163FA7DEA30F2998A25</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#__managed_schema">
+					<SimpleData name="str:bmFtZQ==">L-3</SimpleData>
+					<SimpleData name="str:ZGVzY3JpcHRpb24="></SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<Point>
+				<coordinates>107.36481,-6.912632,614.11</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>
