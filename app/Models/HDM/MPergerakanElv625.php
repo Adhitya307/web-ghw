@@ -24,34 +24,49 @@ class MPergerakanElv625 extends Model
     /**
      * Hitung dan insert data pergerakan
      */
-    public function hitungPergerakan($id_pengukuran)
-    {
-        // Load model yang diperlukan
-        $pembacaanModel = new \App\Models\HDM\MPembacaanElv625();
-        $initialModel = new \App\Models\HDM\MInitialReadingElv625();
+    public function hitungPergerakan($pengukuran_id)
+{
+    try {
+        // Ambil data pembacaan terbaru
+        $pembacaanModel = new MPembacaanElv625();
+        $pembacaan = $pembacaanModel->where('id_pengukuran', $pengukuran_id)->first();
         
-        // Ambil data pembacaan
-        $pembacaan = $pembacaanModel->getByPengukuran($id_pengukuran);
-        // Ambil data initial reading
-        $initial = $initialModel->getByPengukuran($id_pengukuran);
-        
-        if (!$pembacaan || !$initial) {
-            return false; // Data tidak lengkap
+        if (!$pembacaan) {
+            throw new \Exception('Data pembacaan tidak ditemukan');
         }
+
+        // Ambil initial reading
+        $initialModel = new MInitialReadingElv625();
+        $initial = $initialModel->where('id_pengukuran', $pengukuran_id)->first();
         
-        // Hitung pergerakan (Pembacaan - Initial Reading)
-        $hv_1 = $pembacaan['hv_1'] - $initial['hv_1'];
-        $hv_2 = $pembacaan['hv_2'] - $initial['hv_2'];
-        $hv_3 = $pembacaan['hv_3'] - $initial['hv_3'];
+        if (!$initial) {
+            throw new \Exception('Data initial reading tidak ditemukan');
+        }
+
+        // Hitung pergerakan
+        $pergerakanData = [
+            'id_pengukuran' => $pengukuran_id,
+            'hv_1' => $pembacaan['hv_1'] - $initial['hv_1'],
+            'hv_2' => $pembacaan['hv_2'] - $initial['hv_2'],
+            'hv_3' => $pembacaan['hv_3'] - $initial['hv_3']
+        ];
+
+        // Cek apakah data pergerakan sudah ada
+        $existing = $this->where('id_pengukuran', $pengukuran_id)->first();
         
-        // Insert data pergerakan
-        return $this->insert([
-            'id_pengukuran' => $id_pengukuran,
-            'hv_1' => $hv_1,
-            'hv_2' => $hv_2,
-            'hv_3' => $hv_3
-        ]);
+        if ($existing) {
+            // Update data yang sudah ada
+            $this->update($existing['id_pergerakan'], $pergerakanData);
+        } else {
+            // Insert data baru
+            $this->insert($pergerakanData);
+        }
+
+        return true;
+    } catch (\Exception $e) {
+        throw new \Exception('Gagal menghitung pergerakan: ' . $e->getMessage());
     }
+}
 
     /**
      * Hitung pergerakan untuk semua pengukuran

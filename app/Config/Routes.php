@@ -63,3 +63,6 @@ $routes->get('horizontal-displacement/data-lengkap', '\App\Controllers\HDM\HDMCo
 $routes->get('horizontal-displacement/create', '\App\Controllers\HDM\HDMController::create');
 $routes->post('horizontal-displacement/store', '\App\Controllers\HDM\HDMController::store');
 $routes->post('horizontal-displacement/check-duplicate', '\App\Controllers\HDM\HDMController::checkDuplicate');
+
+$routes->get('horizontal-displacement/edit/(:num)', '\App\Controllers\HDM\HDMController::edit/$1');
+$routes->put('horizontal-displacement/update/(:num)', '\App\Controllers\HDM\HDMController::update/$1');
