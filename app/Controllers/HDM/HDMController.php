@@ -359,30 +359,40 @@ class HDMController extends BaseController
     }
 
     /**
-     * Store data
+     * Store data - VERSI FINAL YANG BERHASIL
      */
     public function store()
     {
-        // PERBAIKAN: Hilangkan pengecekan AJAX untuk form submission biasa
         try {
-            $validation = \Config\Services::validation();
-            $validation->setRules($this->getValidationRules());
+            $postData = $this->request->getPost();
 
-            if (!$validation->run($this->request->getPost())) {
+            // Validasi input dasar
+            if (empty($postData['tahun']) || empty($postData['periode']) || empty($postData['tanggal']) || empty($postData['dma'])) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'errors' => $validation->getErrors()
+                    'message' => 'Tahun, Periode, Tanggal, dan DMA harus diisi'
                 ]);
             }
 
-            $postData = $this->request->getPost();
+            // Cek duplikat
+            $existing = $this->pengukuranModel->where('tahun', $postData['tahun'])
+                                             ->where('periode', $postData['periode'])
+                                             ->where('tanggal', $postData['tanggal'])
+                                             ->first();
+
+            if ($existing) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Data dengan tahun, periode, dan tanggal tersebut sudah ada'
+                ]);
+            }
 
             // Simpan data pengukuran
             $pengukuranData = [
                 'tahun' => $postData['tahun'],
                 'periode' => $postData['periode'],
                 'tanggal' => $postData['tanggal'],
-                'dma' => $postData['dma']
+                'dma' => (float) $postData['dma']
             ];
 
             $pengukuranId = $this->pengukuranModel->insert($pengukuranData);
@@ -391,25 +401,33 @@ class HDMController extends BaseController
                 throw new \Exception('Gagal menyimpan data pengukuran');
             }
 
-            // Simpan data pembacaan ELV 625 - PERBAIKAN: selalu insert meski kosong
-            $this->pembacaanElv625Model->insert([
+            // Simpan data pembacaan ELV 625
+            $elv625Data = [
                 'id_pengukuran' => $pengukuranId,
-                'hv_1' => !empty($postData['elv625_hv1']) ? (float)$postData['elv625_hv1'] : null,
-                'hv_2' => !empty($postData['elv625_hv2']) ? (float)$postData['elv625_hv2'] : null,
-                'hv_3' => !empty($postData['elv625_hv3']) ? (float)$postData['elv625_hv3'] : null
-            ]);
+                'hv_1' => !empty($postData['elv625_hv1']) ? (float) $postData['elv625_hv1'] : 0,
+                'hv_2' => !empty($postData['elv625_hv2']) ? (float) $postData['elv625_hv2'] : 0,
+                'hv_3' => !empty($postData['elv625_hv3']) ? (float) $postData['elv625_hv3'] : 0
+            ];
+            
+            if (!$this->pembacaanElv625Model->insert($elv625Data)) {
+                throw new \Exception('Gagal menyimpan data ELV 625');
+            }
 
-            // Simpan data pembacaan ELV 600 - PERBAIKAN: selalu insert meski kosong
-            $this->pembacaanElv600Model->insert([
+            // Simpan data pembacaan ELV 600
+            $elv600Data = [
                 'id_pengukuran' => $pengukuranId,
-                'hv_1' => !empty($postData['elv600_hv1']) ? (float)$postData['elv600_hv1'] : null,
-                'hv_2' => !empty($postData['elv600_hv2']) ? (float)$postData['elv600_hv2'] : null,
-                'hv_3' => !empty($postData['elv600_hv3']) ? (float)$postData['elv600_hv3'] : null,
-                'hv_4' => !empty($postData['elv600_hv4']) ? (float)$postData['elv600_hv4'] : null,
-                'hv_5' => !empty($postData['elv600_hv5']) ? (float)$postData['elv600_hv5'] : null
-            ]);
+                'hv_1' => !empty($postData['elv600_hv1']) ? (float) $postData['elv600_hv1'] : 0,
+                'hv_2' => !empty($postData['elv600_hv2']) ? (float) $postData['elv600_hv2'] : 0,
+                'hv_3' => !empty($postData['elv600_hv3']) ? (float) $postData['elv600_hv3'] : 0,
+                'hv_4' => !empty($postData['elv600_hv4']) ? (float) $postData['elv600_hv4'] : 0,
+                'hv_5' => !empty($postData['elv600_hv5']) ? (float) $postData['elv600_hv5'] : 0
+            ];
+            
+            if (!$this->pembacaanElv600Model->insert($elv600Data)) {
+                throw new \Exception('Gagal menyimpan data ELV 600');
+            }
 
-            // Insert data default (initial reading dan depth)
+            // Insert data default
             $this->insertDefaultData($pengukuranId);
 
             return $this->response->setJSON([
@@ -419,7 +437,14 @@ class HDMController extends BaseController
             ]);
 
         } catch (\Exception $e) {
-            return $this->response->setStatusCode(500)->setJSON([
+            // Rollback jika ada error
+            if (isset($pengukuranId)) {
+                $this->pengukuranModel->delete($pengukuranId);
+                $this->pembacaanElv625Model->where('id_pengukuran', $pengukuranId)->delete();
+                $this->pembacaanElv600Model->where('id_pengukuran', $pengukuranId)->delete();
+            }
+            
+            return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ]);
@@ -427,146 +452,61 @@ class HDMController extends BaseController
     }
 
     /**
-     * Check duplicate data - PERBAIKAN: Handle both POST and JSON
+     * Check duplicate - VERSI SIMPLE
      */
-    /**
- * Check duplicate data - PERBAIKAN: Handle both POST and JSON
- */
-/**
- * Check duplicate data - PERBAIKAN: Cek berdasarkan tahun dan tanggal saja
- */
-public function checkDuplicate()
-{
-    try {
-        // VERSI PALING SIMPLE: Gunakan getVar() saja yang handle semua type
-        $tahun = $this->request->getVar('tahun');
-        $tanggal = $this->request->getVar('tanggal');
+    public function checkDuplicate()
+    {
+        try {
+            $tahun = $this->request->getPost('tahun');
+            $periode = $this->request->getPost('periode');
+            $tanggal = $this->request->getPost('tanggal');
 
-        if (!$tahun || !$tanggal) {
+            if (!$tahun || !$periode || !$tanggal) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Data tidak lengkap'
+                ]);
+            }
+
+            $existing = $this->pengukuranModel->where('tahun', $tahun)
+                                             ->where('periode', $periode)
+                                             ->where('tanggal', $tanggal)
+                                             ->first();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'isDuplicate' => $existing !== null,
+                'message' => $existing ? 'Data sudah ada' : 'Data belum ada'
+            ]);
+
+        } catch (\Exception $e) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Data tahun dan tanggal harus diisi'
+                'message' => 'Error: ' . $e->getMessage()
             ]);
         }
-
-        $existing = $this->pengukuranModel->where('tahun', $tahun)
-                                         ->where('tanggal', $tanggal)
-                                         ->first();
-
-        return $this->response->setJSON([
-            'success' => true,
-            'exists' => $existing !== null,
-            'isDuplicate' => $existing !== null,
-            'message' => $existing ? 'Data dengan Tahun: ' . $tahun . ' dan Tanggal: ' . $tanggal . ' sudah ada dalam database.' : 'Data belum ada'
-        ]);
-
-    } catch (\Exception $e) {
-        return $this->response->setStatusCode(500)->setJSON([
-            'success' => false,
-            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-        ]);
     }
-}
 
     /**
      * Insert data default (initial reading dan depth)
      */
     private function insertDefaultData($pengukuran_id)
     {
-        // Insert initial reading
-        $this->initialReadingElv625Model->insertReading($pengukuran_id);
-        $this->initialReadingElv600Model->insertReading($pengukuran_id);
+        try {
+            // Insert initial reading
+            $this->initialReadingElv625Model->insertReading($pengukuran_id);
+            $this->initialReadingElv600Model->insertReading($pengukuran_id);
 
-        // Insert depth
-        $this->depthElv625Model->insertDefault($pengukuran_id);
-        $this->depthElv600Model->insertDefault($pengukuran_id);
+            // Insert depth
+            $this->depthElv625Model->insertDefault($pengukuran_id);
+            $this->depthElv600Model->insertDefault($pengukuran_id);
 
-        // Hitung pergerakan setelah semua data tersimpan
-        $this->pergerakanElv625Model->hitungPergerakan($pengukuran_id);
-        $this->pergerakanElv600Model->hitungPergerakan($pengukuran_id);
-    }
-
-    private function getValidationRules(): array
-    {
-        return [
-            'tahun' => [
-                'rules' => 'required|numeric|min_length[4]|max_length[4]',
-                'errors' => [
-                    'required' => 'Tahun harus diisi',
-                    'numeric' => 'Tahun harus berupa angka',
-                    'min_length' => 'Tahun harus 4 digit',
-                    'max_length' => 'Tahun harus 4 digit'
-                ]
-            ],
-            'periode' => [
-                'rules' => 'required|in_list[TW-1,TW-2,TW-3,TW-4]',
-                'errors' => [
-                    'required' => 'Periode harus diisi',
-                    'in_list' => 'Periode harus TW-1, TW-2, TW-3, atau TW-4'
-                ]
-            ],
-            'tanggal' => [
-                'rules' => 'required|valid_date',
-                'errors' => [
-                    'required' => 'Tanggal harus diisi',
-                    'valid_date' => 'Format tanggal tidak valid'
-                ]
-            ],
-            'dma' => [
-                'rules' => 'required',
-                'errors' => [
-                    'required' => 'DMA harus diisi'
-                ]
-            ],
-            // PERBAIKAN: Ubah semua field HV menjadi optional dengan validasi lebih longgar
-            'elv600_hv1' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV600 HV1 harus berupa angka'
-                ]
-            ],
-            'elv600_hv2' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV600 HV2 harus berupa angka'
-                ]
-            ],
-            'elv600_hv3' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV600 HV3 harus berupa angka'
-                ]
-            ],
-            'elv600_hv4' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV600 HV4 harus berupa angka'
-                ]
-            ],
-            'elv600_hv5' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV600 HV5 harus berupa angka'
-                ]
-            ],
-            'elv625_hv1' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV625 HV1 harus berupa angka'
-                ]
-            ],
-            'elv625_hv2' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV625 HV2 harus berupa angka'
-                ]
-            ],
-            'elv625_hv3' => [
-                'rules' => 'permit_empty|numeric',
-                'errors' => [
-                    'numeric' => 'ELV625 HV3 harus berupa angka'
-                ]
-            ]
-        ];
+            // Hitung pergerakan setelah semua data tersimpan
+            $this->pergerakanElv625Model->hitungPergerakan($pengukuran_id);
+            $this->pergerakanElv600Model->hitungPergerakan($pengukuran_id);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Gagal insert default data: ' . $e->getMessage());
+        }
     }
 }

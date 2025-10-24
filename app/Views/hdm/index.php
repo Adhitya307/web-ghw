@@ -960,12 +960,18 @@ function filterData() {
         });
         
         // Delete Data
-        document.querySelectorAll('.delete-data').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                deleteData(id);
-            });
-        });
+        // Delete Data - Langsung tampilkan modal tanpa alert
+document.querySelectorAll('.delete-data').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        // Trigger click event yang akan ditangkap oleh modal_hapus.php
+        this.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+    });
+});
         
         // Re-initialize tooltips
         const newTooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

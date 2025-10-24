@@ -43,8 +43,6 @@
 <!-- Notification Container -->
 <div id="notificationContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
-// GANTI script JavaScript di modal_hapus.php dengan yang ini:
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
@@ -78,6 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
+            // Langsung tampilkan modal tanpa alert
             deleteModal.show();
         }
     });
@@ -107,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (!response.ok) {
-                // Jika response tidak ok, coba parse error message
                 return response.json().then(errorData => {
                     throw new Error(errorData.message || 'Network response was not ok: ' + response.status);
                 });

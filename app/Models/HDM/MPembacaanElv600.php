@@ -27,4 +27,9 @@ class MPembacaanElv600 extends Model
             'numeric' => 'ID Pengukuran harus berupa angka'
         ]
     ];
+
+    public function getByPengukuran($pengukuran_id)
+{
+    return $this->where('id_pengukuran', $pengukuran_id)->first();
+}
 }

@@ -392,21 +392,21 @@
                                 <label for="elv625_hv1" class="form-label">HV 1</label>
                                 <input type="text" class="form-control numeric-input" id="elv625_hv1" name="elv625_hv1"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                             
                             <div class="reading-item">
                                 <label for="elv625_hv2" class="form-label">HV 2</label>
                                 <input type="text" class="form-control numeric-input" id="elv625_hv2" name="elv625_hv2"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                             
                             <div class="reading-item">
                                 <label for="elv625_hv3" class="form-label">HV 3</label>
                                 <input type="text" class="form-control numeric-input" id="elv625_hv3" name="elv625_hv3"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                         </div>
                     </div>
@@ -419,35 +419,35 @@
                                 <label for="elv600_hv1" class="form-label">HV 1</label>
                                 <input type="text" class="form-control numeric-input" id="elv600_hv1" name="elv600_hv1"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                             
                             <div class="reading-item">
                                 <label for="elv600_hv2" class="form-label">HV 2</label>
                                 <input type="text" class="form-control numeric-input" id="elv600_hv2" name="elv600_hv2"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                             
                             <div class="reading-item">
                                 <label for="elv600_hv3" class="form-label">HV 3</label>
                                 <input type="text" class="form-control numeric-input" id="elv600_hv3" name="elv600_hv3"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                             
                             <div class="reading-item">
                                 <label for="elv600_hv4" class="form-label">HV 4</label>
                                 <input type="text" class="form-control numeric-input" id="elv600_hv4" name="elv600_hv4"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                             
                             <div class="reading-item">
                                 <label for="elv600_hv5" class="form-label">HV 5</label>
                                 <input type="text" class="form-control numeric-input" id="elv600_hv5" name="elv600_hv5"
                                        pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
-                                       placeholder="0.000">
+                                       placeholder="0.000" value="0">
                             </div>
                         </div>
                     </div>
@@ -477,296 +477,152 @@
     <!-- Bootstrap & Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    // GANTI seluruh script JavaScript dengan yang ini:
-
-// GANTI script JavaScript di create.php dengan yang ini:
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let isDuplicate = false;
-    
-    // Fungsi untuk mengecek data duplikat - PERBAIKAN: berdasarkan tahun, periode, dan tanggal
-    function checkDuplicateData() {
-        const tahun = document.getElementById('tahun').value;
-        const periode = document.getElementById('periode').value;
-        const tanggal = document.getElementById('tanggal').value;
-        
-        if (!tahun || !periode || !tanggal) {
-            hideDuplicateWarning();
-            return;
-        }
-        
-        // Kirim request untuk cek duplikat
-        fetch('<?= base_url('horizontal-displacement/check-duplicate') ?>', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': '<?= csrf_hash() ?>'
-            },
-            body: `tahun=${tahun}&periode=${periode}&tanggal=${tanggal}`
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.isDuplicate) {
-                isDuplicate = true;
-                showDuplicateWarning(data.message);
-            } else {
-                isDuplicate = false;
-                hideDuplicateWarning();
-            }
-        })
-        .catch(error => {
-            console.error('Error checking duplicate:', error);
-            isDuplicate = false;
-            hideDuplicateWarning();
-        });
-    }
-    
-    // Tampilkan peringatan duplikat
-    function showDuplicateWarning(message) {
-        const warning = document.getElementById('duplicateWarning');
-        const messageElement = document.getElementById('duplicateMessage');
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createForm');
         const submitBtn = document.getElementById('submitBtn');
-        
-        if (messageElement) messageElement.textContent = message;
-        if (warning) warning.style.display = 'block';
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Data Sudah Ada';
-            submitBtn.classList.remove('btn-success');
-            submitBtn.classList.add('btn-warning');
-        }
-    }
-    
-    // Sembunyikan peringatan duplikat
-    function hideDuplicateWarning() {
-        const warning = document.getElementById('duplicateWarning');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        if (warning) warning.style.display = 'none';
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Data';
-            submitBtn.classList.remove('btn-warning');
-            submitBtn.classList.add('btn-success');
-        }
-    }
-    
-    // Event listeners untuk field yang memicu pengecekan duplikat
-    document.getElementById('tahun').addEventListener('change', checkDuplicateData);
-    document.getElementById('periode').addEventListener('change', checkDuplicateData);
-    document.getElementById('tanggal').addEventListener('change', checkDuplicateData);
-    
-    // Validasi form sebelum submit
-    function validateForm() {
-        let isValid = true;
-        
-        // Validasi tahun
-        const tahun = document.getElementById('tahun');
-        if (!tahun.value || tahun.value < 2000 || tahun.value > 2100) {
-            tahun.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            tahun.classList.remove('is-invalid');
-        }
-        
-        // Validasi periode
-        const periode = document.getElementById('periode');
-        if (!periode.value) {
-            periode.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            periode.classList.remove('is-invalid');
-        }
-        
-        // Validasi tanggal
-        const tanggal = document.getElementById('tanggal');
-        if (!tanggal.value) {
-            tanggal.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            tanggal.classList.remove('is-invalid');
-        }
-        
-        // Validasi DMA
-        const dma = document.getElementById('dma');
-        if (!dma.value) {
-            dma.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            dma.classList.remove('is-invalid');
-        }
-        
-        return isValid;
-    }
-
-    // Validasi input numerik dengan titik
-    function validateNumericInput(input) {
-        const value = input.value;
-        // Validasi lebih longgar - boleh kosong atau angka dengan titik
-        if (value && !/^-?\d*\.?\d*$/.test(value)) {
-            input.classList.add('is-invalid');
-            return false;
-        } else {
-            input.classList.remove('is-invalid');
-            return true;
-        }
-    }
-    
-    // Handle form submission
-    document.getElementById('createForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!validateForm()) {
-            showAlert('Harap periksa kembali data yang wajib diisi', 'danger');
-            return;
-        }
-
-        // Cek jika data duplikat
-        if (isDuplicate) {
-            showAlert('Data pengukuran dengan tahun, periode, dan tanggal tersebut sudah ada. Silakan periksa kembali.', 'warning');
-            return;
-        }
-
-        // Validasi semua input numerik
-        let allNumericValid = true;
-        document.querySelectorAll('.numeric-input').forEach(input => {
-            if (!validateNumericInput(input)) {
-                allNumericValid = false;
-            }
-        });
-
-        if (!allNumericValid) {
-            showAlert('Harap periksa format angka (gunakan titik untuk desimal)', 'danger');
-            return;
-        }
-        
-        // Show loading spinner
         const loadingSpinner = document.getElementById('loadingSpinner');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        if (loadingSpinner) loadingSpinner.style.display = 'block';
-        if (submitBtn) {
+        const duplicateWarning = document.getElementById('duplicateWarning');
+        const duplicateMessage = document.getElementById('duplicateMessage');
+        const liveAlert = document.getElementById('liveAlert');
+        const alertMessage = document.getElementById('alert-message');
+
+        // Format input angka
+        document.querySelectorAll('.numeric-input').forEach(input => {
+            input.addEventListener('input', function() {
+                // Hanya angka dan titik, maksimal 1 titik desimal
+                this.value = this.value.replace(/[^\d.]/g, '')
+                                     .replace(/(\..*)\./g, '$1');
+            });
+        });
+
+        // Fungsi untuk menampilkan alert
+        function showAlert(message, type = 'success') {
+            alertMessage.textContent = message;
+            liveAlert.className = `alert alert-${type} alert-dismissible fade show`;
+            liveAlert.style.display = 'block';
+            
+            // Auto hide setelah 5 detik
+            setTimeout(() => {
+                liveAlert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Cek duplikat ketika tahun, periode, atau tanggal berubah
+        function checkDuplicate() {
+            const tahun = document.getElementById('tahun').value;
+            const periode = document.getElementById('periode').value;
+            const tanggal = document.getElementById('tanggal').value;
+
+            if (tahun && periode && tanggal) {
+                fetch('<?= base_url('horizontal-displacement/check-duplicate') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: `tahun=${tahun}&periode=${periode}&tanggal=${tanggal}&<?= csrf_token() ?>=<?= csrf_hash() ?>`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.isDuplicate) {
+                        duplicateWarning.style.display = 'block';
+                        duplicateMessage.textContent = `Data dengan Tahun: ${tahun}, Periode: ${periode}, Tanggal: ${tanggal} sudah ada dalam database.`;
+                    } else {
+                        duplicateWarning.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking duplicate:', error);
+                });
+            }
+        }
+
+        // Event listeners untuk cek duplikat
+        document.getElementById('tahun').addEventListener('change', checkDuplicate);
+        document.getElementById('periode').addEventListener('change', checkDuplicate);
+        document.getElementById('tanggal').addEventListener('change', checkDuplicate);
+
+        // Submit form
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validasi form
+            const tahun = document.getElementById('tahun').value;
+            const periode = document.getElementById('periode').value;
+            const tanggal = document.getElementById('tanggal').value;
+            const dma = document.getElementById('dma').value;
+
+            if (!tahun || !periode || !tanggal || !dma) {
+                showAlert('Harap isi semua field yang wajib diisi!', 'danger');
+                return;
+            }
+
+            // Validasi format angka
+            const numericInputs = document.querySelectorAll('.numeric-input');
+            let hasInvalidInput = false;
+            
+            numericInputs.forEach(input => {
+                if (input.value && !/^\d*\.?\d*$/.test(input.value)) {
+                    input.classList.add('is-invalid');
+                    hasInvalidInput = true;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            if (hasInvalidInput) {
+                showAlert('Format angka tidak valid! Hanya angka dan titik desimal yang diperbolehkan.', 'danger');
+                return;
+            }
+
+            // Loading state
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Menyimpan...';
-        }
-        
-        // Submit form via AJAX
-        const formData = new FormData(this);
-        
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showAlert(data.message || 'Data HDM berhasil ditambahkan', 'success');
-                setTimeout(() => {
-                    window.location.href = data.redirect || '<?= base_url('horizontal-displacement') ?>';
-                }, 1500);
-            } else {
-                let errorMessage = 'Gagal menambahkan data';
-                if (data.message) {
-                    errorMessage += ': ' + data.message;
-                } else if (data.errors) {
-                    errorMessage += ': ' + Object.values(data.errors).join(', ');
+            loadingSpinner.style.display = 'block';
+
+            // Submit data
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
-                showAlert(errorMessage, 'danger');
-                
-                // Tampilkan error validasi di field yang sesuai
-                if (data.errors) {
-                    for (const field in data.errors) {
-                        const input = document.querySelector(`[name="${field}"]`);
-                        if (input) {
-                            input.classList.add('is-invalid');
-                            let feedback = input.nextElementSibling;
-                            if (!feedback || !feedback.classList.contains('invalid-feedback')) {
-                                feedback = document.createElement('div');
-                                feedback.className = 'invalid-feedback';
-                                input.parentNode.appendChild(feedback);
-                            }
-                            feedback.textContent = data.errors[field];
-                        }
-                    }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Data berhasil disimpan! Mengalihkan...', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1500);
+                } else {
+                    showAlert('Error: ' + data.message, 'danger');
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('Terjadi kesalahan jaringan: ' + error.message, 'danger');
-        })
-        .finally(() => {
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
-            if (submitBtn) {
+            })
+            .catch(error => {
+                showAlert('Terjadi kesalahan jaringan: ' + error.message, 'danger');
+            })
+            .finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Data';
-            }
+                loadingSpinner.style.display = 'none';
+            });
         });
-    });
-    
-    // Validasi input numerik real-time
-    document.querySelectorAll('.numeric-input').forEach(input => {
-        input.addEventListener('input', function() {
-            validateNumericInput(this);
-            
-            // Format input: ganti koma dengan titik
-            this.value = this.value.replace(',', '.');
-            
-            // Hapus karakter selain angka, titik, dan minus
-            this.value = this.value.replace(/[^\d.-]/g, '');
-            
-            // Hanya boleh ada satu titik
-            const parts = this.value.split('.');
-            if (parts.length > 2) {
-                this.value = parts[0] + '.' + parts.slice(1).join('');
-            }
-        });
-    });
-    
-    // Function to show alert
-    function showAlert(message, type) {
-        const alert = document.getElementById('liveAlert');
-        const alertMessage = document.getElementById('alert-message');
-        
-        if (alert && alertMessage) {
-            alert.className = `alert alert-${type} alert-dismissible fade show`;
-            alertMessage.textContent = message;
-            alert.style.display = 'block';
-            
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5000);
-        } else {
-            // Fallback jika element alert tidak ada
-            alert(message);
-        }
-    }
-    
-    // Hapus kelas invalid saat user mulai mengisi
-    document.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('input', function() {
-            this.classList.remove('is-invalid');
-        });
-    });
 
-    // Inisialisasi check duplicate saat halaman dimuat
-    checkDuplicateData();
-});
-</script>
+        // Set default values
+        document.getElementById('tahun').value = new Date().getFullYear();
+        document.getElementById('tanggal').valueAsDate = new Date();
+        
+        // Set default values untuk input numerik
+        document.querySelectorAll('.numeric-input').forEach(input => {
+            if (!input.value) {
+                input.value = '0';
+            }
+        });
+    });
+    </script>
 </body>
 </html>
