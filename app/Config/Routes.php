@@ -84,3 +84,8 @@ $routes->get('hdm600/chart-data', 'HDM\Hdm600Controller::chartData');
 $routes->get('hdm600/api', 'HDM\Hdm600Controller::apiData');
 $routes->post('hdm600/update-ambang-batas/(:num)', 'HDM\Hdm600Controller::updateAmbangBatas/$1');
 $routes->post('hdm600/insert-default-ambang-batas/(:num)', 'HDM\Hdm600Controller::insertDefaultAmbangBatas/$1');
+
+// IMPORT SQL ROUTE - INI YANG PERLU DIPASTIKAN
+// Di file app/Config/Routes.php
+$routes->post('horizontal-displacement/import-sql', 'HDM\HDMController::importSQL');
+$routes->get('horizontal-displacement/export-excel', 'HDM\HDMController::exportExcel');

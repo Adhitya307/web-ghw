@@ -218,7 +218,7 @@
             <i class="fas fa-arrow-left-right me-2"></i>Horizontal Displacement Meter - ELV 625
         </h2>
 
-        <!-- Button Group -->
+        <!-- Button Group - HILANGKAN SYNC PERGERAKAN -->
         <div class="btn-group mb-3" role="group">
             <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-outline-primary">
                 <i class="fas fa-table"></i> Tabel Data HDM
@@ -228,9 +228,7 @@
                 <i class="fas fa-file-excel me-1"></i> Export Excel
             </button>
             
-            <button type="button" class="btn btn-outline-info" id="syncPergerakanBtn">
-                <i class="fas fa-sync-alt me-1"></i> Sync Pergerakan
-            </button>
+            <!-- BUTTON SYNC PERGERAKAN DIHAPUS DARI SINI -->
         </div>
 
         <div class="table-controls">
@@ -461,7 +459,7 @@
                             
                             <!-- HV 1 Data (Kedalaman 20.00m) -->
                             <td class="reading-cell"><?= $pembacaan['hv_1'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_hv1) ?></td>
+                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv1) ?></td>
                             <td class="threshold-cell"><?= $ambangH1['aman'] ?? $ambangH1['aman'] ?></td>
                             <td class="threshold-cell"><?= $ambangH1['peringatan'] ?? $ambangH1['peringatan'] ?></td>
                             <td class="threshold-cell"><?= $ambangH1['bahaya'] ?? $ambangH1['bahaya'] ?></td>
@@ -471,7 +469,7 @@
 
                             <!-- HV 2 Data (Kedalaman 40.00m) -->
                             <td class="reading-cell"><?= $pembacaan['hv_2'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_hv2) ?></td>
+                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv2) ?></td>
                             <td class="threshold-cell"><?= $ambangH2['aman'] ?? $ambangH2['aman'] ?></td>
                             <td class="threshold-cell"><?= $ambangH2['peringatan'] ?? $ambangH2['peringatan'] ?></td>
                             <td class="threshold-cell"><?= $ambangH2['bahaya'] ?? $ambangH2['bahaya'] ?></td>
@@ -481,7 +479,7 @@
 
                             <!-- HV 3 Data (Kedalaman 50.00m) -->
                             <td class="reading-cell"><?= $pembacaan['hv_3'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_hv3) ?></td>
+                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv3) ?></td>
                             <td class="threshold-cell"><?= $ambangH3['aman'] ?? $ambangH3['aman'] ?></td>
                             <td class="threshold-cell"><?= $ambangH3['peringatan'] ?? $ambangH3['peringatan'] ?></td>
                             <td class="threshold-cell"><?= $ambangH3['bahaya'] ?? $ambangH3['bahaya'] ?></td>
@@ -569,10 +567,7 @@ $(document).ready(function() {
         exportToExcel();
     });
 
-    // Sync Pergerakan
-    $('#syncPergerakanBtn').on('click', function() {
-        syncPergerakanAmbangBatas();
-    });
+    // HAPUS FUNGSI SYNC PERGERAKAN DARI SINI
 
     function exportToExcel() {
         try {
@@ -610,32 +605,7 @@ $(document).ready(function() {
         }
     }
 
-    function syncPergerakanAmbangBatas() {
-        const originalText = $('#syncPergerakanBtn').html();
-        $('#syncPergerakanBtn').html('<i class="fas fa-spinner fa-spin me-1"></i>Syncing...');
-        $('#syncPergerakanBtn').prop('disabled', true);
-
-        $.ajax({
-            url: '<?= base_url("hdm/hdm625/syncPergerakanAmbangBatas") ?>',
-            type: 'POST',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    alert('Sync pergerakan ambang batas berhasil!');
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.error);
-                }
-            },
-            error: function(xhr, status, error) {
-                alert('Error syncing data: ' + error);
-            },
-            complete: function() {
-                $('#syncPergerakanBtn').html(originalText);
-                $('#syncPergerakanBtn').prop('disabled', false);
-            }
-        });
-    }
+    // HAPUS FUNGSI syncPergerakanAmbangBatas() DARI SINI
 
     // Initialize
     applyFilters();

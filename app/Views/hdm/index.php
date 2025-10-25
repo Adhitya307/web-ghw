@@ -24,7 +24,7 @@
             z-index: 10;
             box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             padding: 8px 5px;
-            min-width: 90px;
+            min-width: 60px;
         }
         
         .btn-action {
@@ -59,18 +59,6 @@
         .btn-delete:hover {
             background-color: #bb2d3b;
             border-color: #b02a37;
-            transform: translateY(-1px);
-        }
-        
-        .btn-view {
-            color: #fff;
-            background-color: #198754;
-            border: 1px solid #198754;
-        }
-        
-        .btn-view:hover {
-            background-color: #157347;
-            border-color: #146c43;
             transform: translateY(-1px);
         }
         
@@ -352,22 +340,21 @@
             </div>
 
             <!-- DAM -->
-            <!-- Di bagian filter, ubah dam menjadi dma -->
-<div class="filter-item">
-    <label for="damFilter" class="form-label">DMA</label>
-    <select id="damFilter" class="form-select">
-        <option value="">Semua DMA</option>
-        <?php
-        if (!empty($pengukuran)):
-            $uniqueDMA = array_unique(array_map(fn($p) => $p['dma'] ?? '-', $pengukuran));
-            sort($uniqueDMA);
-            foreach ($uniqueDMA as $dma):
-                if ($dma === '-') continue;
-        ?>
-            <option value="<?= esc($dma) ?>"><?= esc($dma) ?></option>
-        <?php endforeach; endif; ?>
-    </select>
-</div>
+            <div class="filter-item">
+                <label for="damFilter" class="form-label">DMA</label>
+                <select id="damFilter" class="form-select">
+                    <option value="">Semua DMA</option>
+                    <?php
+                    if (!empty($pengukuran)):
+                        $uniqueDMA = array_unique(array_map(fn($p) => $p['dma'] ?? '-', $pengukuran));
+                        sort($uniqueDMA);
+                        foreach ($uniqueDMA as $dma):
+                            if ($dma === '-') continue;
+                    ?>
+                        <option value="<?= esc($dma) ?>"><?= esc($dma) ?></option>
+                    <?php endforeach; endif; ?>
+                </select>
+            </div>
 
             <!-- Reset -->
             <div class="filter-item" style="align-self: flex-end;">
@@ -524,28 +511,6 @@
     <span id="scrollText">Scroll untuk melihat lebih banyak data</span>
 </div>
 
-<!-- Detail Modal -->
-<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="detailModalLabel">
-                    <i class="fas fa-info-circle me-2"></i>Detail Data HDM
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="detailModalBody">
-                <!-- Detail content will be loaded here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Tutup
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Include Modal Hapus HDM -->
 <?= $this->include('hdm/modal_hapus') ?>
 
@@ -574,14 +539,51 @@ function sortDataByDate(data) {
     });
 }
 
+// Fungsi untuk memformat tanggal dengan benar
+function formatDateForExport(dateString) {
+    if (!dateString || dateString === '-') return '-';
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        // Format: DD/MM/YYYY untuk Excel (mencegah issue ###)
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        return dateString;
+    }
+}
+
+// Fungsi untuk memformat nilai numerik
+function formatNumericValue(value) {
+    if (value === null || value === undefined || value === '' || value === '-') {
+        return '-';
+    }
+    
+    // Jika sudah number, return as is
+    if (typeof value === 'number') return value;
+    
+    // Jika string, coba parse sebagai float
+    if (typeof value === 'string') {
+        const num = parseFloat(value);
+        return isNaN(num) ? value : num;
+    }
+    
+    return value;
+}
+
+
 document.addEventListener('DOMContentLoaded', function () {
     // Inisialisasi tooltip
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
-    const detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
     
     // ============ PAGINATION & DATA MANAGEMENT ============
     const pageSizeSelect = document.getElementById('pageSize');
@@ -624,134 +626,131 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     // Fungsi render body tabel
-    // Di bagian renderTableBody, perbaiki tampilan DMA
-function renderTableBody(data) {
-    const tbody = document.getElementById('dataTableBody');
-    
-    if (data.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="34" class="text-center py-4">
-                    <i class="fas fa-database fa-2x text-muted mb-3"></i>
-                    <p class="text-muted">Tidak ada data HDM yang tersedia</p>
-                    <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-primary mt-2">
-                        <i class="fas fa-refresh me-1"></i> Refresh
-                    </a>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    let html = '';
-    const tahunCounts = {};
-    const processedYears = [];
-    
-    data.forEach(item => {
-        const tahun = item.pengukuran?.tahun ?? '-';
-        tahunCounts[tahun] = (tahunCounts[tahun] || 0) + 1;
-    });
-    
-    data.forEach(item => {
-        const p = item.pengukuran || {};
-        const pembacaanElv600 = item.pembacaan_elv600 || {};
-        const pembacaanElv625 = item.pembacaan_elv625 || {};
-        const depthElv600 = item.depth_elv600 || {};
-        const depthElv625 = item.depth_elv625 || {};
-        const initialReadingElv600 = item.initial_reading_elv600 || {}; // PERBAIKAN: tambahkan initial reading
-        const initialReadingElv625 = item.initial_reading_elv625 || {}; // PERBAIKAN: tambahkan initial reading
-        const pergerakanElv600 = item.pergerakan_elv600 || {};
-        const pergerakanElv625 = item.pergerakan_elv625 || {};
+    function renderTableBody(data) {
+        const tbody = document.getElementById('dataTableBody');
         
-        const tahun = p.tahun ?? '-';
-        const periode = p.periode ?? '-';
-        const dma = p.dma ?? '-'; // PERBAIKAN: ubah dam menjadi dma
-        const pid = p.id_pengukuran ?? null;
+        if (data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="34" class="text-center py-4">
+                        <i class="fas fa-database fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Tidak ada data HDM yang tersedia</p>
+                        <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-primary mt-2">
+                            <i class="fas fa-refresh me-1"></i> Refresh
+                        </a>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
         
-        const showTahun = !processedYears.includes(tahun);
-        if (showTahun) processedYears.push(tahun);
+        let html = '';
+        const tahunCounts = {};
+        const processedYears = [];
         
-        html += `
-            <tr data-tahun="${tahun}" data-periode="${periode}" data-dma="${dma}" data-pid="${pid}">
-                ${showTahun ? `<td rowspan="${tahunCounts[tahun]}" class="sticky">${tahun}</td>` : ''}
-                <td class="sticky-2">${periode}</td>
-                <td class="sticky-3">${p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID') : '-'}</td>
-                <td class="sticky-4">${dma}</td> <!-- PERBAIKAN: ubah dam menjadi dma -->
-                
-                <!-- PEMBACAAN HDM - ELV 625 -->
-                <td>${pembacaanElv625.hv_1 || '-'}</td>
-                <td>${pembacaanElv625.hv_2 || '-'}</td>
-                <td>${pembacaanElv625.hv_3 || '-'}</td>
-
-                <!-- PEMBACAAN HDM - ELV 600 -->
-                <td>${pembacaanElv600.hv_1 || '-'}</td>
-                <td>${pembacaanElv600.hv_2 || '-'}</td>
-                <td>${pembacaanElv600.hv_3 || '-'}</td>
-                <td>${pembacaanElv600.hv_4 || '-'}</td>
-                <td>${pembacaanElv600.hv_5 || '-'}</td>
-                
-                <!-- DEPTH (S) - ELV 625 -->
-                <td>${depthElv625.hv_1 || '-'}</td>
-                <td>${depthElv625.hv_2 || '-'}</td>
-                <td>${depthElv625.hv_3 || '-'}</td>
-
-                <!-- DEPTH (S) - ELV 600 -->
-                <td>${depthElv600.hv_1 || '-'}</td>
-                <td>${depthElv600.hv_2 || '-'}</td>
-                <td>${depthElv600.hv_3 || '-'}</td>
-                <td>${depthElv600.hv_4 || '-'}</td>
-                <td>${depthElv600.hv_5 || '-'}</td>
-                
-                <!-- READINGS (S) - ELV 625 -->
-                <td>${initialReadingElv625.hv_1 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
-                <td>${initialReadingElv625.hv_2 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
-                <td>${initialReadingElv625.hv_3 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
-
-                <!-- READINGS (S) - ELV 600 -->
-                <td>${initialReadingElv600.hv_1 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
-                <td>${initialReadingElv600.hv_2 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
-                <td>${initialReadingElv600.hv_3 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
-                <td>${initialReadingElv600.hv_4 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
-                <td>${initialReadingElv600.hv_5 || '-'}</td> <!-- PERBAIKAN: ubah readings menjadi initial reading -->
+        data.forEach(item => {
+            const tahun = item.pengukuran?.tahun ?? '-';
+            tahunCounts[tahun] = (tahunCounts[tahun] || 0) + 1;
+        });
+        
+        data.forEach(item => {
+            const p = item.pengukuran || {};
+            const pembacaanElv600 = item.pembacaan_elv600 || {};
+            const pembacaanElv625 = item.pembacaan_elv625 || {};
+            const depthElv600 = item.depth_elv600 || {};
+            const depthElv625 = item.depth_elv625 || {};
+            const initialReadingElv600 = item.initial_reading_elv600 || {};
+            const initialReadingElv625 = item.initial_reading_elv625 || {};
+            const pergerakanElv600 = item.pergerakan_elv600 || {};
+            const pergerakanElv625 = item.pergerakan_elv625 || {};
             
-                <!-- PERGERAKAN (CM) - ELV 625 -->
-                <td>${pergerakanElv625.hv_1 || '-'}</td>
-                <td>${pergerakanElv625.hv_2 || '-'}</td>
-                <td>${pergerakanElv625.hv_3 || '-'}</td>
+            const tahun = p.tahun ?? '-';
+            const periode = p.periode ?? '-';
+            const dma = p.dma ?? '-';
+            const pid = p.id_pengukuran ?? null;
+            
+            const showTahun = !processedYears.includes(tahun);
+            if (showTahun) processedYears.push(tahun);
+            
+            // Format tanggal untuk tampilan
+            const displayDate = p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID') : '-';
+            
+            html += `
+                <tr data-tahun="${tahun}" data-periode="${periode}" data-dma="${dma}" data-pid="${pid}">
+                    ${showTahun ? `<td rowspan="${tahunCounts[tahun]}" class="sticky">${tahun}</td>` : ''}
+                    <td class="sticky-2">${periode}</td>
+                    <td class="sticky-3">${displayDate}</td>
+                    <td class="sticky-4">${dma}</td>
+                    
+                    <!-- PEMBACAAN HDM - ELV 625 -->
+                    <td>${pembacaanElv625.hv_1 || '-'}</td>
+                    <td>${pembacaanElv625.hv_2 || '-'}</td>
+                    <td>${pembacaanElv625.hv_3 || '-'}</td>
 
-                <!-- PERGERAKAN (CM) - ELV 600 -->
-                <td>${pergerakanElv600.hv_1 || '-'}</td>
-                <td>${pergerakanElv600.hv_2 || '-'}</td>
-                <td>${pergerakanElv600.hv_3 || '-'}</td>
-                <td>${pergerakanElv600.hv_4 || '-'}</td>
-                <td>${pergerakanElv600.hv_5 || '-'}</td>
+                    <!-- PEMBACAAN HDM - ELV 600 -->
+                    <td>${pembacaanElv600.hv_1 || '-'}</td>
+                    <td>${pembacaanElv600.hv_2 || '-'}</td>
+                    <td>${pembacaanElv600.hv_3 || '-'}</td>
+                    <td>${pembacaanElv600.hv_4 || '-'}</td>
+                    <td>${pembacaanElv600.hv_5 || '-'}</td>
+                    
+                    <!-- DEPTH (S) - ELV 625 -->
+                    <td>${depthElv625.hv_1 || '-'}</td>
+                    <td>${depthElv625.hv_2 || '-'}</td>
+                    <td>${depthElv625.hv_3 || '-'}</td>
 
-                <td class="action-cell">
-                    <div class="d-flex justify-content-center">
-                        <button type="button" class="btn-action btn-view view-detail" 
-                               data-id="${pid}" data-bs-toggle="tooltip" 
-                               data-bs-placement="top" title="Lihat Detail">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button type="button" class="btn-action btn-edit edit-data" 
-                               data-id="${pid}" data-bs-toggle="tooltip" 
-                               data-bs-placement="top" title="Edit Data">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
-                        <button type="button" class="btn-action btn-delete delete-data" 
-                                data-id="${pid}" data-bs-toggle="tooltip" 
-                                data-bs-placement="top" title="Hapus Data">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-    
-    tbody.innerHTML = html;
-    attachEventListeners();
-}
+                    <!-- DEPTH (S) - ELV 600 -->
+                    <td>${depthElv600.hv_1 || '-'}</td>
+                    <td>${depthElv600.hv_2 || '-'}</td>
+                    <td>${depthElv600.hv_3 || '-'}</td>
+                    <td>${depthElv600.hv_4 || '-'}</td>
+                    <td>${depthElv600.hv_5 || '-'}</td>
+                    
+                    <!-- READINGS (S) - ELV 625 -->
+                    <td>${initialReadingElv625.hv_1 || '-'}</td>
+                    <td>${initialReadingElv625.hv_2 || '-'}</td>
+                    <td>${initialReadingElv625.hv_3 || '-'}</td>
+
+                    <!-- READINGS (S) - ELV 600 -->
+                    <td>${initialReadingElv600.hv_1 || '-'}</td>
+                    <td>${initialReadingElv600.hv_2 || '-'}</td>
+                    <td>${initialReadingElv600.hv_3 || '-'}</td>
+                    <td>${initialReadingElv600.hv_4 || '-'}</td>
+                    <td>${initialReadingElv600.hv_5 || '-'}</td>
+                
+                    <!-- PERGERAKAN (CM) - ELV 625 -->
+                    <td>${pergerakanElv625.hv_1 || '-'}</td>
+                    <td>${pergerakanElv625.hv_2 || '-'}</td>
+                    <td>${pergerakanElv625.hv_3 || '-'}</td>
+
+                    <!-- PERGERAKAN (CM) - ELV 600 -->
+                    <td>${pergerakanElv600.hv_1 || '-'}</td>
+                    <td>${pergerakanElv600.hv_2 || '-'}</td>
+                    <td>${pergerakanElv600.hv_3 || '-'}</td>
+                    <td>${pergerakanElv600.hv_4 || '-'}</td>
+                    <td>${pergerakanElv600.hv_5 || '-'}</td>
+
+                    <td class="action-cell">
+                        <div class="d-flex justify-content-center">
+                            <button type="button" class="btn-action btn-edit edit-data" 
+                                   data-id="${pid}" data-bs-toggle="tooltip" 
+                                   data-bs-placement="top" title="Edit Data">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button type="button" class="btn-action btn-delete delete-data" 
+                                    data-id="${pid}" data-bs-toggle="tooltip" 
+                                    data-bs-placement="top" title="Hapus Data">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+        attachEventListeners();
+    }
     
     // Fungsi render pagination
     function renderPagination() {
@@ -850,44 +849,43 @@ function renderTableBody(data) {
     const searchInput = document.getElementById('searchInput');
     
     // Fungsi filter data
-    // Di bagian JavaScript, perbaiki filter data
-function filterData() {
-    const tVal = tahunFilter.value;
-    const pVal = periodeFilter.value;
-    const dVal = damFilter.value;
-    const searchVal = searchInput.value.toLowerCase();
-    
-    filteredData = allData.filter(item => {
-        const p = item.pengukuran || {};
-        const tahun = p.tahun ?? '-';
-        const periode = p.periode ?? '-';
-        const dma = p.dma ?? '-'; // PERBAIKAN: ubah dam menjadi dma
+    function filterData() {
+        const tVal = tahunFilter.value;
+        const pVal = periodeFilter.value;
+        const dVal = damFilter.value;
+        const searchVal = searchInput.value.toLowerCase();
         
-        const tahunMatch = !tVal || tahun === tVal;
-        const periodeMatch = !pVal || periode === pVal;
-        const dmaMatch = !dVal || dma.toString() === dVal; // PERBAIKAN: ubah dam menjadi dma
+        filteredData = allData.filter(item => {
+            const p = item.pengukuran || {};
+            const tahun = p.tahun ?? '-';
+            const periode = p.periode ?? '-';
+            const dma = p.dma ?? '-';
+            
+            const tahunMatch = !tVal || tahun === tVal;
+            const periodeMatch = !pVal || periode === pVal;
+            const dmaMatch = !dVal || dma.toString() === dVal;
+            
+            let searchMatch = true;
+            if (searchVal) {
+                const searchText = Object.values(p).join(' ').toLowerCase() +
+                                 Object.values(item.pembacaan_elv600 || {}).join(' ').toLowerCase() +
+                                 Object.values(item.pembacaan_elv625 || {}).join(' ').toLowerCase() +
+                                 Object.values(item.depth_elv600 || {}).join(' ').toLowerCase() +
+                                 Object.values(item.depth_elv625 || {}).join(' ').toLowerCase() +
+                                 Object.values(item.initial_reading_elv600 || {}).join(' ').toLowerCase() +
+                                 Object.values(item.initial_reading_elv625 || {}).join(' ').toLowerCase() +
+                                 Object.values(item.pergerakan_elv600 || {}).join(' ').toLowerCase() +
+                                 Object.values(item.pergerakan_elv625 || {}).join(' ').toLowerCase();
+                searchMatch = searchText.includes(searchVal);
+            }
+            
+            return tahunMatch && periodeMatch && dmaMatch && searchMatch;
+        });
         
-        let searchMatch = true;
-        if (searchVal) {
-            const searchText = Object.values(p).join(' ').toLowerCase() +
-                             Object.values(item.pembacaan_elv600 || {}).join(' ').toLowerCase() +
-                             Object.values(item.pembacaan_elv625 || {}).join(' ').toLowerCase() +
-                             Object.values(item.depth_elv600 || {}).join(' ').toLowerCase() +
-                             Object.values(item.depth_elv625 || {}).join(' ').toLowerCase() +
-                             Object.values(item.initial_reading_elv600 || {}).join(' ').toLowerCase() + // PERBAIKAN: tambahkan initial reading
-                             Object.values(item.initial_reading_elv625 || {}).join(' ').toLowerCase() + // PERBAIKAN: tambahkan initial reading
-                             Object.values(item.pergerakan_elv600 || {}).join(' ').toLowerCase() +
-                             Object.values(item.pergerakan_elv625 || {}).join(' ').toLowerCase();
-            searchMatch = searchText.includes(searchVal);
-        }
-        
-        return tahunMatch && periodeMatch && dmaMatch && searchMatch; // PERBAIKAN: ubah dam menjadi dma
-    });
-    
-    filteredData = sortDataByDate(filteredData);
-    currentPage = 1;
-    renderTable();
-}
+        filteredData = sortDataByDate(filteredData);
+        currentPage = 1;
+        renderTable();
+    }
     
     // Event listeners untuk filter
     tahunFilter.addEventListener('change', filterData);
@@ -943,14 +941,6 @@ function filterData() {
     
     // ============ EVENT LISTENERS ATTACHMENT ============
     function attachEventListeners() {
-        // View Detail
-        document.querySelectorAll('.view-detail').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                showDetailModal(id);
-            });
-        });
-        
         // Edit Data
         document.querySelectorAll('.edit-data').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -960,18 +950,17 @@ function filterData() {
         });
         
         // Delete Data
-        // Delete Data - Langsung tampilkan modal tanpa alert
-document.querySelectorAll('.delete-data').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        // Trigger click event yang akan ditangkap oleh modal_hapus.php
-        this.dispatchEvent(new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window
-        }));
-    });
-});
+        document.querySelectorAll('.delete-data').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                // Trigger click event yang akan ditangkap oleh modal_hapus.php
+                this.dispatchEvent(new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                }));
+            });
+        });
         
         // Re-initialize tooltips
         const newTooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -980,161 +969,382 @@ document.querySelectorAll('.delete-data').forEach(btn => {
         });
     }
     
-    // ============ MODAL FUNCTIONALITY ============
-    function showDetailModal(id) {
-        // Show loading
-        document.getElementById('detailModalBody').innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2">Memuat data...</p>
-            </div>
-        `;
-        
-        detailModal.show();
-        
-        // Load detail data
-        fetch('<?= base_url('horizontal-displacement/detail') ?>/' + id)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const detailData = data.data;
-                    let html = `
-                        <div class="row">
-                            <div class="col-md-12 mb-4">
-                                <h6 class="border-bottom pb-2">Data Pengukuran</h6>
-                                <table class="table table-sm table-bordered">
-                                    <tr><th class="w-25">Tahun</th><td>${detailData.pengukuran.tahun || '-'}</td></tr>
-                                    <tr><th>Periode</th><td>${detailData.pengukuran.periode || '-'}</td></tr>
-                                    <tr><th>Tanggal</th><td>${detailData.pengukuran.tanggal ? new Date(detailData.pengukuran.tanggal).toLocaleDateString('id-ID') : '-'}</td></tr>
-                                    <tr><th>DAM</th><td>${detailData.pengukuran.dam || '-'}</td></tr>
-                                </table>
-                            </div>
-                    `;
+    // ============ EXPORT EXCEL FUNCTIONALITY ============
+document.getElementById('exportExcel').addEventListener('click', function() {
+    // Show loading
+    const originalText = this.innerHTML;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
+    this.disabled = true;
+
+    setTimeout(() => {
+        try {
+            // Buat workbook baru
+            const wb = XLSX.utils.book_new();
+            
+            // Data untuk worksheet
+            const wsData = [];
+            
+            // ===== HEADER ROWS =====
+            // Row 1: Main Headers (TANPA AKSI)
+            const header1 = [
+                'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
+                // PEMBACAAN HDM - ELV 625 & ELV 600
+                ...Array(8).fill('PEMBACAAN HDM'),
+                // DEPTH (S) - ELV 625 & ELV 600
+                ...Array(8).fill('DEPTH (S)'),
+                // READINGS (S) - ELV 625 & ELV 600
+                ...Array(8).fill('READINGS (S)'),
+                // PERGERAKAN (CM) - ELV 625 & ELV 600
+                ...Array(8).fill('PERGERAKAN (CM)')
+                // AKSI DIHAPUS DARI EXPORT
+            ];
+            wsData.push(header1);
+            
+            // Row 2: Sub Headers (TANPA AKSI)
+            const header2 = [
+                '', '', '', '',
+                // PEMBACAAN HDM
+                ...Array(3).fill('ELV.625'),
+                ...Array(5).fill('ELV.600'),
+                // DEPTH (S)
+                ...Array(3).fill('ELV.625'),
+                ...Array(5).fill('ELV.600'),
+                // READINGS (S)
+                ...Array(3).fill('ELV.625'),
+                ...Array(5).fill('ELV.600'),
+                // PERGERAKAN (CM)
+                ...Array(3).fill('ELV.625'),
+                ...Array(5).fill('ELV.600')
+                // AKSI DIHAPUS DARI EXPORT
+            ];
+            wsData.push(header2);
+            
+            // Row 3: Measurement Headers (TANPA AKSI)
+            const header3 = [
+                'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
+                // PEMBACAAN HDM - ELV 625
+                'HV-1', 'HV-2', 'HV-3',
+                // PEMBACAAN HDM - ELV 600
+                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
+                // DEPTH (S) - ELV 625
+                'HV-1', 'HV-2', 'HV-3',
+                // DEPTH (S) - ELV 600
+                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
+                // READINGS (S) - ELV 625
+                'HV-1', 'HV-2', 'HV-3',
+                // READINGS (S) - ELV 600
+                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
+                // PERGERAKAN (CM) - ELV 625
+                'HV-1', 'HV-2', 'HV-3',
+                // PERGERAKAN (CM) - ELV 600
+                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5'
+                // AKSI DIHAPUS DARI EXPORT
+            ];
+            wsData.push(header3);
+            
+            // ===== DATA ROWS =====
+            filteredData.forEach(item => {
+                const p = item.pengukuran || {};
+                const pembacaanElv600 = item.pembacaan_elv600 || {};
+                const pembacaanElv625 = item.pembacaan_elv625 || {};
+                const depthElv600 = item.depth_elv600 || {};
+                const depthElv625 = item.depth_elv625 || {};
+                const initialReadingElv600 = item.initial_reading_elv600 || {};
+                const initialReadingElv625 = item.initial_reading_elv625 || {};
+                const pergerakanElv600 = item.pergerakan_elv600 || {};
+                const pergerakanElv625 = item.pergerakan_elv625 || {};
+                
+                // Format tanggal untuk Excel (DD/MM/YYYY)
+                const excelDate = p.tanggal ? formatDateForExport(p.tanggal) : '-';
+                
+                // Format nilai numerik - pastikan sebagai string dengan format yang benar
+                const formatNumber = (value) => {
+                    if (value === null || value === undefined || value === '' || value === '-') {
+                        return '-';
+                    }
                     
-                    // ELV 625 Data
-                    html += `
-                        <div class="col-md-6">
-                            <h6 class="border-bottom pb-2 text-info">ELV 625 Data</h6>
-                            <table class="table table-sm table-bordered">
-                                <tr><th colspan="3" class="text-center bg-info text-white">Pembacaan HDM</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.pembacaan_elv625.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.pembacaan_elv625.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.pembacaan_elv625.hv_3 || '-'}</td></tr>
-                                
-                                <tr><th colspan="3" class="text-center bg-primary text-white">Depth (S)</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.depth_elv625.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.depth_elv625.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.depth_elv625.hv_3 || '-'}</td></tr>
-                                
-                                <tr><th colspan="3" class="text-center bg-success text-white">Readings (S)</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.readings_elv625.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.readings_elv625.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.readings_elv625.hv_3 || '-'}</td></tr>
-                                
-                                <tr><th colspan="3" class="text-center bg-warning text-dark">Pergerakan (CM)</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.pergerakan_elv625.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.pergerakan_elv625.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.pergerakan_elv625.hv_3 || '-'}</td></tr>
-                            </table>
-                        </div>
-                    `;
+                    // Konversi ke number dulu
+                    const numValue = typeof value === 'number' ? value : parseFloat(value);
                     
-                    // ELV 600 Data
-                    html += `
-                        <div class="col-md-6">
-                            <h6 class="border-bottom pb-2 text-info">ELV 600 Data</h6>
-                            <table class="table table-sm table-bordered">
-                                <tr><th colspan="5" class="text-center bg-info text-white">Pembacaan HDM</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.pembacaan_elv600.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.pembacaan_elv600.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.pembacaan_elv600.hv_3 || '-'}</td></tr>
-                                <tr><th>HV 4</th><td>${detailData.pembacaan_elv600.hv_4 || '-'}</td></tr>
-                                <tr><th>HV 5</th><td>${detailData.pembacaan_elv600.hv_5 || '-'}</td></tr>
-                                
-                                <tr><th colspan="5" class="text-center bg-primary text-white">Depth (S)</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.depth_elv600.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.depth_elv600.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.depth_elv600.hv_3 || '-'}</td></tr>
-                                <tr><th>HV 4</th><td>${detailData.depth_elv600.hv_4 || '-'}</td></tr>
-                                <tr><th>HV 5</th><td>${detailData.depth_elv600.hv_5 || '-'}</td></tr>
-                                
-                                <tr><th colspan="5" class="text-center bg-success text-white">Readings (S)</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.readings_elv600.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.readings_elv600.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.readings_elv600.hv_3 || '-'}</td></tr>
-                                <tr><th>HV 4</th><td>${detailData.readings_elv600.hv_4 || '-'}</td></tr>
-                                <tr><th>HV 5</th><td>${detailData.readings_elv600.hv_5 || '-'}</td></tr>
-                                
-                                <tr><th colspan="5" class="text-center bg-warning text-dark">Pergerakan (CM)</th></tr>
-                                <tr><th>HV 1</th><td>${detailData.pergerakan_elv600.hv_1 || '-'}</td></tr>
-                                <tr><th>HV 2</th><td>${detailData.pergerakan_elv600.hv_2 || '-'}</td></tr>
-                                <tr><th>HV 3</th><td>${detailData.pergerakan_elv600.hv_3 || '-'}</td></tr>
-                                <tr><th>HV 4</th><td>${detailData.pergerakan_elv600.hv_4 || '-'}</td></tr>
-                                <tr><th>HV 5</th><td>${detailData.pergerakan_elv600.hv_5 || '-'}</td></tr>
-                            </table>
-                        </div>
-                    `;
+                    // Jika bukan number, return as is
+                    if (isNaN(numValue)) return value;
                     
-                    html += `</div>`;
-                    document.getElementById('detailModalBody').innerHTML = html;
-                } else {
-                    document.getElementById('detailModalBody').innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            ${data.error || 'Terjadi kesalahan saat memuat data'}
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                document.getElementById('detailModalBody').innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Terjadi kesalahan saat memuat data: ${error.message}
-                    </div>
-                `;
+                    // Format dengan 2 digit desimal dan konversi ke string
+                    return numValue.toFixed(2);
+                };
+
+                const row = [
+                    // Basic Info
+                    p.tahun || '-',
+                    p.periode || '-',
+                    excelDate,
+                    formatNumber(p.dma),
+                    
+                    // PEMBACAAN HDM - ELV 625
+                    formatNumber(pembacaanElv625.hv_1),
+                    formatNumber(pembacaanElv625.hv_2),
+                    formatNumber(pembacaanElv625.hv_3),
+                    
+                    // PEMBACAAN HDM - ELV 600
+                    formatNumber(pembacaanElv600.hv_1),
+                    formatNumber(pembacaanElv600.hv_2),
+                    formatNumber(pembacaanElv600.hv_3),
+                    formatNumber(pembacaanElv600.hv_4),
+                    formatNumber(pembacaanElv600.hv_5),
+                    
+                    // DEPTH (S) - ELV 625
+                    formatNumber(depthElv625.hv_1),
+                    formatNumber(depthElv625.hv_2),
+                    formatNumber(depthElv625.hv_3),
+                    
+                    // DEPTH (S) - ELV 600
+                    formatNumber(depthElv600.hv_1),
+                    formatNumber(depthElv600.hv_2),
+                    formatNumber(depthElv600.hv_3),
+                    formatNumber(depthElv600.hv_4),
+                    formatNumber(depthElv600.hv_5),
+                    
+                    // READINGS (S) - ELV 625
+                    formatNumber(initialReadingElv625.hv_1),
+                    formatNumber(initialReadingElv625.hv_2),
+                    formatNumber(initialReadingElv625.hv_3),
+                    
+                    // READINGS (S) - ELV 600
+                    formatNumber(initialReadingElv600.hv_1),
+                    formatNumber(initialReadingElv600.hv_2),
+                    formatNumber(initialReadingElv600.hv_3),
+                    formatNumber(initialReadingElv600.hv_4),
+                    formatNumber(initialReadingElv600.hv_5),
+                    
+                    // PERGERAKAN (CM) - ELV 625
+                    formatNumber(pergerakanElv625.hv_1),
+                    formatNumber(pergerakanElv625.hv_2),
+                    formatNumber(pergerakanElv625.hv_3),
+                    
+                    // PERGERAKAN (CM) - ELV 600
+                    formatNumber(pergerakanElv600.hv_1),
+                    formatNumber(pergerakanElv600.hv_2),
+                    formatNumber(pergerakanElv600.hv_3),
+                    formatNumber(pergerakanElv600.hv_4),
+                    formatNumber(pergerakanElv600.hv_5)
+                    
+                    // AKSI DIHAPUS DARI EXPORT
+                ];
+                wsData.push(row);
             });
-    }
-    
-    // Delete Data Function
-    function deleteData(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-            fetch('<?= base_url('horizontal-displacement/delete') ?>/' + id, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Data berhasil dihapus');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                alert('Terjadi kesalahan saat menghapus data');
+            
+            // Buat worksheet
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // ===== STYLING DENGAN WARNA =====
+            if (!ws['!merges']) ws['!merges'] = [];
+            
+            // Merge untuk Header Row 1 (Main Sections) - TANPA AKSI
+            const mainSections = [
+                { start: 4, end: 11, label: 'PEMBACAAN HDM' },    // 8 columns
+                { start: 12, end: 19, label: 'DEPTH (S)' },       // 8 columns
+                { start: 20, end: 27, label: 'READINGS (S)' },    // 8 columns
+                { start: 28, end: 35, label: 'PERGERAKAN (CM)' }  // 8 columns
+            ];
+            
+            mainSections.forEach(section => {
+                ws['!merges'].push({ 
+                    s: { r: 0, c: section.start }, 
+                    e: { r: 0, c: section.end } 
+                });
             });
+            
+            // Merge untuk Header Row 2 (ELV Sections) - TANPA AKSI
+            const elvSections = [
+                // PEMBACAAN HDM
+                { start: 4, end: 6, label: 'ELV.625' },      // 3 columns
+                { start: 7, end: 11, label: 'ELV.600' },     // 5 columns
+                // DEPTH (S)
+                { start: 12, end: 14, label: 'ELV.625' },    // 3 columns
+                { start: 15, end: 19, label: 'ELV.600' },    // 5 columns
+                // READINGS (S)
+                { start: 20, end: 22, label: 'ELV.625' },    // 3 columns
+                { start: 23, end: 27, label: 'ELV.600' },    // 5 columns
+                // PERGERAKAN (CM)
+                { start: 28, end: 30, label: 'ELV.625' },    // 3 columns
+                { start: 31, end: 35, label: 'ELV.600' }     // 5 columns
+            ];
+            
+            elvSections.forEach(section => {
+                ws['!merges'].push({ 
+                    s: { r: 1, c: section.start }, 
+                    e: { r: 1, c: section.end } 
+                });
+            });
+            
+            // ===== PENGATURAN KOLOM ===== (TANPA KOLOM AKSI)
+            const colWidths = [
+                { wch: 8 },   // TAHUN
+                { wch: 10 },  // PERIODE
+                { wch: 12 },  // TANGGAL
+                { wch: 8 },   // DAM
+                // PEMBACAAN HDM - ELV 625 (3 kolom)
+                { wch: 12 }, { wch: 12 }, { wch: 12 },
+                // PEMBACAAN HDM - ELV 600 (5 kolom)
+                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                // DEPTH (S) - ELV 625 (3 kolom)
+                { wch: 12 }, { wch: 12 }, { wch: 12 },
+                // DEPTH (S) - ELV 600 (5 kolom)
+                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                // READINGS (S) - ELV 625 (3 kolom)
+                { wch: 12 }, { wch: 12 }, { wch: 12 },
+                // READINGS (S) - ELV 600 (5 kolom)
+                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                // PERGERAKAN (CM) - ELV 625 (3 kolom)
+                { wch: 14 }, { wch: 14 }, { wch: 14 },
+                // PERGERAKAN (CM) - ELV 600 (5 kolom)
+                { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }
+                // KOLOM AKSI DIHAPUS
+            ];
+            ws['!cols'] = colWidths;
+            
+            // ===== WARNA HEADER =====
+            // Definisikan range untuk styling
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            
+            // Warna untuk header rows (0, 1, 2) - TANPA AKSI
+            for (let R = 0; R < 3; R++) {
+                for (let C = range.s.c; C <= range.e.c; C++) {
+                    const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
+                    if (!ws[cell_ref]) continue;
+                    
+                    // Inisialisasi style jika belum ada
+                    if (!ws[cell_ref].s) {
+                        ws[cell_ref].s = {};
+                    }
+                    
+                    // Background colors berdasarkan section
+                    let fillColor = '';
+                    
+                    // Row 1 - Main Sections
+                    if (R === 0) {
+                        if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
+                        else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
+                        else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
+                        else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
+                    }
+                    // Row 2 - ELV Sections
+                    else if (R === 1) {
+                        if ((C >= 4 && C <= 6) || (C >= 12 && C <= 14) || (C >= 20 && C <= 22) || (C >= 28 && C <= 30)) {
+                            fillColor = 'FF0DCAF0'; // Biru muda - ELV.625
+                        } else if ((C >= 7 && C <= 11) || (C >= 15 && C <= 19) || (C >= 23 && C <= 27) || (C >= 31 && C <= 35)) {
+                            fillColor = 'FF0DCAF0'; // Biru muda - ELV.600
+                        }
+                    }
+                    // Row 3 - Measurement Headers
+                    else if (R === 2) {
+                        if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
+                        else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
+                        else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
+                        else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
+                    }
+                    
+                    // Terapkan warna background
+                    if (fillColor) {
+                        ws[cell_ref].s.fill = {
+                            fgColor: { rgb: fillColor }
+                        };
+                        
+                        // Text color - putih untuk header gelap, hitam untuk kuning
+                        if (fillColor === 'FFFFC107') {
+                            ws[cell_ref].s.font = { color: { rgb: "FF000000" }, bold: true };
+                        } else {
+                            ws[cell_ref].s.font = { color: { rgb: "FFFFFFFF" }, bold: true };
+                        }
+                        
+                        // Border untuk semua header
+                        ws[cell_ref].s.border = {
+                            top: { style: 'thin', color: { rgb: "FF000000" } },
+                            left: { style: 'thin', color: { rgb: "FF000000" } },
+                            bottom: { style: 'thin', color: { rgb: "FF000000" } },
+                            right: { style: 'thin', color: { rgb: "FF000000" } }
+                        };
+                        
+                        // Alignment center
+                        ws[cell_ref].s.alignment = { 
+                            horizontal: 'center',
+                            vertical: 'center',
+                            wrapText: true
+                        };
+                    }
+                }
+            }
+            
+            // ===== STYLING DATA ROWS ===== (TANPA KOLOM AKSI)
+            for (let R = 3; R <= range.e.r; R++) {
+                for (let C = range.s.c; C <= range.e.c; C++) {
+                    const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
+                    if (!ws[cell_ref]) continue;
+                    
+                    // Inisialisasi style jika belum ada
+                    if (!ws[cell_ref].s) {
+                        ws[cell_ref].s = {};
+                    }
+                    
+                    // Border untuk semua cell data
+                    ws[cell_ref].s.border = {
+                        top: { style: 'thin', color: { rgb: "FFDEE2E6" } },
+                        left: { style: 'thin', color: { rgb: "FFDEE2E6" } },
+                        bottom: { style: 'thin', color: { rgb: "FFDEE2E6" } },
+                        right: { style: 'thin', color: { rgb: "FFDEE2E6" } }
+                    };
+                    
+                    // Alignment untuk data
+                    if (C <= 3) {
+                        // Kolom dasar (TAHUN, PERIODE, TANGGAL, DAM) - center
+                        ws[cell_ref].s.alignment = { 
+                            horizontal: 'center',
+                            vertical: 'center'
+                        };
+                    } else {
+                        // Semua kolom numerik - right align
+                        ws[cell_ref].s.alignment = { 
+                            horizontal: 'right',
+                            vertical: 'center'
+                        };
+                        
+                        // Format angka dengan 2 desimal
+                        const cellValue = ws[cell_ref].v;
+                        if (cellValue !== '-' && !isNaN(parseFloat(cellValue))) {
+                            ws[cell_ref].z = '0.00';
+                        }
+                    }
+                }
+            }
+            
+            // Tambahkan worksheet ke workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Data HDM");
+            
+            // Generate filename dengan timestamp
+            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const filename = `HDM_Data_Export_${timestamp}.xlsx`;
+            
+            // Simpan file
+            XLSX.writeFile(wb, filename);
+            
+            // Show success message
+            setTimeout(() => {
+                alert('Export berhasil! File Excel telah didownload.\n\nFile: ' + filename);
+            }, 500);
+            
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            alert('Terjadi kesalahan saat mengexport data: ' + error.message);
+        } finally {
+            // Restore button state
+            this.innerHTML = originalText;
+            this.disabled = false;
         }
-    }
-    
+    }, 1000);
+});
     // Add Data button
     document.getElementById('addData').addEventListener('click', function() {
         window.location.href = '<?= base_url('horizontal-displacement/create') ?>';
-    });
-
-    // Export Excel
-    document.getElementById('exportExcel').addEventListener('click', function() {
-        const table = document.getElementById('exportTable');
-        const wb = XLSX.utils.table_to_book(table, {sheet: "Data HDM"});
-        XLSX.writeFile(wb, "data_horizontal_displacement_meter.xlsx");
     });
 });
 
@@ -1156,6 +1366,198 @@ function startPolling() {
 document.addEventListener('DOMContentLoaded', function() {
     startPolling();
 });
+
+// Import SQL Functionality - VERSI PERBAIKAN LENGKAP
+document.getElementById('btnImportSQL').addEventListener('click', function() {
+    const sqlFileInput = document.getElementById('sqlFile');
+    const importProgress = document.getElementById('importProgress');
+    const importStatus = document.getElementById('importStatus');
+    const btnImport = this;
+    
+    // Reset status sebelumnya
+    importStatus.style.display = 'none';
+    
+    // Validasi file
+    if (!sqlFileInput.files || sqlFileInput.files.length === 0) {
+        showImportStatus('❌ Pilih file SQL terlebih dahulu', 'danger');
+        return;
+    }
+    
+    const file = sqlFileInput.files[0];
+    
+    // Validasi ekstensi
+    if (!file.name.toLowerCase().endsWith('.sql')) {
+        showImportStatus('❌ File harus berformat .sql', 'danger');
+        return;
+    }
+    
+    // Validasi ukuran file (client-side)
+    if (file.size > 50 * 1024 * 1024) {
+        showImportStatus('❌ Ukuran file maksimal 50MB', 'danger');
+        return;
+    }
+    
+    if (file.size === 0) {
+        showImportStatus('❌ File kosong', 'danger');
+        return;
+    }
+    
+    // Show progress
+    importProgress.style.display = 'block';
+    const progressBar = importProgress.querySelector('.progress-bar');
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+    
+    btnImport.disabled = true;
+    btnImport.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('sql_file', file);
+    
+    // Progress simulation
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += 2;
+        if (progress <= 80) { // Hanya sampai 80%, sisanya menunggu response
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+        }
+    }, 100);
+    
+    // Send request
+    fetch('<?= base_url('horizontal-displacement/import-sql') ?>', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+        
+        // Cek status response
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showImportStatus('✅ ' + data.message, 'success');
+            
+            // Tampilkan detail stats jika ada
+            if (data.stats) {
+                const stats = data.stats;
+                let detailHtml = `
+                    <div class="mt-3 p-2 bg-light rounded">
+                        <h6 class="mb-2">📊 Detail Import:</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <small>Total Query: <strong>${stats.total}</strong></small><br>
+                                <small>Berhasil: <strong class="text-success">${stats.success}</strong></small>
+                            </div>
+                            <div class="col-6">
+                                <small>Gagal: <strong class="text-danger">${stats.failed}</strong></small><br>
+                                <small>Affected Rows: <strong>${stats.affected_rows || 0}</strong></small>
+                            </div>
+                        </div>
+                `;
+                
+                if (data.error_display) {
+                    detailHtml += `
+                        <div class="mt-2">
+                            <h6 class="mb-1">❌ Error Details:</h6>
+                            <div class="bg-white p-2 rounded small text-danger" style="max-height: 100px; overflow-y: auto;">
+                                ${data.error_display.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                detailHtml += `</div>`;
+                importStatus.innerHTML += detailHtml;
+            }
+            
+            // Auto refresh setelah 3 detik jika sukses
+            if (data.success) {
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    // Refresh halaman untuk menampilkan data baru
+                    window.location.reload();
+                }, 3000);
+            }
+            
+        } else {
+            showImportStatus('❌ ' + data.message, 'danger');
+            
+            // Tampilkan error details jika ada
+            if (data.error_display) {
+                importStatus.innerHTML += `
+                    <div class="mt-2 p-2 bg-white rounded border">
+                        <strong>Detail Error:</strong><br>
+                        <div class="small text-danger">${data.error_display.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            }
+        }
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        console.error('Import Error:', error);
+        showImportStatus('❌ Terjadi kesalahan: ' + error.message, 'danger');
+    })
+    .finally(() => {
+        // Reset button state setelah delay
+        setTimeout(() => {
+            btnImport.disabled = false;
+            btnImport.innerHTML = '<i class="fas fa-upload me-1"></i> Import';
+        }, 2000);
+    });
+    
+    function showImportStatus(message, type) {
+        importStatus.style.display = 'block';
+        importStatus.className = `alert alert-${type} alert-dismissible fade show`;
+        importStatus.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+    }
+});
+
+// Reset form ketika modal ditutup
+document.getElementById('importModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('sqlFile').value = '';
+    document.getElementById('importProgress').style.display = 'none';
+    document.getElementById('importStatus').style.display = 'none';
+    document.getElementById('importProgress').querySelector('.progress-bar').style.width = '0%';
+    document.getElementById('importProgress').querySelector('.progress-bar').textContent = '0%';
+});
+
+// Validasi file ketika dipilih
+document.getElementById('sqlFile').addEventListener('change', function(e) {
+    const file = this.files[0];
+    const importStatus = document.getElementById('importStatus');
+    
+    if (file) {
+        // Validasi ekstensi
+        if (!file.name.toLowerCase().endsWith('.sql')) {
+            importStatus.style.display = 'block';
+            importStatus.className = 'alert alert-warning';
+            importStatus.innerHTML = '⚠️ File harus berekstensi .sql';
+            this.value = ''; // Reset input file
+        } else {
+            importStatus.style.display = 'none';
+        }
+    }
+});
+
 </script>
 </body>
 </html>

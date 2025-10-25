@@ -251,7 +251,7 @@ class HDMController extends BaseController
     }
 
     /**
-     * Export Excel
+     * Export Excel - VERSI CODEIGNITER 4 (TANPA KOLOM AKSI)
      */
     public function exportExcel()
     {
@@ -261,6 +261,29 @@ class HDMController extends BaseController
                                                ->findAll();
 
             $data = [];
+            
+            // Header Excel (TANPA AKSI)
+            $headers = [
+                'Tahun', 'Periode', 'Tanggal', 'DMA',
+                // ELV 625 - Pembacaan HDM
+                'ELV625_HV1', 'ELV625_HV2', 'ELV625_HV3',
+                // ELV 600 - Pembacaan HDM  
+                'ELV600_HV1', 'ELV600_HV2', 'ELV600_HV3', 'ELV600_HV4', 'ELV600_HV5',
+                // ELV 625 - Depth (S)
+                'ELV625_Depth_HV1', 'ELV625_Depth_HV2', 'ELV625_Depth_HV3',
+                // ELV 600 - Depth (S)
+                'ELV600_Depth_HV1', 'ELV600_Depth_HV2', 'ELV600_Depth_HV3', 'ELV600_Depth_HV4', 'ELV600_Depth_HV5',
+                // ELV 625 - Readings (S)
+                'ELV625_Readings_HV1', 'ELV625_Readings_HV2', 'ELV625_Readings_HV3',
+                // ELV 600 - Readings (S)
+                'ELV600_Readings_HV1', 'ELV600_Readings_HV2', 'ELV600_Readings_HV3', 'ELV600_Readings_HV4', 'ELV600_Readings_HV5',
+                // ELV 625 - Pergerakan (CM)
+                'ELV625_Pergerakan_HV1', 'ELV625_Pergerakan_HV2', 'ELV625_Pergerakan_HV3',
+                // ELV 600 - Pergerakan (CM)
+                'ELV600_Pergerakan_HV1', 'ELV600_Pergerakan_HV2', 'ELV600_Pergerakan_HV3', 'ELV600_Pergerakan_HV4', 'ELV600_Pergerakan_HV5'
+                // AKSI DIHAPUS
+            ];
+
             foreach ($pengukuran as $p) {
                 $pid = $p['id_pengukuran'];
                 
@@ -273,64 +296,111 @@ class HDMController extends BaseController
                 $depthElv600 = $this->depthElv600Model->where('id_pengukuran', $pid)->first();
                 $depthElv625 = $this->depthElv625Model->where('id_pengukuran', $pid)->first();
 
-                $data[] = [
+                $row = [
+                    // Data dasar
                     'Tahun' => $p['tahun'] ?? '-',
                     'Periode' => $p['periode'] ?? '-',
                     'Tanggal' => $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-',
                     'DMA' => $p['dma'] ?? '-',
-                    // ELV 625
+                    
+                    // ELV 625 - Pembacaan HDM
                     'ELV625_HV1' => $pembacaanElv625['hv_1'] ?? '-',
                     'ELV625_HV2' => $pembacaanElv625['hv_2'] ?? '-',
                     'ELV625_HV3' => $pembacaanElv625['hv_3'] ?? '-',
-                    // ELV 600
+                    
+                    // ELV 600 - Pembacaan HDM
                     'ELV600_HV1' => $pembacaanElv600['hv_1'] ?? '-',
                     'ELV600_HV2' => $pembacaanElv600['hv_2'] ?? '-',
                     'ELV600_HV3' => $pembacaanElv600['hv_3'] ?? '-',
                     'ELV600_HV4' => $pembacaanElv600['hv_4'] ?? '-',
                     'ELV600_HV5' => $pembacaanElv600['hv_5'] ?? '-',
+                    
+                    // ELV 625 - Depth (S)
+                    'ELV625_Depth_HV1' => $depthElv625['hv_1'] ?? '-',
+                    'ELV625_Depth_HV2' => $depthElv625['hv_2'] ?? '-',
+                    'ELV625_Depth_HV3' => $depthElv625['hv_3'] ?? '-',
+                    
+                    // ELV 600 - Depth (S)
+                    'ELV600_Depth_HV1' => $depthElv600['hv_1'] ?? '-',
+                    'ELV600_Depth_HV2' => $depthElv600['hv_2'] ?? '-',
+                    'ELV600_Depth_HV3' => $depthElv600['hv_3'] ?? '-',
+                    'ELV600_Depth_HV4' => $depthElv600['hv_4'] ?? '-',
+                    'ELV600_Depth_HV5' => $depthElv600['hv_5'] ?? '-',
+                    
+                    // ELV 625 - Readings (S)
+                    'ELV625_Readings_HV1' => $initialReadingElv625['hv_1'] ?? '-',
+                    'ELV625_Readings_HV2' => $initialReadingElv625['hv_2'] ?? '-',
+                    'ELV625_Readings_HV3' => $initialReadingElv625['hv_3'] ?? '-',
+                    
+                    // ELV 600 - Readings (S)
+                    'ELV600_Readings_HV1' => $initialReadingElv600['hv_1'] ?? '-',
+                    'ELV600_Readings_HV2' => $initialReadingElv600['hv_2'] ?? '-',
+                    'ELV600_Readings_HV3' => $initialReadingElv600['hv_3'] ?? '-',
+                    'ELV600_Readings_HV4' => $initialReadingElv600['hv_4'] ?? '-',
+                    'ELV600_Readings_HV5' => $initialReadingElv600['hv_5'] ?? '-',
+                    
+                    // ELV 625 - Pergerakan (CM)
+                    'ELV625_Pergerakan_HV1' => $pergerakanElv625['hv_1'] ?? '-',
+                    'ELV625_Pergerakan_HV2' => $pergerakanElv625['hv_2'] ?? '-',
+                    'ELV625_Pergerakan_HV3' => $pergerakanElv625['hv_3'] ?? '-',
+                    
+                    // ELV 600 - Pergerakan (CM)
+                    'ELV600_Pergerakan_HV1' => $pergerakanElv600['hv_1'] ?? '-',
+                    'ELV600_Pergerakan_HV2' => $pergerakanElv600['hv_2'] ?? '-',
+                    'ELV600_Pergerakan_HV3' => $pergerakanElv600['hv_3'] ?? '-',
+                    'ELV600_Pergerakan_HV4' => $pergerakanElv600['hv_4'] ?? '-',
+                    'ELV600_Pergerakan_HV5' => $pergerakanElv600['hv_5'] ?? '-'
+                    // AKSI DIHAPUS
                 ];
+                
+                $data[] = $row;
             }
 
-            return $this->response->setJSON([
-                'success' => true,
-                'data' => $data
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Delete data
-     */
-    public function delete($id)
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
-        }
-
-        try {
-            // Hapus semua data terkait
-            $this->pembacaanElv600Model->where('id_pengukuran', $id)->delete();
-            $this->pembacaanElv625Model->where('id_pengukuran', $id)->delete();
-            $this->pergerakanElv600Model->where('id_pengukuran', $id)->delete();
-            $this->pergerakanElv625Model->where('id_pengukuran', $id)->delete();
-            $this->initialReadingElv600Model->where('id_pengukuran', $id)->delete();
-            $this->initialReadingElv625Model->where('id_pengukuran', $id)->delete();
-            $this->depthElv600Model->where('id_pengukuran', $id)->delete();
-            $this->depthElv625Model->where('id_pengukuran', $id)->delete();
+            // Load library PhpSpreadsheet
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
             
-            // Hapus data pengukuran
-            $this->pengukuranModel->delete($id);
-
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Data berhasil dihapus'
-            ]);
+            // Set title
+            $sheet->setTitle('Data HDM');
+            
+            // Set header row
+            $col = 'A';
+            foreach ($headers as $header) {
+                $sheet->setCellValue($col . '1', $header);
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+                $col++;
+            }
+            
+            // Set data rows
+            $row = 2;
+            foreach ($data as $item) {
+                $col = 'A';
+                foreach ($headers as $header) {
+                    $value = $item[$header] ?? '-';
+                    $sheet->setCellValue($col . $row, $value);
+                    $col++;
+                }
+                $row++;
+            }
+            
+            // Auto size columns
+            foreach (range('A', chr(ord('A') + count($headers) - 1)) as $columnID) {
+                $sheet->getColumnDimension($columnID)->setAutoSize(true);
+            }
+            
+            // Create writer
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            
+            // Set headers untuk download
+            $filename = 'data_horizontal_displacement_meter_' . date('Ymd_His') . '.xlsx';
+            
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            
+            // Output file
+            $writer->save('php://output');
+            exit();
 
         } catch (\Exception $e) {
             return $this->response->setStatusCode(500)->setJSON([
@@ -621,13 +691,7 @@ class HDMController extends BaseController
                 'hv_3' => !empty($postData['elv625_hv3']) ? (float) $postData['elv625_hv3'] : 0
             ];
             
-            $existingElv625 = $this->pembacaanElv625Model->where('id_pengukuran', $id)->first();
-            if ($existingElv625) {
-                $this->pembacaanElv625Model->update($existingElv625['id_pembacaan'], $elv625Data);
-            } else {
-                $elv625Data['id_pengukuran'] = $id;
-                $this->pembacaanElv625Model->insert($elv625Data);
-            }
+            $this->pembacaanElv625Model->where('id_pengukuran', $id)->update(null, $elv625Data);
 
             // Update data pembacaan ELV 600
             $elv600Data = [
@@ -638,33 +702,20 @@ class HDMController extends BaseController
                 'hv_5' => !empty($postData['elv600_hv5']) ? (float) $postData['elv600_hv5'] : 0
             ];
             
-            $existingElv600 = $this->pembacaanElv600Model->where('id_pengukuran', $id)->first();
-            if ($existingElv600) {
-                $this->pembacaanElv600Model->update($existingElv600['id_pembacaan'], $elv600Data);
-            } else {
-                $elv600Data['id_pengukuran'] = $id;
-                $this->pembacaanElv600Model->insert($elv600Data);
-            }
+            $this->pembacaanElv600Model->where('id_pengukuran', $id)->update(null, $elv600Data);
 
             // Cek apakah ada perubahan pada data pembacaan
-            $hasChanges = $this->deteksiPerubahan($oldData, [
-                'pengukuran' => $pengukuranData,
-                'pembacaanElv625' => $elv625Data,
-                'pembacaanElv600' => $elv600Data
-            ]);
+            $isDataChanged = $this->isDataChanged($oldData, $elv625Data, $elv600Data);
 
-            // Jika ada perubahan pada data pembacaan, hitung ulang pergerakan
-            if ($hasChanges) {
-                $this->hitungUlangPergerakan($id);
-                $message = 'Data berhasil diupdate dan pergerakan dihitung ulang';
-            } else {
-                $message = 'Data berhasil disimpan tanpa perubahan';
+            // Jika ada perubahan, update pergerakan
+            if ($isDataChanged) {
+                $this->pergerakanElv625Model->hitungPergerakan($id);
+                $this->pergerakanElv600Model->hitungPergerakan($id);
             }
 
             return $this->response->setJSON([
                 'success' => true,
-                'message' => $message,
-                'hasChanges' => $hasChanges,
+                'message' => 'Data berhasil diupdate',
                 'redirect' => base_url('horizontal-displacement')
             ]);
 
@@ -677,66 +728,372 @@ class HDMController extends BaseController
     }
 
     /**
-     * Deteksi perubahan data
+     * Cek apakah ada perubahan data
      */
-    private function deteksiPerubahan($oldData, $newData)
+    private function isDataChanged($oldData, $newElv625, $newElv600)
     {
-        $hasChanges = false;
-
-        // Bandingkan data pengukuran
-        foreach (['tahun', 'periode', 'tanggal', 'dma'] as $field) {
-            $oldValue = $oldData['pengukuran'][$field] ?? '';
-            $newValue = $newData['pengukuran'][$field] ?? '';
-            
-            if ($oldValue != $newValue) {
-                $hasChanges = true;
-                break;
-            }
+        // Cek perubahan pada data dasar
+        if ($oldData['pengukuran']['tahun'] != $this->request->getPost('tahun') ||
+            $oldData['pengukuran']['periode'] != $this->request->getPost('periode') ||
+            $oldData['pengukuran']['tanggal'] != $this->request->getPost('tanggal') ||
+            (float)$oldData['pengukuran']['dma'] != (float)$this->request->getPost('dma')) {
+            return true;
         }
 
-        // Bandingkan data ELV 625
-        if (!$hasChanges && $oldData['pembacaanElv625']) {
+        // Cek perubahan pada ELV 625
+        if ($oldData['pembacaanElv625']) {
             foreach (['hv_1', 'hv_2', 'hv_3'] as $field) {
-                $oldValue = (float) ($oldData['pembacaanElv625'][$field] ?? 0);
-                $newValue = (float) ($newData['pembacaanElv625'][$field] ?? 0);
-                
-                if (abs($oldValue - $newValue) > 0.0001) { // Tolerance untuk floating point
-                    $hasChanges = true;
-                    break;
+                if ((float)$oldData['pembacaanElv625'][$field] != (float)$newElv625[$field]) {
+                    return true;
                 }
             }
         }
 
-        // Bandingkan data ELV 600
-        if (!$hasChanges && $oldData['pembacaanElv600']) {
+        // Cek perubahan pada ELV 600
+        if ($oldData['pembacaanElv600']) {
             foreach (['hv_1', 'hv_2', 'hv_3', 'hv_4', 'hv_5'] as $field) {
-                $oldValue = (float) ($oldData['pembacaanElv600'][$field] ?? 0);
-                $newValue = (float) ($newData['pembacaanElv600'][$field] ?? 0);
-                
-                if (abs($oldValue - $newValue) > 0.0001) { // Tolerance untuk floating point
-                    $hasChanges = true;
-                    break;
+                if ((float)$oldData['pembacaanElv600'][$field] != (float)$newElv600[$field]) {
+                    return true;
                 }
             }
         }
 
-        return $hasChanges;
+        return false;
     }
 
     /**
-     * Hitung ulang pergerakan
+     * Delete data
      */
-    private function hitungUlangPergerakan($pengukuran_id)
+    public function delete($id)
     {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
+        }
+
         try {
-            // Hitung ulang pergerakan untuk kedua elevasi
-            $this->pergerakanElv625Model->hitungPergerakan($pengukuran_id);
-            $this->pergerakanElv600Model->hitungPergerakan($pengukuran_id);
-            
-            return true;
+            // Hapus semua data terkait
+            $this->pengukuranModel->delete($id);
+            $this->pembacaanElv625Model->where('id_pengukuran', $id)->delete();
+            $this->pembacaanElv600Model->where('id_pengukuran', $id)->delete();
+            $this->pergerakanElv625Model->where('id_pengukuran', $id)->delete();
+            $this->pergerakanElv600Model->where('id_pengukuran', $id)->delete();
+            $this->initialReadingElv625Model->where('id_pengukuran', $id)->delete();
+            $this->initialReadingElv600Model->where('id_pengukuran', $id)->delete();
+            $this->depthElv625Model->where('id_pengukuran', $id)->delete();
+            $this->depthElv600Model->where('id_pengukuran', $id)->delete();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Data berhasil dihapus'
+            ]);
+
         } catch (\Exception $e) {
-            log_message('error', 'Gagal hitung ulang pergerakan: ' . $e->getMessage());
-            return false;
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
         }
     }
+
+    /**
+     * IMPORT SQL - VERSI FIXED
+     */
+    /**
+ * IMPORT SQL - VERSI FIXED DENGAN VALIDASI LENGKAP
+ */
+public function importSQL()
+{
+    // Validasi AJAX request
+    if (!$this->request->isAJAX()) {
+        return $this->response->setStatusCode(405)->setJSON([
+            'success' => false, 
+            'message' => 'Method not allowed. Hanya AJAX request yang diizinkan.'
+        ]);
+    }
+
+    try {
+        // Validasi method POST
+        if ($this->request->getMethod() !== 'post') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Hanya metode POST yang diizinkan'
+            ]);
+        }
+
+        // Debug: Cek apakah file ada
+        if (empty($_FILES)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Tidak ada file yang diupload. Pastikan form menggunakan enctype="multipart/form-data"'
+            ]);
+        }
+
+        // Validasi file upload
+        $sqlFile = $this->request->getFile('sql_file');
+        
+        if (!$sqlFile) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'File SQL tidak ditemukan dalam request. Pastikan name="sql_file"'
+            ]);
+        }
+
+        // Validasi apakah file berhasil diupload
+        if (!$sqlFile->isValid()) {
+            $errorMessage = $sqlFile->getErrorString();
+            if (empty($errorMessage)) {
+                $errorMessage = 'File upload gagal. Pastikan ukuran file tidak melebihi limit server.';
+            }
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $errorMessage
+            ]);
+        }
+
+        // Validasi ekstensi file
+        $originalName = $sqlFile->getClientName();
+        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+        
+        if (strtolower($extension) !== 'sql') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'File harus berekstensi .sql. File yang diupload: ' . $originalName
+            ]);
+        }
+
+        // Validasi ukuran file (max 50MB)
+        if ($sqlFile->getSize() > 50 * 1024 * 1024) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Ukuran file maksimal 50MB. File Anda: ' . round($sqlFile->getSize() / 1024 / 1024, 2) . 'MB'
+            ]);
+        }
+
+        if ($sqlFile->getSize() == 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'File kosong (0 byte)'
+            ]);
+        }
+
+        // Baca isi file SQL
+        $sqlContent = file_get_contents($sqlFile->getTempName());
+        
+        if (empty($sqlContent)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'File SQL kosong atau tidak dapat dibaca'
+            ]);
+        }
+
+        // Deteksi encoding dan convert ke UTF-8 jika perlu
+        $encoding = mb_detect_encoding($sqlContent, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
+        if ($encoding !== 'UTF-8') {
+            $sqlContent = mb_convert_encoding($sqlContent, 'UTF-8', $encoding);
+        }
+
+        // Hapus BOM jika ada
+        $sqlContent = preg_replace('/^\xEF\xBB\xBF/', '', $sqlContent);
+
+        // Pisahkan query SQL
+        $queries = $this->splitSQLQueries($sqlContent);
+        
+        if (empty($queries)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Tidak ada query SQL yang valid ditemukan dalam file'
+            ]);
+        }
+
+        // Setup database
+        $db = \Config\Database::connect();
+        $stats = [
+            'total' => count($queries),
+            'success' => 0,
+            'failed' => 0,
+            'affected_rows' => 0,
+            'errors' => []
+        ];
+
+        // Mulai transaction
+        $db->transStart();
+
+        try {
+            // Nonaktifkan foreign key checks sementara
+            $db->query('SET FOREIGN_KEY_CHECKS=0');
+            $db->query('SET UNIQUE_CHECKS=0');
+            $db->query('SET AUTOCOMMIT=0');
+
+            // Eksekusi setiap query
+            foreach ($queries as $index => $query) {
+                try {
+                    $trimmedQuery = trim($query);
+                    
+                    // Skip query yang kosong atau terlalu pendek
+                    if (empty($trimmedQuery) || strlen($trimmedQuery) < 10) {
+                        continue;
+                    }
+
+                    // Skip komentar
+                    if (strpos($trimmedQuery, '--') === 0 || 
+                        strpos($trimmedQuery, '/*') === 0 ||
+                        preg_match('/^#/', $trimmedQuery)) {
+                        continue;
+                    }
+
+                    // Skip SET statements tertentu
+                    if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER)/i', $trimmedQuery)) {
+                        continue;
+                    }
+
+                    // Eksekusi query
+                    $result = $db->query($trimmedQuery);
+                    
+                    if ($result !== false) {
+                        $stats['success']++;
+                        
+                        // Hitung affected rows untuk INSERT/UPDATE/DELETE
+                        if (preg_match('/^(INSERT|UPDATE|DELETE)/i', $trimmedQuery)) {
+                            $stats['affected_rows'] += $db->affectedRows();
+                        }
+                    } else {
+                        $stats['failed']++;
+                        $errorInfo = $db->error();
+                        $stats['errors'][] = [
+                            'query' => $index + 1,
+                            'error' => $errorInfo['message'] ?? 'Unknown error',
+                            'sql' => substr($trimmedQuery, 0, 100) . '...' // Simpan sebagian query untuk debug
+                        ];
+                    }
+
+                } catch (\Exception $e) {
+                    $stats['failed']++;
+                    $stats['errors'][] = [
+                        'query' => $index + 1,
+                        'error' => $e->getMessage(),
+                        'sql' => substr($trimmedQuery, 0, 100) . '...'
+                    ];
+                }
+            }
+
+            // Commit transaction
+            $db->transComplete();
+
+            if ($db->transStatus() === FALSE) {
+                throw new \Exception('Transaction failed during SQL import');
+            }
+
+        } finally {
+            // Selalu aktifkan kembali foreign key checks
+            $db->query('SET FOREIGN_KEY_CHECKS=1');
+            $db->query('SET UNIQUE_CHECKS=1');
+            $db->query('SET AUTOCOMMIT=1');
+        }
+
+        // Siapkan response
+        $response = [
+            'success' => $stats['failed'] === 0,
+            'message' => "Import selesai. \nTotal Query: {$stats['total']} \nBerhasil: {$stats['success']} \nGagal: {$stats['failed']} \nAffected Rows: {$stats['affected_rows']}",
+            'stats' => $stats
+        ];
+
+        // Tambahkan sample error jika ada
+        if ($stats['failed'] > 0 && !empty($stats['errors'])) {
+            $response['error_samples'] = array_slice($stats['errors'], 0, 5);
+            
+            // Format error samples untuk tampilan yang lebih baik
+            $errorMessages = [];
+            foreach ($response['error_samples'] as $error) {
+                $errorMessages[] = "Query {$error['query']}: {$error['error']}";
+            }
+            $response['error_display'] = implode("\n", $errorMessages);
+        }
+
+        return $this->response->setJSON($response);
+
+    } catch (\Exception $e) {
+        // Log error untuk debugging
+        log_message('error', 'SQL Import Error: ' . $e->getMessage());
+        
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * Fungsi improved untuk memisahkan query SQL
+ */
+private function splitSQLQueries($sqlContent)
+{
+    // Normalize line endings
+    $sqlContent = str_replace(["\r\n", "\r"], "\n", $sqlContent);
+    
+    // Remove single line comments
+    $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
+    $sqlContent = preg_replace('/#.*$/m', '', $sqlContent);
+    
+    // Remove multi-line comments
+    $sqlContent = preg_replace('/\/\*.*?\*\//s', '', $sqlContent);
+    
+    // Split by semicolon, but ignore semicolons inside quotes
+    $tempQueries = [];
+    $currentQuery = '';
+    $inString = false;
+    $stringChar = '';
+    
+    for ($i = 0; $i < strlen($sqlContent); $i++) {
+        $char = $sqlContent[$i];
+        
+        if (($char === "'" || $char === '"') && !$inString) {
+            $inString = true;
+            $stringChar = $char;
+        } elseif ($char === $stringChar && $inString) {
+            // Cek untuk escaped quotes
+            if ($i > 0 && $sqlContent[$i-1] === '\\') {
+                // Ini escaped quote, lanjutkan
+            } else {
+                $inString = false;
+                $stringChar = '';
+            }
+        }
+        
+        if ($char === ';' && !$inString) {
+            $tempQueries[] = trim($currentQuery);
+            $currentQuery = '';
+        } else {
+            $currentQuery .= $char;
+        }
+    }
+    
+    // Tambahkan query terakhir jika ada
+    if (!empty(trim($currentQuery))) {
+        $tempQueries[] = trim($currentQuery);
+    }
+    
+    // Clean queries
+    $queries = [];
+    foreach ($tempQueries as $query) {
+        $trimmedQuery = trim($query);
+        
+        if (empty($trimmedQuery)) {
+            continue;
+        }
+        
+        // Skip queries yang terlalu pendek (biasanya komentar)
+        if (strlen($trimmedQuery) < 10) {
+            continue;
+        }
+        
+        // Skip specific commands
+        if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER|CREATE DATABASE|DROP DATABASE)/i', $trimmedQuery)) {
+            continue;
+        }
+        
+        $queries[] = $trimmedQuery . ';';
+    }
+    
+    return $queries;
+}
 }
