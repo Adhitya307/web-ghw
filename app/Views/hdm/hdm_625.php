@@ -201,6 +201,11 @@
             background-color: #f8f9fa !important;
             font-weight: bold;
         }
+        
+        .mawaduk-cell {
+            background-color: #e8f5e8 !important;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -292,6 +297,7 @@
                     <th colspan="6" class="bg-info header-large">H.1</th>
                     <th colspan="6" class="bg-info header-large">H.2</th>
                     <th colspan="6" class="bg-info header-large">H.3</th>
+                    <th rowspan="4" class="bg-info header-large">MA.Waduk</th>
                 </tr>
                 <tr>
                     <th colspan="3" class="bg-info header-large">Elevasi (EL. m)</th>
@@ -342,6 +348,9 @@
                     <th colspan="1" class="bg-danger">Peringatan</th>
                     <th colspan="1" class="bg-danger">Bahaya</th>
                     <th colspan="1" class="bg-danger">Pergerakan</th>
+
+                    <!-- MA.Waduk Header -->
+                    <th rowspan="1" class="bg-success">Elevasi (EL. m)</th>
                 </tr>
             </thead>
             <tbody>
@@ -405,7 +414,7 @@
 
                 <?php if (empty($data)): ?>
                     <tr>
-                        <td colspan="24" class="text-center py-4">
+                        <td colspan="25" class="text-center py-4">
                             <i class="fas fa-inbox fa-2x text-muted mb-2"></i><br>
                             <span class="text-muted">Tidak ada data HDM 625 yang ditemukan</span>
                         </td>
@@ -452,7 +461,7 @@
                             
                             <!-- HV 1 Data (Kedalaman 20.00m) -->
                             <td class="reading-cell"><?= $pembacaan['hv_1'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv1) ?></td>
+                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_hv1) ?></td>
                             <td class="threshold-cell"><?= $ambangH1['aman'] ?? $ambangH1['aman'] ?></td>
                             <td class="threshold-cell"><?= $ambangH1['peringatan'] ?? $ambangH1['peringatan'] ?></td>
                             <td class="threshold-cell"><?= $ambangH1['bahaya'] ?? $ambangH1['bahaya'] ?></td>
@@ -462,7 +471,7 @@
 
                             <!-- HV 2 Data (Kedalaman 40.00m) -->
                             <td class="reading-cell"><?= $pembacaan['hv_2'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv2) ?></td>
+                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_hv2) ?></td>
                             <td class="threshold-cell"><?= $ambangH2['aman'] ?? $ambangH2['aman'] ?></td>
                             <td class="threshold-cell"><?= $ambangH2['peringatan'] ?? $ambangH2['peringatan'] ?></td>
                             <td class="threshold-cell"><?= $ambangH2['bahaya'] ?? $ambangH2['bahaya'] ?></td>
@@ -472,12 +481,17 @@
 
                             <!-- HV 3 Data (Kedalaman 50.00m) -->
                             <td class="reading-cell"><?= $pembacaan['hv_3'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv3) ?></td>
+                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_hv3) ?></td>
                             <td class="threshold-cell"><?= $ambangH3['aman'] ?? $ambangH3['aman'] ?></td>
                             <td class="threshold-cell"><?= $ambangH3['peringatan'] ?? $ambangH3['peringatan'] ?></td>
                             <td class="threshold-cell"><?= $ambangH3['bahaya'] ?? $ambangH3['bahaya'] ?></td>
                             <td class="<?= getStatusClass625($pergerakan_ambang_hv3, 'H3') ?>">
                                 <?= formatPergerakan625($pergerakan_ambang_hv3) ?>
+                            </td>
+
+                            <!-- MA.Waduk Data -->
+                            <td class="mawaduk-cell">
+                                <?= $pengukuran['dma'] ?? '-' ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>

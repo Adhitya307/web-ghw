@@ -201,6 +201,11 @@
             background-color: #f8f9fa !important;
             font-weight: bold;
         }
+        
+        .mawaduk-cell {
+            background-color: #e8f5e8 !important;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -290,6 +295,7 @@
                     <th colspan="6" class="bg-info header-large">H.3</th>
                     <th colspan="6" class="bg-info header-large">H.4</th>
                     <th colspan="6" class="bg-info header-large">H.5</th>
+                    <th rowspan="4" class="bg-info header-large">MA.Waduk</th>
                 </tr>
                 <tr>
                     <th colspan="3" class="bg-info header-large">Elevasi (EL. m)</th>
@@ -364,82 +370,85 @@
                     <th colspan="1" class="bg-danger">Peringatan</th>
                     <th colspan="1" class="bg-danger">Bahaya</th>
                     <th colspan="1" class="bg-danger">Pergerakan</th>
+
+                    <!-- MA.Waduk Header -->
+                    <th rowspan="1" class="bg-success">Elevasi (EL. m)</th>
                 </tr>
             </thead>
             <tbody>
                 <?php 
-                // Helper functions untuk menentukan status berdasarkan kedalaman//
-function getStatusClass600($pergerakanValue, $depth) {
-    if ($pergerakanValue === null || $pergerakanValue === '' || $pergerakanValue === '-') return '';
-    
-    $pergerakanValue = floatval($pergerakanValue);
-    
-    switch($depth) {
-        case 'H1':
-            if ($pergerakanValue >= -44.29) return 'status-aman';
-            if ($pergerakanValue <= -60.40) return 'status-bahaya';
-            return 'status-peringatan';
-        case 'H2':
-            if ($pergerakanValue >= -39.75) return 'status-aman';
-            if ($pergerakanValue <= -54.20) return 'status-bahaya';
-            return 'status-peringatan';
-        case 'H3':
-            if ($pergerakanValue >= -40.63) return 'status-aman';
-            if ($pergerakanValue <= -55.40) return 'status-bahaya';
-            return 'status-peringatan';
-        case 'H4':
-            if ($pergerakanValue >= -24.86) return 'status-aman';
-            if ($pergerakanValue <= -33.90) return 'status-bahaya';
-            return 'status-peringatan';
-        case 'H5':
-            if ($pergerakanValue >= -11.22) return 'status-aman';
-            if ($pergerakanValue <= -15.30) return 'status-bahaya';
-            return 'status-peringatan';
-        default:
-            return '';
-    }
-}
+                // Helper functions untuk menentukan status berdasarkan kedalaman
+                function getStatusClass600($pergerakanValue, $depth) {
+                    if ($pergerakanValue === null || $pergerakanValue === '' || $pergerakanValue === '-') return '';
+                    
+                    $pergerakanValue = floatval($pergerakanValue);
+                    
+                    switch($depth) {
+                        case 'H1':
+                            if ($pergerakanValue >= -44.29) return 'status-aman';
+                            if ($pergerakanValue <= -60.40) return 'status-bahaya';
+                            return 'status-peringatan';
+                        case 'H2':
+                            if ($pergerakanValue >= -39.75) return 'status-aman';
+                            if ($pergerakanValue <= -54.20) return 'status-bahaya';
+                            return 'status-peringatan';
+                        case 'H3':
+                            if ($pergerakanValue >= -40.63) return 'status-aman';
+                            if ($pergerakanValue <= -55.40) return 'status-bahaya';
+                            return 'status-peringatan';
+                        case 'H4':
+                            if ($pergerakanValue >= -24.86) return 'status-aman';
+                            if ($pergerakanValue <= -33.90) return 'status-bahaya';
+                            return 'status-peringatan';
+                        case 'H5':
+                            if ($pergerakanValue >= -11.22) return 'status-aman';
+                            if ($pergerakanValue <= -15.30) return 'status-bahaya';
+                            return 'status-peringatan';
+                        default:
+                            return '';
+                    }
+                }
 
-function getAmbangBatas600($depth) {
-    switch($depth) {
-        case 'H1':
-            return ['aman' => -44.29, 'peringatan' => -51.11, 'bahaya' => -60.40];
-        case 'H2':
-            return ['aman' => -39.75, 'peringatan' => -45.86, 'bahaya' => -54.20];
-        case 'H3':
-            return ['aman' => -40.63, 'peringatan' => -46.88, 'bahaya' => -55.40];
-        case 'H4':
-            return ['aman' => -24.86, 'peringatan' => -28.68, 'bahaya' => -33.90];
-        case 'H5':
-            return ['aman' => -11.22, 'peringatan' => -12.95, 'bahaya' => -15.30];
-        default:
-            return ['aman' => 0, 'peringatan' => 0, 'bahaya' => 0];
-    }
-}
+                function getAmbangBatas600($depth) {
+                    switch($depth) {
+                        case 'H1':
+                            return ['aman' => -44.29, 'peringatan' => -51.11, 'bahaya' => -60.40];
+                        case 'H2':
+                            return ['aman' => -39.75, 'peringatan' => -45.86, 'bahaya' => -54.20];
+                        case 'H3':
+                            return ['aman' => -40.63, 'peringatan' => -46.88, 'bahaya' => -55.40];
+                        case 'H4':
+                            return ['aman' => -24.86, 'peringatan' => -28.68, 'bahaya' => -33.90];
+                        case 'H5':
+                            return ['aman' => -11.22, 'peringatan' => -12.95, 'bahaya' => -15.30];
+                        default:
+                            return ['aman' => 0, 'peringatan' => 0, 'bahaya' => 0];
+                    }
+                }
 
-// Helper function khusus untuk format pergerakan dengan 2 desimal
-function formatPergerakan($value) {
-    if ($value === null || $value === '' || $value === '-') return '-';
-    $floatVal = floatval($value);
-    return number_format($floatVal, 2, '.', '');
-}
+                // Helper function khusus untuk format pergerakan dengan 2 desimal
+                function formatPergerakan($value) {
+                    if ($value === null || $value === '' || $value === '-') return '-';
+                    $floatVal = floatval($value);
+                    return number_format($floatVal, 2, '.', '');
+                }
 
-// Group data by tahun untuk rowspan
-$groupedData = [];
-if (!empty($data)) {
-    foreach ($data as $item) {
-        $tahun = $item['pengukuran']['tahun'];
-        if (!isset($groupedData[$tahun])) {
-            $groupedData[$tahun] = [];
-        }
-        $groupedData[$tahun][] = $item;
-    }
-}
-?>
+                // Group data by tahun untuk rowspan
+                $groupedData = [];
+                if (!empty($data)) {
+                    foreach ($data as $item) {
+                        $tahun = $item['pengukuran']['tahun'];
+                        if (!isset($groupedData[$tahun])) {
+                            $groupedData[$tahun] = [];
+                        }
+                        $groupedData[$tahun][] = $item;
+                    }
+                }
+                ?>
 
                 <?php if (empty($data)): ?>
                     <tr>
-                        <td colspan="36" class="text-center py-4">
+                        <td colspan="37" class="text-center py-4">
                             <i class="fas fa-inbox fa-2x text-muted mb-2"></i><br>
                             <span class="text-muted">Tidak ada data HDM 600 yang ditemukan</span>
                         </td>
@@ -538,6 +547,11 @@ if (!empty($data)) {
                             <td class="threshold-cell"><?= $ambangH5['bahaya'] ?? $ambangH5['bahaya'] ?></td>
                             <td class="<?= getStatusClass600($pergerakan_ambang_hv5, 'H5') ?>">
                                 <?= formatPergerakan($pergerakan_ambang_hv5) ?>
+                            </td>
+
+                            <!-- MA.Waduk Data -->
+                            <td class="mawaduk-cell">
+                                <?= $pengukuran['dma'] ?? '-' ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
