@@ -66,3 +66,21 @@ $routes->post('horizontal-displacement/check-duplicate', '\App\Controllers\HDM\H
 
 $routes->get('horizontal-displacement/edit/(:num)', '\App\Controllers\HDM\HDMController::edit/$1');
 $routes->put('horizontal-displacement/update/(:num)', '\App\Controllers\HDM\HDMController::update/$1');
+
+// HDM 625 Routes
+$routes->get('hdm625', 'HDM\Hdm625Controller::index');
+$routes->get('hdm625/detail/(:num)', 'HDM\Hdm625Controller::detail/$1');
+$routes->get('hdm625/export', 'HDM\Hdm625Controller::exportExcel');
+$routes->post('hdm625/recalculate', 'HDM\Hdm625Controller::recalculatePergerakan');
+$routes->get('hdm625/chart-data', 'HDM\Hdm625Controller::chartData');
+$routes->get('hdm625/api', 'HDM\Hdm625Controller::apiData');
+
+// HDM 600 Routes
+$routes->get('hdm600', 'HDM\Hdm600Controller::index');
+$routes->get('hdm600/detail/(:num)', 'HDM\Hdm600Controller::detail/$1');
+$routes->get('hdm600/export', 'HDM\Hdm600Controller::exportExcel');
+$routes->post('hdm600/recalculate', 'HDM\Hdm600Controller::recalculatePergerakan');
+$routes->get('hdm600/chart-data', 'HDM\Hdm600Controller::chartData');
+$routes->get('hdm600/api', 'HDM\Hdm600Controller::apiData');
+$routes->post('hdm600/update-ambang-batas/(:num)', 'HDM\Hdm600Controller::updateAmbangBatas/$1');
+$routes->post('hdm600/insert-default-ambang-batas/(:num)', 'HDM\Hdm600Controller::insertDefaultAmbangBatas/$1');

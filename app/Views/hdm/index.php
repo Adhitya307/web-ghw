@@ -248,11 +248,11 @@
             <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-outline-primary active">
                 <i class="fas fa-table"></i> Tabel Data HDM
             </a>
-            <a href="<?= base_url('horizontal-displacement/data-lengkap') ?>" class="btn btn-outline-info">
-                <i class="fas fa-database"></i> Data Lengkap
+            <a href="<?= base_url('hdm625') ?>" class="btn btn-outline-info">
+                <i class="fas fa-database"></i> HDM 625
             </a>
-            <a href="<?= base_url('horizontal-displacement/grafik') ?>" class="btn btn-outline-success">
-                <i class="fas fa-chart-line"></i> Grafik HDM
+            <a href="<?= base_url('hdm600') ?>" class="btn btn-outline-info">
+                <i class="fas fa-arrow-right-arrow-left"></i> HDM 600
             </a>
             
             <button type="button" class="btn btn-outline-primary" id="addData">
