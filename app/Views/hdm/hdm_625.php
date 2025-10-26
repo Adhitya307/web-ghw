@@ -352,149 +352,163 @@
                 </tr>
             </thead>
             <tbody>
-                <?php 
-                // Helper functions untuk menentukan status berdasarkan kedalaman
-                function getStatusClass625($pergerakanValue, $depth) {
-                    if ($pergerakanValue === null || $pergerakanValue === '' || $pergerakanValue === '-') return '';
-                    
-                    $pergerakanValue = floatval($pergerakanValue);
-                    
-                    switch($depth) {
-                        case 'H1':
-                            if ($pergerakanValue >= -18.77) return 'status-aman';
-                            if ($pergerakanValue <= -25.60) return 'status-bahaya';
-                            return 'status-peringatan';
-                        case 'H2':
-                            if ($pergerakanValue >= -9.02) return 'status-aman';
-                            if ($pergerakanValue <= -12.30) return 'status-bahaya';
-                            return 'status-peringatan';
-                        case 'H3':
-                            if ($pergerakanValue >= -5.94) return 'status-aman';
-                            if ($pergerakanValue <= -8.10) return 'status-bahaya';
-                            return 'status-peringatan';
-                        default:
-                            return '';
-                    }
-                }
+                <!-- GANTI BAGIAN INI DI VIEW -->
+<?php 
+// Helper functions untuk menentukan status berdasarkan kedalaman
+function getStatusClass625($pergerakanValue, $depth) {
+    if ($pergerakanValue === null || $pergerakanValue === '' || $pergerakanValue === '-') return '';
+    
+    $pergerakanValue = floatval($pergerakanValue);
+    
+    switch($depth) {
+        case 'H1':
+            if ($pergerakanValue >= -18.77) return 'status-aman';
+            if ($pergerakanValue <= -25.60) return 'status-bahaya';
+            return 'status-peringatan';
+        case 'H2':
+            if ($pergerakanValue >= -9.02) return 'status-aman';
+            if ($pergerakanValue <= -12.30) return 'status-bahaya';
+            return 'status-peringatan';
+        case 'H3':
+            if ($pergerakanValue >= -5.94) return 'status-aman';
+            if ($pergerakanValue <= -8.10) return 'status-bahaya';
+            return 'status-peringatan';
+        default:
+            return '';
+    }
+}
 
-                function getAmbangBatas625($depth) {
-                    switch($depth) {
-                        case 'H1':
-                            return ['aman' => -18.77, 'peringatan' => -21.66, 'bahaya' => -25.60];
-                        case 'H2':
-                            return ['aman' => -9.02, 'peringatan' => -10.41, 'bahaya' => -12.30];
-                        case 'H3':
-                            return ['aman' => -5.94, 'peringatan' => -6.85, 'bahaya' => -8.10];
-                        default:
-                            return ['aman' => 0, 'peringatan' => 0, 'bahaya' => 0];
-                    }
-                }
+function getAmbangBatas625($depth) {
+    switch($depth) {
+        case 'H1':
+            return ['aman' => -18.77, 'peringatan' => -21.66, 'bahaya' => -25.60];
+        case 'H2':
+            return ['aman' => -9.02, 'peringatan' => -10.41, 'bahaya' => -12.30];
+        case 'H3':
+            return ['aman' => -5.94, 'peringatan' => -6.85, 'bahaya' => -8.10];
+        default:
+            return ['aman' => 0, 'peringatan' => 0, 'bahaya' => 0];
+    }
+}
 
-                // Helper function khusus untuk format pergerakan dengan 2 desimal
-                function formatPergerakan625($value) {
-                    if ($value === null || $value === '' || $value === '-') return '-';
-                    $floatVal = floatval($value);
-                    return number_format($floatVal, 2, '.', '');
-                }
+// Helper function khusus untuk format pergerakan dengan 2 desimal
+function formatPergerakan625($value) {
+    if ($value === null || $value === '' || $value === '-') return '-';
+    $floatVal = floatval($value);
+    return number_format($floatVal, 2, '.', '');
+}
 
-                // Group data by tahun untuk rowspan
-                $groupedData = [];
-                if (!empty($data)) {
-                    foreach ($data as $item) {
-                        $tahun = $item['pengukuran']['tahun'];
-                        if (!isset($groupedData[$tahun])) {
-                            $groupedData[$tahun] = [];
-                        }
-                        $groupedData[$tahun][] = $item;
-                    }
-                }
-                ?>
+// Group data by tahun untuk rowspan - DENGAN URUTAN ASCENDING
+$groupedData = [];
+if (!empty($data)) {
+    foreach ($data as $item) {
+        $tahun = $item['pengukuran']['tahun'];
+        if (!isset($groupedData[$tahun])) {
+            $groupedData[$tahun] = [];
+        }
+        $groupedData[$tahun][] = $item;
+    }
+    
+    // Urutkan tahun secara ascending (dari kecil ke besar)
+    ksort($groupedData);
+    
+    // Untuk setiap tahun, urutkan data berdasarkan tanggal ascending (dari lama ke baru)
+    foreach ($groupedData as $tahun => &$items) {
+        usort($items, function($a, $b) {
+            $dateA = strtotime($a['pengukuran']['tanggal']);
+            $dateB = strtotime($b['pengukuran']['tanggal']);
+            return $dateA - $dateB; // Ascending: data lama di atas, baru di bawah
+        });
+    }
+    unset($items); // Hapus reference
+}
+?>
 
-                <?php if (empty($data)): ?>
-                    <tr>
-                        <td colspan="25" class="text-center py-4">
-                            <i class="fas fa-inbox fa-2x text-muted mb-2"></i><br>
-                            <span class="text-muted">Tidak ada data HDM 625 yang ditemukan</span>
-                        </td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($groupedData as $tahun => $itemsInYear): ?>
-                        <?php $rowCount = count($itemsInYear); ?>
-                        <?php foreach ($itemsInYear as $index => $item): 
-                            $pengukuran = $item['pengukuran'];
-                            $pembacaan = $item['pembacaan_elv625'] ?? [];
-                            $initial = $item['initial_reading_elv625'] ?? [];
-                            $pergerakan = $item['pergerakan_elv625'] ?? [];
-                            $depth = $item['depth_elv625'] ?? [];
-                            $ambangBatas = $item['ambang_batas'] ?? [];
-                            
-                            // Ambang batas dari database jika ada, jika tidak gunakan default
-                            $ambangH1 = $ambangBatas['h1'] ?? getAmbangBatas625('H1');
-                            $ambangH2 = $ambangBatas['h2'] ?? getAmbangBatas625('H2');
-                            $ambangH3 = $ambangBatas['h3'] ?? getAmbangBatas625('H3');
-                            
-                            // Pergerakan asli (belum dikali 10) untuk kolom pergerakan biasa
-                            $pergerakan_hv1 = $pergerakan['hv_1'] ?? 0;
-                            $pergerakan_hv2 = $pergerakan['hv_2'] ?? 0;
-                            $pergerakan_hv3 = $pergerakan['hv_3'] ?? 0;
-                            
-                            // Pergerakan untuk ambang batas (sudah dikali 10)
-                            $pergerakan_ambang_hv1 = $ambangH1['pergerakan'] ?? ($pergerakan_hv1 * 10);
-                            $pergerakan_ambang_hv2 = $ambangH2['pergerakan'] ?? ($pergerakan_hv2 * 10);
-                            $pergerakan_ambang_hv3 = $ambangH3['pergerakan'] ?? ($pergerakan_hv3 * 10);
-                        ?>
-                        <tr data-tahun="<?= $pengukuran['tahun'] ?>" 
-                            data-periode="<?= $pengukuran['periode'] ?>"
-                            data-id="<?= $pengukuran['id_pengukuran'] ?>">
-                            
-                            <!-- Basic Info Columns -->
-                            <?php if ($index === 0): ?>
-                                <td rowspan="<?= $rowCount ?>" class="sticky-header year-rowspan">
-                                    <?= $pengukuran['tahun'] ?>
-                                </td>
-                            <?php endif; ?>
-                            
-                            <td class="sticky-header-2 bg-light"><?= $pengukuran['periode'] ?></td>
-                            <td class="sticky-header-3 bg-light"><?= date('d-m-Y', strtotime($pengukuran['tanggal'])) ?></td>
-                            
-                            <!-- HV 1 Data (Kedalaman 20.00m) -->
-                            <td class="reading-cell"><?= $pembacaan['hv_1'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv1) ?></td>
-                            <td class="threshold-cell"><?= $ambangH1['aman'] ?? $ambangH1['aman'] ?></td>
-                            <td class="threshold-cell"><?= $ambangH1['peringatan'] ?? $ambangH1['peringatan'] ?></td>
-                            <td class="threshold-cell"><?= $ambangH1['bahaya'] ?? $ambangH1['bahaya'] ?></td>
-                            <td class="<?= getStatusClass625($pergerakan_ambang_hv1, 'H1') ?>">
-                                <?= formatPergerakan625($pergerakan_ambang_hv1) ?>
-                            </td>
+<?php if (empty($data)): ?>
+    <tr>
+        <td colspan="25" class="text-center py-4">
+            <i class="fas fa-inbox fa-2x text-muted mb-2"></i><br>
+            <span class="text-muted">Tidak ada data HDM 625 yang ditemukan</span>
+        </td>
+    </tr>
+<?php else: ?>
+    <?php foreach ($groupedData as $tahun => $itemsInYear): ?>
+        <?php $rowCount = count($itemsInYear); ?>
+        <?php foreach ($itemsInYear as $index => $item): 
+            $pengukuran = $item['pengukuran'];
+            $pembacaan = $item['pembacaan_elv625'] ?? [];
+            $initial = $item['initial_reading_elv625'] ?? [];
+            $pergerakan = $item['pergerakan_elv625'] ?? [];
+            $depth = $item['depth_elv625'] ?? [];
+            $ambangBatas = $item['ambang_batas'] ?? [];
+            
+            // Ambang batas dari database jika ada, jika tidak gunakan default
+            $ambangH1 = $ambangBatas['h1'] ?? getAmbangBatas625('H1');
+            $ambangH2 = $ambangBatas['h2'] ?? getAmbangBatas625('H2');
+            $ambangH3 = $ambangBatas['h3'] ?? getAmbangBatas625('H3');
+            
+            // Pergerakan asli (belum dikali 10) untuk kolom pergerakan biasa
+            $pergerakan_hv1 = $pergerakan['hv_1'] ?? 0;
+            $pergerakan_hv2 = $pergerakan['hv_2'] ?? 0;
+            $pergerakan_hv3 = $pergerakan['hv_3'] ?? 0;
+            
+            // Pergerakan untuk ambang batas (sudah dikali 10)
+            $pergerakan_ambang_hv1 = $ambangH1['pergerakan'] ?? ($pergerakan_hv1 * 10);
+            $pergerakan_ambang_hv2 = $ambangH2['pergerakan'] ?? ($pergerakan_hv2 * 10);
+            $pergerakan_ambang_hv3 = $ambangH3['pergerakan'] ?? ($pergerakan_hv3 * 10);
+        ?>
+        <tr data-tahun="<?= $pengukuran['tahun'] ?>" 
+            data-periode="<?= $pengukuran['periode'] ?>"
+            data-id="<?= $pengukuran['id_pengukuran'] ?>">
+            
+            <!-- Basic Info Columns -->
+            <?php if ($index === 0): ?>
+                <td rowspan="<?= $rowCount ?>" class="sticky-header year-rowspan">
+                    <?= $pengukuran['tahun'] ?>
+                </td>
+            <?php endif; ?>
+            
+            <td class="sticky-header-2 bg-light"><?= $pengukuran['periode'] ?></td>
+            <td class="sticky-header-3 bg-light"><?= date('d-m-Y', strtotime($pengukuran['tanggal'])) ?></td>
+            
+            <!-- HV 1 Data (Kedalaman 20.00m) -->
+            <td class="reading-cell"><?= $pembacaan['hv_1'] ?? '-' ?></td>
+            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv1) ?></td>
+            <td class="threshold-cell"><?= $ambangH1['aman'] ?? $ambangH1['aman'] ?></td>
+            <td class="threshold-cell"><?= $ambangH1['peringatan'] ?? $ambangH1['peringatan'] ?></td>
+            <td class="threshold-cell"><?= $ambangH1['bahaya'] ?? $ambangH1['bahaya'] ?></td>
+            <td class="<?= getStatusClass625($pergerakan_ambang_hv1, 'H1') ?>">
+                <?= formatPergerakan625($pergerakan_ambang_hv1) ?>
+            </td>
 
-                            <!-- HV 2 Data (Kedalaman 40.00m) -->
-                            <td class="reading-cell"><?= $pembacaan['hv_2'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv2) ?></td>
-                            <td class="threshold-cell"><?= $ambangH2['aman'] ?? $ambangH2['aman'] ?></td>
-                            <td class="threshold-cell"><?= $ambangH2['peringatan'] ?? $ambangH2['peringatan'] ?></td>
-                            <td class="threshold-cell"><?= $ambangH2['bahaya'] ?? $ambangH2['bahaya'] ?></td>
-                            <td class="<?= getStatusClass625($pergerakan_ambang_hv2, 'H2') ?>">
-                                <?= formatPergerakan625($pergerakan_ambang_hv2) ?>
-                            </td>
+            <!-- HV 2 Data (Kedalaman 40.00m) -->
+            <td class="reading-cell"><?= $pembacaan['hv_2'] ?? '-' ?></td>
+            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv2) ?></td>
+            <td class="threshold-cell"><?= $ambangH2['aman'] ?? $ambangH2['aman'] ?></td>
+            <td class="threshold-cell"><?= $ambangH2['peringatan'] ?? $ambangH2['peringatan'] ?></td>
+            <td class="threshold-cell"><?= $ambangH2['bahaya'] ?? $ambangH2['bahaya'] ?></td>
+            <td class="<?= getStatusClass625($pergerakan_ambang_hv2, 'H2') ?>">
+                <?= formatPergerakan625($pergerakan_ambang_hv2) ?>
+            </td>
 
-                            <!-- HV 3 Data (Kedalaman 50.00m) -->
-                            <td class="reading-cell"><?= $pembacaan['hv_3'] ?? '-' ?></td>
-                            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv3) ?></td>
-                            <td class="threshold-cell"><?= $ambangH3['aman'] ?? $ambangH3['aman'] ?></td>
-                            <td class="threshold-cell"><?= $ambangH3['peringatan'] ?? $ambangH3['peringatan'] ?></td>
-                            <td class="threshold-cell"><?= $ambangH3['bahaya'] ?? $ambangH3['bahaya'] ?></td>
-                            <td class="<?= getStatusClass625($pergerakan_ambang_hv3, 'H3') ?>">
-                                <?= formatPergerakan625($pergerakan_ambang_hv3) ?>
-                            </td>
+            <!-- HV 3 Data (Kedalaman 50.00m) -->
+            <td class="reading-cell"><?= $pembacaan['hv_3'] ?? '-' ?></td>
+            <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv3) ?></td>
+            <td class="threshold-cell"><?= $ambangH3['aman'] ?? $ambangH3['aman'] ?></td>
+            <td class="threshold-cell"><?= $ambangH3['peringatan'] ?? $ambangH3['peringatan'] ?></td>
+            <td class="threshold-cell"><?= $ambangH3['bahaya'] ?? $ambangH3['bahaya'] ?></td>
+            <td class="<?= getStatusClass625($pergerakan_ambang_hv3, 'H3') ?>">
+                <?= formatPergerakan625($pergerakan_ambang_hv3) ?>
+            </td>
 
-                            <!-- MA.Waduk Data -->
-                            <td class="mawaduk-cell">
-                                <?= $pengukuran['dma'] ?? '-' ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+            <!-- MA.Waduk Data -->
+            <td class="mawaduk-cell">
+                <?= $pengukuran['dma'] ?? '-' ?>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    <?php endforeach; ?>
+<?php endif; ?>
             </tbody>
         </table>
     </div>

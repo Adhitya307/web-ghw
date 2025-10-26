@@ -41,10 +41,10 @@ class Hdm625Controller extends BaseController
     public function index()
     {
         try {
-            // Get all pengukuran data
+            // Get all pengukuran data - UBAH URUTAN MENJADI ASCENDING
             $pengukuranData = $this->pengukuranModel
-                ->orderBy('tahun', 'DESC')
-                ->orderBy('tanggal', 'DESC')
+                ->orderBy('tahun', 'ASC')  // Ubah dari DESC ke ASC
+                ->orderBy('tanggal', 'ASC') // Ubah dari DESC ke ASC
                 ->findAll();
 
             $data = [];
@@ -82,7 +82,7 @@ class Hdm625Controller extends BaseController
             $uniquePeriods = array_unique(array_column($pengukuranData, 'periode'));
             $uniqueDMA = array_unique(array_column($pengukuranData, 'dma'));
 
-            rsort($uniqueYears); // Tahun terbaru pertama
+            sort($uniqueYears); // Ubah dari rsort() ke sort() untuk ascending
             sort($uniquePeriods);
             sort($uniqueDMA);
 
@@ -201,10 +201,10 @@ class Hdm625Controller extends BaseController
     public function exportExcel()
     {
         try {
-            // Get all data
+            // Get all data - UBAH URUTAN MENJADI ASCENDING
             $pengukuranData = $this->pengukuranModel
-                ->orderBy('tahun', 'DESC')
-                ->orderBy('tanggal', 'DESC')
+                ->orderBy('tahun', 'ASC')  // Ubah dari DESC ke ASC
+                ->orderBy('tanggal', 'ASC') // Ubah dari DESC ke ASC
                 ->findAll();
 
             $data = [];

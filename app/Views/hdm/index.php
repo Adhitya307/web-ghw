@@ -530,12 +530,12 @@ let currentPage = 1;
 let pageSize = 10;
 let filteredData = [];
 
-// Fungsi untuk mengurutkan data berdasarkan tanggal
+// Fungsi untuk mengurutkan data berdasarkan tanggal (terlama ke terbaru)
 function sortDataByDate(data) {
     return data.sort((a, b) => {
         const dateA = new Date(a.pengukuran?.tanggal || 0);
         const dateB = new Date(b.pengukuran?.tanggal || 0);
-        return dateB - dateA; // Urutkan dari tanggal terbaru ke terlama
+        return dateA - dateB; // Urutkan dari tanggal terlama ke terbaru
     });
 }
 
@@ -626,34 +626,42 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     // Fungsi render body tabel
-    function renderTableBody(data) {
-        const tbody = document.getElementById('dataTableBody');
-        
-        if (data.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="34" class="text-center py-4">
-                        <i class="fas fa-database fa-2x text-muted mb-3"></i>
-                        <p class="text-muted">Tidak ada data HDM yang tersedia</p>
-                        <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-primary mt-2">
-                            <i class="fas fa-refresh me-1"></i> Refresh
-                        </a>
-                    </td>
-                </tr>
-            `;
-            return;
+function renderTableBody(data) {
+    const tbody = document.getElementById('dataTableBody');
+    
+    if (data.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="34" class="text-center py-4">
+                    <i class="fas fa-database fa-2x text-muted mb-3"></i>
+                    <p class="text-muted">Tidak ada data HDM yang tersedia</p>
+                    <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-primary mt-2">
+                        <i class="fas fa-refresh me-1"></i> Refresh
+                    </a>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    // Group data by tahun untuk rowspan
+    const tahunGroups = {};
+    data.forEach(item => {
+        const tahun = item.pengukuran?.tahun ?? '-';
+        if (!tahunGroups[tahun]) {
+            tahunGroups[tahun] = [];
         }
+        tahunGroups[tahun].push(item);
+    });
+    
+    // Render data dengan grouping tahun yang benar
+    Object.keys(tahunGroups).sort().forEach(tahun => { // Sort tahun ascending
+        const itemsInYear = tahunGroups[tahun];
+        const rowCount = itemsInYear.length;
         
-        let html = '';
-        const tahunCounts = {};
-        const processedYears = [];
-        
-        data.forEach(item => {
-            const tahun = item.pengukuran?.tahun ?? '-';
-            tahunCounts[tahun] = (tahunCounts[tahun] || 0) + 1;
-        });
-        
-        data.forEach(item => {
+        itemsInYear.forEach((item, index) => {
             const p = item.pengukuran || {};
             const pembacaanElv600 = item.pembacaan_elv600 || {};
             const pembacaanElv625 = item.pembacaan_elv625 || {};
@@ -664,20 +672,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const pergerakanElv600 = item.pergerakan_elv600 || {};
             const pergerakanElv625 = item.pergerakan_elv625 || {};
             
-            const tahun = p.tahun ?? '-';
             const periode = p.periode ?? '-';
             const dma = p.dma ?? '-';
             const pid = p.id_pengukuran ?? null;
             
-            const showTahun = !processedYears.includes(tahun);
-            if (showTahun) processedYears.push(tahun);
+            const isFirstInYear = index === 0;
             
             // Format tanggal untuk tampilan
             const displayDate = p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID') : '-';
             
             html += `
                 <tr data-tahun="${tahun}" data-periode="${periode}" data-dma="${dma}" data-pid="${pid}">
-                    ${showTahun ? `<td rowspan="${tahunCounts[tahun]}" class="sticky">${tahun}</td>` : ''}
+                    ${isFirstInYear ? `<td rowspan="${rowCount}" class="sticky">${tahun}</td>` : ''}
                     <td class="sticky-2">${periode}</td>
                     <td class="sticky-3">${displayDate}</td>
                     <td class="sticky-4">${dma}</td>
@@ -747,10 +753,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 </tr>
             `;
         });
-        
-        tbody.innerHTML = html;
-        attachEventListeners();
-    }
+    });
+    
+    tbody.innerHTML = html;
+    attachEventListeners();
+}
     
     // Fungsi render pagination
     function renderPagination() {

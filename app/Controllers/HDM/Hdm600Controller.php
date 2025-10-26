@@ -47,10 +47,10 @@ class Hdm600Controller extends BaseController
     public function index()
     {
         try {
-            // Get all pengukuran data
+            // Get all pengukuran data - UBAH URUTAN MENJADI ASCENDING
             $pengukuranData = $this->pengukuranModel
-                ->orderBy('tahun', 'DESC')
-                ->orderBy('tanggal', 'DESC')
+                ->orderBy('tahun', 'ASC')  // Ubah dari DESC ke ASC
+                ->orderBy('tanggal', 'ASC') // Ubah dari DESC ke ASC
                 ->findAll();
 
             $data = [];
@@ -90,7 +90,7 @@ class Hdm600Controller extends BaseController
             $uniquePeriods = array_unique(array_column($pengukuranData, 'periode'));
             $uniqueDMA = array_unique(array_column($pengukuranData, 'dma'));
 
-            rsort($uniqueYears); // Tahun terbaru pertama
+            sort($uniqueYears); // Ubah dari rsort() ke sort() untuk ascending
             sort($uniquePeriods);
             sort($uniqueDMA);
 
@@ -109,7 +109,6 @@ class Hdm600Controller extends BaseController
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memuat data HDM 600: ' . $e->getMessage());
         }
     }
-
     /**
      * Pastikan data ambang batas ada untuk pengukuran
      */
@@ -227,10 +226,10 @@ class Hdm600Controller extends BaseController
     public function exportExcel()
     {
         try {
-            // Get all data
+            // Get all data - UBAH URUTAN MENJADI ASCENDING
             $pengukuranData = $this->pengukuranModel
-                ->orderBy('tahun', 'DESC')
-                ->orderBy('tanggal', 'DESC')
+                ->orderBy('tahun', 'ASC')  // Ubah dari DESC ke ASC
+                ->orderBy('tanggal', 'ASC') // Ubah dari DESC ke ASC
                 ->findAll();
 
             $data = [];
@@ -327,50 +326,6 @@ class Hdm600Controller extends BaseController
             return $this->response->setJSON([
                 'success' => false,
                 'error' => 'Terjadi kesalahan saat export data'
-            ]);
-        }
-    }
-
-    /**
-     * Hitung ulang pergerakan untuk HDM 600
-     */
-    public function recalculatePergerakan()
-    {
-        try {
-            $pengukuranData = $this->pengukuranModel->findAll();
-            $results = [];
-
-            foreach ($pengukuranData as $pengukuran) {
-                $id = $pengukuran['id_pengukuran'];
-                
-                // Pastikan ambang batas ada
-                $this->ensureAmbangBatasExists($id);
-                
-                $success = $this->pergerakan600Model->hitungPergerakan($id);
-                
-                // Update pergerakan di ambang batas setelah perhitungan
-                $pergerakan = $this->pergerakan600Model->getByPengukuran($id);
-                $this->updatePergerakanAmbangBatas($id, $pergerakan);
-                
-                $results[] = [
-                    'id_pengukuran' => $id,
-                    'tahun' => $pengukuran['tahun'],
-                    'periode' => $pengukuran['periode'],
-                    'success' => $success
-                ];
-            }
-
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Perhitungan pergerakan HDM 600 selesai',
-                'results' => $results
-            ]);
-
-        } catch (\Exception $e) {
-            log_message('error', 'Error in Hdm600Controller::recalculatePergerakan: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'success' => false,
-                'error' => 'Terjadi kesalahan saat menghitung pergerakan: ' . $e->getMessage()
             ]);
         }
     }
