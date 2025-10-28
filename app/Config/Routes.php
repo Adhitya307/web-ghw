@@ -87,5 +87,5 @@ $routes->post('hdm600/insert-default-ambang-batas/(:num)', 'HDM\Hdm600Controller
 
 // IMPORT SQL ROUTE - INI YANG PERLU DIPASTIKAN
 // Di file app/Config/Routes.php
-$routes->post('horizontal-displacement/import-sql', 'HDM\HDMController::importSQL');
+$routes->post('horizontal-displacement/importSQL', 'HDM\HDMController::importSQL');
 $routes->get('horizontal-displacement/export-excel', 'HDM\HDMController::exportExcel');

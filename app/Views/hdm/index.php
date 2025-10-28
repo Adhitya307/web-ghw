@@ -236,9 +236,11 @@
             <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-outline-primary active">
                 <i class="fas fa-table"></i> Tabel Data HDM
             </a>
-            <a href="<?= base_url('hdm625') ?>" class="btn btn-outline-info">
-                <i class="fas fa-database"></i> HDM 625
+            <a href="#" class="btn btn-outline-info"
+            onclick="window.location.href='<?= base_url('hdm625') ?>'">
+            <i class="fas fa-database"></i> HDM 625
             </a>
+
             <a href="<?= base_url('hdm600') ?>" class="btn btn-outline-info">
                 <i class="fas fa-arrow-right-arrow-left"></i> HDM 600
             </a>
@@ -1374,137 +1376,136 @@ document.addEventListener('DOMContentLoaded', function() {
     startPolling();
 });
 
-// Import SQL Functionality - VERSI PERBAIKAN LENGKAP
 document.getElementById('btnImportSQL').addEventListener('click', function() {
+    console.log('[IMPORT] Tombol Import diklik.');
+
     const sqlFileInput = document.getElementById('sqlFile');
     const importProgress = document.getElementById('importProgress');
     const importStatus = document.getElementById('importStatus');
     const btnImport = this;
-    
-    // Reset status sebelumnya
+
     importStatus.style.display = 'none';
-    
-    // Validasi file
+
+    // === Validasi file ===
     if (!sqlFileInput.files || sqlFileInput.files.length === 0) {
+        console.warn('[IMPORT] Tidak ada file dipilih.');
         showImportStatus('❌ Pilih file SQL terlebih dahulu', 'danger');
         return;
     }
-    
+
     const file = sqlFileInput.files[0];
-    
-    // Validasi ekstensi
+    console.log('[IMPORT] File terpilih:', file.name, '-', (file.size / 1024).toFixed(2), 'KB');
+
     if (!file.name.toLowerCase().endsWith('.sql')) {
+        console.warn('[IMPORT] File bukan .sql');
         showImportStatus('❌ File harus berformat .sql', 'danger');
         return;
     }
-    
-    // Validasi ukuran file (client-side)
+
     if (file.size > 50 * 1024 * 1024) {
+        console.warn('[IMPORT] File lebih dari 50MB');
         showImportStatus('❌ Ukuran file maksimal 50MB', 'danger');
         return;
     }
-    
+
     if (file.size === 0) {
+        console.warn('[IMPORT] File kosong');
         showImportStatus('❌ File kosong', 'danger');
         return;
     }
-    
-    // Show progress
+
+    // === Progress Bar ===
     importProgress.style.display = 'block';
     const progressBar = importProgress.querySelector('.progress-bar');
     progressBar.style.width = '0%';
     progressBar.textContent = '0%';
-    
+
     btnImport.disabled = true;
     btnImport.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
-    
-    // Create form data
+    console.log('[IMPORT] Memulai upload ke server...');
+
     const formData = new FormData();
     formData.append('sql_file', file);
-    
-    // Progress simulation
+
+    // Simulasi progress sementara menunggu response server
     let progress = 0;
     const progressInterval = setInterval(() => {
         progress += 2;
-        if (progress <= 80) { // Hanya sampai 80%, sisanya menunggu response
+        if (progress <= 80) {
             progressBar.style.width = progress + '%';
             progressBar.textContent = progress + '%';
         }
     }, 100);
-    
-    // Send request
-    fetch('<?= base_url('horizontal-displacement/import-sql') ?>', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
+
+   // === Fetch API ===
+fetch('<?= base_url('horizontal-displacement/importSQL') ?>', {
+    method: 'POST',
+    body: formData,
+    headers: { 
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+    },
+    credentials: 'same-origin' // Tambahkan ini
+})
     .then(response => {
         clearInterval(progressInterval);
         progressBar.style.width = '100%';
         progressBar.textContent = '100%';
-        
-        // Cek status response
+        console.log('[IMPORT] Response diterima:', response.status);
+
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP Error: ${response.status}`);
         }
-        
         return response.json();
     })
     .then(data => {
+        console.log('[IMPORT] Response JSON:', data);
+
         if (data.success) {
+            console.log('[IMPORT] Import SQL sukses');
             showImportStatus('✅ ' + data.message, 'success');
-            
-            // Tampilkan detail stats jika ada
+
             if (data.stats) {
-                const stats = data.stats;
+                const s = data.stats;
                 let detailHtml = `
                     <div class="mt-3 p-2 bg-light rounded">
                         <h6 class="mb-2">📊 Detail Import:</h6>
                         <div class="row">
                             <div class="col-6">
-                                <small>Total Query: <strong>${stats.total}</strong></small><br>
-                                <small>Berhasil: <strong class="text-success">${stats.success}</strong></small>
+                                <small>Total Query: <strong>${s.total}</strong></small><br>
+                                <small>Berhasil: <strong class="text-success">${s.success}</strong></small>
                             </div>
                             <div class="col-6">
-                                <small>Gagal: <strong class="text-danger">${stats.failed}</strong></small><br>
-                                <small>Affected Rows: <strong>${stats.affected_rows || 0}</strong></small>
+                                <small>Gagal: <strong class="text-danger">${s.failed}</strong></small><br>
+                                <small>Affected Rows: <strong>${s.affected_rows || 0}</strong></small>
                             </div>
                         </div>
                 `;
-                
                 if (data.error_display) {
                     detailHtml += `
                         <div class="mt-2">
                             <h6 class="mb-1">❌ Error Details:</h6>
-                            <div class="bg-white p-2 rounded small text-danger" style="max-height: 100px; overflow-y: auto;">
+                            <div class="bg-white p-2 rounded small text-danger" style="max-height:100px;overflow-y:auto;">
                                 ${data.error_display.replace(/\n/g, '<br>')}
                             </div>
                         </div>
                     `;
                 }
-                
                 detailHtml += `</div>`;
                 importStatus.innerHTML += detailHtml;
             }
-            
-            // Auto refresh setelah 3 detik jika sukses
-            if (data.success) {
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
-                    if (modal) {
-                        modal.hide();
-                    }
-                    // Refresh halaman untuk menampilkan data baru
-                    window.location.reload();
-                }, 3000);
-            }
-            
+
+            // Auto-refresh 3 detik setelah sukses
+            setTimeout(() => {
+                console.log('[IMPORT] Reload halaman setelah sukses.');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+                if (modal) modal.hide();
+                window.location.reload();
+            }, 3000);
+
         } else {
+            console.error('[IMPORT] Import gagal:', data.message);
             showImportStatus('❌ ' + data.message, 'danger');
-            
-            // Tampilkan error details jika ada
             if (data.error_display) {
                 importStatus.innerHTML += `
                     <div class="mt-2 p-2 bg-white rounded border">
@@ -1517,17 +1518,18 @@ document.getElementById('btnImportSQL').addEventListener('click', function() {
     })
     .catch(error => {
         clearInterval(progressInterval);
-        console.error('Import Error:', error);
+        console.error('[IMPORT ERROR]', error);
         showImportStatus('❌ Terjadi kesalahan: ' + error.message, 'danger');
     })
     .finally(() => {
-        // Reset button state setelah delay
+        console.log('[IMPORT] Proses import selesai (finally).');
         setTimeout(() => {
             btnImport.disabled = false;
             btnImport.innerHTML = '<i class="fas fa-upload me-1"></i> Import';
         }, 2000);
     });
-    
+
+    // === Helper: tampilkan status ===
     function showImportStatus(message, type) {
         importStatus.style.display = 'block';
         importStatus.className = `alert alert-${type} alert-dismissible fade show`;

@@ -794,227 +794,147 @@ class HDMController extends BaseController
             ]);
         }
     }
-
-    /**
-     * IMPORT SQL - VERSI FIXED
-     */
-    /**
- * IMPORT SQL - VERSI FIXED DENGAN VALIDASI LENGKAP
+/**
+ * IMPORT SQL - VERSI KONVERSI SQLITE TO MYSQL
  */
 public function importSQL()
 {
-    // Validasi AJAX request
+    log_message('info', '[IMPORT SQL] === START IMPORT PROCESS ===');
+    log_message('info', '[IMPORT SQL] Request Method: ' . $this->request->getMethod());
+    log_message('info', '[IMPORT SQL] Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
+
     if (!$this->request->isAJAX()) {
         return $this->response->setStatusCode(405)->setJSON([
             'success' => false, 
-            'message' => 'Method not allowed. Hanya AJAX request yang diizinkan.'
+            'message' => 'Hanya AJAX request yang diizinkan.'
         ]);
     }
 
     try {
-        // Validasi method POST
-        if ($this->request->getMethod() !== 'post') {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Hanya metode POST yang diizinkan'
-            ]);
-        }
-
-        // Debug: Cek apakah file ada
         if (empty($_FILES)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Tidak ada file yang diupload. Pastikan form menggunakan enctype="multipart/form-data"'
+                'message' => 'Tidak ada file yang diupload.'
             ]);
         }
 
-        // Validasi file upload
         $sqlFile = $this->request->getFile('sql_file');
-        
-        if (!$sqlFile) {
+        if (!$sqlFile || !$sqlFile->isValid()) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'File SQL tidak ditemukan dalam request. Pastikan name="sql_file"'
+                'message' => 'File upload gagal: ' . ($sqlFile ? $sqlFile->getErrorString() : 'File tidak ditemukan')
             ]);
         }
 
-        // Validasi apakah file berhasil diupload
-        if (!$sqlFile->isValid()) {
-            $errorMessage = $sqlFile->getErrorString();
-            if (empty($errorMessage)) {
-                $errorMessage = 'File upload gagal. Pastikan ukuran file tidak melebihi limit server.';
-            }
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => $errorMessage
-            ]);
-        }
-
-        // Validasi ekstensi file
+        // Validasi file
         $originalName = $sqlFile->getClientName();
-        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
-        
-        if (strtolower($extension) !== 'sql') {
+        if (!str_ends_with(strtolower($originalName), '.sql')) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'File harus berekstensi .sql. File yang diupload: ' . $originalName
+                'message' => 'File harus berekstensi .sql'
             ]);
         }
 
-        // Validasi ukuran file (max 50MB)
-        if ($sqlFile->getSize() > 50 * 1024 * 1024) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Ukuran file maksimal 50MB. File Anda: ' . round($sqlFile->getSize() / 1024 / 1024, 2) . 'MB'
-            ]);
-        }
-
-        if ($sqlFile->getSize() == 0) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'File kosong (0 byte)'
-            ]);
-        }
-
-        // Baca isi file SQL
+        // Baca file SQL
         $sqlContent = file_get_contents($sqlFile->getTempName());
-        
         if (empty($sqlContent)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'File SQL kosong atau tidak dapat dibaca'
+                'message' => 'File SQL kosong'
             ]);
         }
 
-        // Deteksi encoding dan convert ke UTF-8 jika perlu
-        $encoding = mb_detect_encoding($sqlContent, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
-        if ($encoding !== 'UTF-8') {
-            $sqlContent = mb_convert_encoding($sqlContent, 'UTF-8', $encoding);
-        }
+        log_message('info', '[IMPORT SQL] Original SQL content length: ' . strlen($sqlContent));
 
-        // Hapus BOM jika ada
-        $sqlContent = preg_replace('/^\xEF\xBB\xBF/', '', $sqlContent);
+        // ===== KONVERSI SQLITE → MYSQL =====
+        $mysqlContent = $this->convertSQLiteToMySQL($sqlContent);
+        log_message('info', '[IMPORT SQL] Converted to MySQL syntax');
 
-        // Pisahkan query SQL
-        $queries = $this->splitSQLQueries($sqlContent);
-        
+        $queries = $this->splitSQLQueries($mysqlContent);
+        log_message('info', "[IMPORT SQL] Total queries after conversion: " . count($queries));
+
         if (empty($queries)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Tidak ada query SQL yang valid ditemukan dalam file'
+                'message' => 'Tidak ada query SQL valid setelah konversi.'
             ]);
         }
 
-        // Setup database
-        $db = \Config\Database::connect();
+        // Eksekusi queries
+        $db = \Config\Database::connect('hdm');
         $stats = [
-            'total' => count($queries),
-            'success' => 0,
-            'failed' => 0,
+            'total' => count($queries), 
+            'success' => 0, 
+            'failed' => 0, 
             'affected_rows' => 0,
             'errors' => []
         ];
 
-        // Mulai transaction
         $db->transStart();
+        $db->query('SET FOREIGN_KEY_CHECKS=0');
 
-        try {
-            // Nonaktifkan foreign key checks sementara
-            $db->query('SET FOREIGN_KEY_CHECKS=0');
-            $db->query('SET UNIQUE_CHECKS=0');
-            $db->query('SET AUTOCOMMIT=0');
+        foreach ($queries as $index => $query) {
+            $trimmedQuery = trim($query);
+            if (empty($trimmedQuery)) continue;
 
-            // Eksekusi setiap query
-            foreach ($queries as $index => $query) {
-                try {
-                    $trimmedQuery = trim($query);
-                    
-                    // Skip query yang kosong atau terlalu pendek
-                    if (empty($trimmedQuery) || strlen($trimmedQuery) < 10) {
-                        continue;
+            // Skip commands yang tidak perlu
+            if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER)/i', $trimmedQuery)) {
+                continue;
+            }
+
+            try {
+                $result = $db->query($trimmedQuery);
+                if ($result !== false) {
+                    $stats['success']++;
+                    if (preg_match('/^(INSERT|UPDATE|DELETE|REPLACE)/i', $trimmedQuery)) {
+                        $stats['affected_rows'] += $db->affectedRows();
                     }
-
-                    // Skip komentar
-                    if (strpos($trimmedQuery, '--') === 0 || 
-                        strpos($trimmedQuery, '/*') === 0 ||
-                        preg_match('/^#/', $trimmedQuery)) {
-                        continue;
-                    }
-
-                    // Skip SET statements tertentu
-                    if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER)/i', $trimmedQuery)) {
-                        continue;
-                    }
-
-                    // Eksekusi query
-                    $result = $db->query($trimmedQuery);
-                    
-                    if ($result !== false) {
-                        $stats['success']++;
-                        
-                        // Hitung affected rows untuk INSERT/UPDATE/DELETE
-                        if (preg_match('/^(INSERT|UPDATE|DELETE)/i', $trimmedQuery)) {
-                            $stats['affected_rows'] += $db->affectedRows();
-                        }
-                    } else {
-                        $stats['failed']++;
-                        $errorInfo = $db->error();
-                        $stats['errors'][] = [
-                            'query' => $index + 1,
-                            'error' => $errorInfo['message'] ?? 'Unknown error',
-                            'sql' => substr($trimmedQuery, 0, 100) . '...' // Simpan sebagian query untuk debug
-                        ];
-                    }
-
-                } catch (\Exception $e) {
+                    log_message('debug', "[IMPORT SQL] ✅ Query #" . ($index + 1) . " success");
+                } else {
                     $stats['failed']++;
+                    $error = $db->error();
                     $stats['errors'][] = [
                         'query' => $index + 1,
-                        'error' => $e->getMessage(),
+                        'error' => $error['message'] ?? 'Unknown error',
                         'sql' => substr($trimmedQuery, 0, 100) . '...'
                     ];
+                    log_message('error', "[IMPORT SQL] ❌ Query #" . ($index + 1) . " failed: " . ($error['message'] ?? 'Unknown'));
                 }
+            } catch (\Exception $e) {
+                $stats['failed']++;
+                $stats['errors'][] = [
+                    'query' => $index + 1,
+                    'error' => $e->getMessage(),
+                    'sql' => substr($trimmedQuery, 0, 100) . '...'
+                ];
+                log_message('error', "[IMPORT SQL] ❌ Query #" . ($index + 1) . " exception: " . $e->getMessage());
             }
-
-            // Commit transaction
-            $db->transComplete();
-
-            if ($db->transStatus() === FALSE) {
-                throw new \Exception('Transaction failed during SQL import');
-            }
-
-        } finally {
-            // Selalu aktifkan kembali foreign key checks
-            $db->query('SET FOREIGN_KEY_CHECKS=1');
-            $db->query('SET UNIQUE_CHECKS=1');
-            $db->query('SET AUTOCOMMIT=1');
         }
 
-        // Siapkan response
+        $db->transComplete();
+        $db->query('SET FOREIGN_KEY_CHECKS=1');
+
+        $success = $stats['failed'] === 0;
+        
+        log_message('info', "[IMPORT SQL] Import completed. Success: {$stats['success']}, Failed: {$stats['failed']}");
+
         $response = [
-            'success' => $stats['failed'] === 0,
-            'message' => "Import selesai. \nTotal Query: {$stats['total']} \nBerhasil: {$stats['success']} \nGagal: {$stats['failed']} \nAffected Rows: {$stats['affected_rows']}",
+            'success' => $success,
+            'message' => "Import selesai. Total: {$stats['total']}, Berhasil: {$stats['success']}, Gagal: {$stats['failed']}, Affected Rows: {$stats['affected_rows']}",
             'stats' => $stats
         ];
 
-        // Tambahkan sample error jika ada
-        if ($stats['failed'] > 0 && !empty($stats['errors'])) {
-            $response['error_samples'] = array_slice($stats['errors'], 0, 5);
-            
-            // Format error samples untuk tampilan yang lebih baik
-            $errorMessages = [];
-            foreach ($response['error_samples'] as $error) {
-                $errorMessages[] = "Query {$error['query']}: {$error['error']}";
-            }
-            $response['error_display'] = implode("\n", $errorMessages);
+        if (!$success && !empty($stats['errors'])) {
+            $response['error_details'] = "Beberapa query gagal:\n" . 
+                implode("\n", array_map(function($error) {
+                    return "Query #{$error['query']}: {$error['error']}";
+                }, $stats['errors']));
         }
 
         return $this->response->setJSON($response);
 
     } catch (\Exception $e) {
-        // Log error untuk debugging
-        log_message('error', 'SQL Import Error: ' . $e->getMessage());
-        
+        log_message('error', '[IMPORT SQL] System Error: ' . $e->getMessage());
         return $this->response->setJSON([
             'success' => false,
             'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
@@ -1023,21 +943,60 @@ public function importSQL()
 }
 
 /**
- * Fungsi improved untuk memisahkan query SQL
+ * Konversi SQLite syntax ke MySQL syntax
+ */
+private function convertSQLiteToMySQL($sqlContent)
+{
+    // 1. Hapus komentar
+    $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
+    
+    // 2. Konversi INSERT OR REPLACE → REPLACE INTO (MySQL equivalent)
+    $sqlContent = preg_replace('/INSERT OR REPLACE INTO/i', 'REPLACE INTO', $sqlContent);
+    
+    // 3. Konversi datetime('now') → NOW() (MySQL equivalent)
+    $sqlContent = preg_replace("/datetime\('now'\)/i", 'NOW()', $sqlContent);
+    
+    // 4. Konversi table names jika diperlukan (sesuaikan dengan schema MySQL Anda)
+    $tableMappings = [
+        't_pengukuran_hdm' => 't_pengukuran_hdm',
+        't_pembacaan_hdm_elv625' => 't_pembacaan_hdm_elv625', 
+        't_pembacaan_hdm_elv600' => 't_pembacaan_hdm_elv600',
+        't_depth_elv625' => 't_depth_elv625',
+        't_depth_elv600' => 't_depth_elv600',
+        'm_initial_reading_elv_625' => 'm_initial_reading_elv_625',
+        'm_initial_reading_elv_600' => 'm_initial_reading_elv_600',
+        't_pergerakan_elv625' => 't_pergerakan_elv625',
+        't_pergerakan_elv600' => 't_pergerakan_elv600'
+    ];
+    
+    foreach ($tableMappings as $sqliteTable => $mysqlTable) {
+        if ($sqliteTable !== $mysqlTable) {
+            $sqlContent = str_ireplace($sqliteTable, $mysqlTable, $sqlContent);
+        }
+    }
+    
+    // 5. Hapus AUTOINCREMENT jika ada (MySQL menggunakan AUTO_INCREMENT)
+    $sqlContent = preg_replace('/AUTOINCREMENT/i', 'AUTO_INCREMENT', $sqlContent);
+    
+    log_message('info', '[IMPORT SQL] SQLite to MySQL conversion completed');
+    
+    return $sqlContent;
+}
+
+/**
+ * Split SQL queries (tetap gunakan yang sebelumnya)
  */
 private function splitSQLQueries($sqlContent)
 {
     // Normalize line endings
     $sqlContent = str_replace(["\r\n", "\r"], "\n", $sqlContent);
     
-    // Remove single line comments
+    // Remove comments
     $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
     $sqlContent = preg_replace('/#.*$/m', '', $sqlContent);
-    
-    // Remove multi-line comments
     $sqlContent = preg_replace('/\/\*.*?\*\//s', '', $sqlContent);
     
-    // Split by semicolon, but ignore semicolons inside quotes
+    // Split by semicolon
     $tempQueries = [];
     $currentQuery = '';
     $inString = false;
@@ -1050,13 +1009,8 @@ private function splitSQLQueries($sqlContent)
             $inString = true;
             $stringChar = $char;
         } elseif ($char === $stringChar && $inString) {
-            // Cek untuk escaped quotes
-            if ($i > 0 && $sqlContent[$i-1] === '\\') {
-                // Ini escaped quote, lanjutkan
-            } else {
-                $inString = false;
-                $stringChar = '';
-            }
+            $inString = false;
+            $stringChar = '';
         }
         
         if ($char === ';' && !$inString) {
@@ -1067,7 +1021,7 @@ private function splitSQLQueries($sqlContent)
         }
     }
     
-    // Tambahkan query terakhir jika ada
+    // Add last query
     if (!empty(trim($currentQuery))) {
         $tempQueries[] = trim($currentQuery);
     }
@@ -1076,22 +1030,9 @@ private function splitSQLQueries($sqlContent)
     $queries = [];
     foreach ($tempQueries as $query) {
         $trimmedQuery = trim($query);
-        
-        if (empty($trimmedQuery)) {
-            continue;
+        if (!empty($trimmedQuery) && strlen($trimmedQuery) > 10) {
+            $queries[] = $trimmedQuery;
         }
-        
-        // Skip queries yang terlalu pendek (biasanya komentar)
-        if (strlen($trimmedQuery) < 10) {
-            continue;
-        }
-        
-        // Skip specific commands
-        if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER|CREATE DATABASE|DROP DATABASE)/i', $trimmedQuery)) {
-            continue;
-        }
-        
-        $queries[] = $trimmedQuery . ';';
     }
     
     return $queries;
