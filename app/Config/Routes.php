@@ -89,3 +89,24 @@ $routes->post('hdm600/insert-default-ambang-batas/(:num)', 'HDM\Hdm600Controller
 // Di file app/Config/Routes.php
 $routes->post('horizontal-displacement/importSQL', 'HDM\HDMController::importSQL');
 $routes->get('horizontal-displacement/export-excel', 'HDM\HDMController::exportExcel');
+
+// BTM Routes
+$routes->get('/btm', 'BTM\BtmController::index');
+$routes->get('/btm/create', 'BTM\BtmController::create');
+$routes->post('/btm/store', 'BTM\BtmController::store');
+$routes->get('/btm/edit/(:num)', 'BTM\BtmController::edit/$1');
+$routes->put('/btm/update/(:num)', 'BTM\BtmController::update/$1');
+$routes->delete('/btm/delete/(:num)', 'BTM\BtmController::delete/$1');
+$routes->post('/btm/calculate-all', 'BTM\BtmController::calculateAll');
+$routes->get('/btm/export-excel', 'BTM\BtmController::exportExcel');
+$routes->post('/btm/check-duplicate', 'BTM\BtmController::checkDuplicate');
+
+// Routes untuk masing-masing BT
+$routes->get('/btm/bt1', 'BTM\BtmController::bt1');
+$routes->get('/btm/bt2', 'BTM\BtmController::bt2');
+$routes->get('/btm/bt3', 'BTM\BtmController::bt3');
+$routes->get('/btm/bt4', 'BTM\BtmController::bt4');
+$routes->get('/btm/bt5', 'BTC\BtmController::bt5');
+$routes->get('/btm/bt6', 'BTM\BtmController::bt6');
+$routes->get('/btm/bt7', 'BTM\BtmController::bt7');
+$routes->get('/btm/bt8', 'BTM\BtmController::bt8');
