@@ -7,7 +7,6 @@ use App\Models\Btm\BacaanBt1Model;
 use App\Models\Btm\BacaanBt2Model;
 use App\Models\Btm\BacaanBt3Model;
 use App\Models\Btm\BacaanBt4Model;
-use App\Models\Btm\BacaanBt5Model;
 use App\Models\Btm\BacaanBt6Model;
 use App\Models\Btm\BacaanBt7Model;
 use App\Models\Btm\BacaanBt8Model;
@@ -15,7 +14,6 @@ use App\Models\Btm\PerhitunganBt1Model;
 use App\Models\Btm\PerhitunganBt2Model;
 use App\Models\Btm\PerhitunganBt3Model;
 use App\Models\Btm\PerhitunganBt4Model;
-use App\Models\Btm\PerhitunganBt5Model;
 use App\Models\Btm\PerhitunganBt6Model;
 use App\Models\Btm\PerhitunganBt7Model;
 use App\Models\Btm\PerhitunganBt8Model;
@@ -23,7 +21,6 @@ use App\Models\Btm\ScatterBt1Model;
 use App\Models\Btm\ScatterBt2Model;
 use App\Models\Btm\ScatterBt3Model;
 use App\Models\Btm\ScatterBt4Model;
-use App\Models\Btm\ScatterBt5Model;
 use App\Models\Btm\ScatterBt6Model;
 use App\Models\Btm\ScatterBt7Model;
 use App\Models\Btm\ScatterBt8Model;
@@ -39,37 +36,34 @@ class BtmController extends BaseController
     {
         $this->pengukuranModel = new PengukuranBtmModel();
         
-        // Inisialisasi model bacaan untuk semua BT
+        // Inisialisasi model bacaan untuk semua BT (tanpa BT5)
         $this->bacaanModels = [
             'bt1' => new BacaanBt1Model(),
             'bt2' => new BacaanBt2Model(),
             'bt3' => new BacaanBt3Model(),
             'bt4' => new BacaanBt4Model(),
-            'bt5' => new BacaanBt5Model(),
             'bt6' => new BacaanBt6Model(),
             'bt7' => new BacaanBt7Model(),
             'bt8' => new BacaanBt8Model()
         ];
         
-        // Inisialisasi model perhitungan untuk semua BT
+        // Inisialisasi model perhitungan untuk semua BT (tanpa BT5)
         $this->perhitunganModels = [
             'bt1' => new PerhitunganBt1Model(),
             'bt2' => new PerhitunganBt2Model(),
             'bt3' => new PerhitunganBt3Model(),
             'bt4' => new PerhitunganBt4Model(),
-            'bt5' => new PerhitunganBt5Model(),
             'bt6' => new PerhitunganBt6Model(),
             'bt7' => new PerhitunganBt7Model(),
             'bt8' => new PerhitunganBt8Model()
         ];
 
-        // Inisialisasi model scatter untuk semua BT
+        // Inisialisasi model scatter untuk semua BT (tanpa BT5)
         $this->scatterModels = [
             'bt1' => new ScatterBt1Model(),
             'bt2' => new ScatterBt2Model(),
             'bt3' => new ScatterBt3Model(),
             'bt4' => new ScatterBt4Model(),
-            'bt5' => new ScatterBt5Model(),
             'bt6' => new ScatterBt6Model(),
             'bt7' => new ScatterBt7Model(),
             'bt8' => new ScatterBt8Model()
@@ -108,7 +102,7 @@ class BtmController extends BaseController
     }
 
     /**
-     * Mendapatkan semua data pengukuran beserta bacaan dan perhitungan untuk SEMUA BT
+     * Mendapatkan semua data pengukuran beserta bacaan dan perhitungan untuk SEMUA BT (tanpa BT5)
      */
     private function getAllDataWithCalculations()
     {
@@ -126,7 +120,7 @@ class BtmController extends BaseController
                     'scatter' => []
                 ];
 
-                // Ambil data bacaan untuk semua BT (1-8)
+                // Ambil data bacaan untuk semua BT (1-4,6-8)
                 foreach ($this->bacaanModels as $key => $model) {
                     $bacaan = $model->getByPengukuran($id_pengukuran);
                     if ($bacaan) {
@@ -142,7 +136,7 @@ class BtmController extends BaseController
                     }
                 }
 
-                // Ambil data perhitungan untuk semua BT (1-8)
+                // Ambil data perhitungan untuk semua BT (1-4,6-8)
                 foreach ($this->perhitunganModels as $key => $model) {
                     $perhitungan = $model->getByPengukuran($id_pengukuran);
                     if ($perhitungan) {
@@ -163,7 +157,7 @@ class BtmController extends BaseController
                     }
                 }
 
-                // Ambil data scatter untuk semua BT (1-8)
+                // Ambil data scatter untuk semua BT (1-4,6-8)
                 foreach ($this->scatterModels as $key => $model) {
                     $scatter = $model->where('id_pengukuran', $id_pengukuran)->first();
                     if ($scatter) {
@@ -224,9 +218,9 @@ class BtmController extends BaseController
 
             $pengukuranId = $this->pengukuranModel->insert($pengukuranData);
 
-            // Simpan data bacaan untuk setiap BT (1-8)
-            for ($i = 1; $i <= 8; $i++) {
-                $btKey = "bt{$i}";
+            // Simpan data bacaan untuk setiap BT (1-4,6-8)
+            $btKeys = ['bt1', 'bt2', 'bt3', 'bt4', 'bt6', 'bt7', 'bt8'];
+            foreach ($btKeys as $btKey) {
                 $model = $this->bacaanModels[$btKey] ?? null;
                 
                 if ($model) {
@@ -295,7 +289,7 @@ class BtmController extends BaseController
             ->orderBy('tanggal', 'DESC')
             ->first();
 
-        // Hitung untuk setiap BT (1-8)
+        // Hitung untuk setiap BT (1-4,6-8)
         foreach ($this->perhitunganModels as $key => $perhitunganModel) {
             $bacaanModel = $this->bacaanModels[$key];
             
@@ -368,11 +362,10 @@ class BtmController extends BaseController
             'bt1' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => 29.72554, 'X_cum' => 35.46528],
             'bt2' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => 751.1415, 'X_cum' => 297.492],
             'bt3' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => -388.8682, 'X_cum' => -280.21875],
-            'bt4' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => -388.8682, 'X_cum' => -280.21875],
-            'bt5' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => -388.8682, 'X_cum' => -280.21875],
-            'bt6' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => -388.8682, 'X_cum' => -280.21875],
-            'bt7' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => -388.8682, 'X_cum' => -280.21875],
-            'bt8' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => -388.8682, 'X_cum' => -280.21875]
+            'bt4' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => 73.17, 'X_cum' => -74.3438],
+            'bt6' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => -608.714, 'X_cum' => -1142.37],
+            'bt7' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => 219.6, 'X_cum' => -631.35],
+            'bt8' => ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => 171.56, 'X_cum' => -106.37]
         ];
 
         $values = $firstScatterValues[$btKey] ?? ['Y_US' => 0, 'X_TB' => 0, 'Y_cum' => 0, 'X_cum' => 0];
@@ -396,102 +389,99 @@ class BtmController extends BaseController
     /**
      * SCATTER: Hitung data kedua dan seterusnya berdasarkan rumus
      */
-    /**
- * SCATTER: Hitung data kedua dan seterusnya berdasarkan rumus
- */
-private function calculateScatterFromFormula($scatterModel, $id_pengukuran, $btKey)
-{
-    try {
-        // Ambil data bacaan dan perhitungan
-        $bacaanData = $this->bacaanModels[$btKey]->getByPengukuran($id_pengukuran);
-        $perhitunganData = $this->perhitunganModels[$btKey]->getByPengukuran($id_pengukuran);
-        
-        if (!$bacaanData || !$perhitunganData) {
-            log_message('error', "Data bacaan atau perhitungan tidak ditemukan untuk $btKey, id_pengukuran: $id_pengukuran");
-            return;
-        }
+    private function calculateScatterFromFormula($scatterModel, $id_pengukuran, $btKey)
+    {
+        try {
+            // Ambil data bacaan dan perhitungan
+            $bacaanData = $this->bacaanModels[$btKey]->getByPengukuran($id_pengukuran);
+            $perhitunganData = $this->perhitunganModels[$btKey]->getByPengukuran($id_pengukuran);
+            
+            if (!$bacaanData || !$perhitunganData) {
+                log_message('error', "Data bacaan atau perhitungan tidak ditemukan untuk $btKey, id_pengukuran: $id_pengukuran");
+                return;
+            }
 
-        // Pastikan nilai A_sec dan B_sec tersedia
-        if ($perhitunganData['A_sec'] === null || $perhitunganData['B_sec'] === null) {
-            log_message('error', "Nilai A_sec atau B_sec null untuk $btKey, id_pengukuran: $id_pengukuran");
-            return;
-        }
+            // Pastikan nilai A_sec dan B_sec tersedia
+            if ($perhitunganData['A_sec'] === null || $perhitunganData['B_sec'] === null) {
+                log_message('error', "Nilai A_sec atau B_sec null untuk $btKey, id_pengukuran: $id_pengukuran");
+                return;
+            }
 
-        // Rumus: Y_US = IF(US_Arah="U";A_sec;(-A_sec))
-        $Y_US = ($bacaanData['US_Arah'] == 'U') ? $perhitunganData['A_sec'] : (-$perhitunganData['A_sec']);
-        
-        // Rumus: X_TB = IF(TB_Arah="T";B_sec;(-B_sec))
-        $X_TB = ($bacaanData['TB_Arah'] == 'T') ? $perhitunganData['B_sec'] : (-$perhitunganData['B_sec']);
-        
-        // Ambil scatter data sebelumnya untuk kumulatif
-        $previousScatter = $this->getPreviousScatterData($scatterModel, $id_pengukuran);
-        
-        // Debug informasi
-        log_message('debug', "=== Scatter Calculation for $btKey ===");
-        log_message('debug', "ID Pengukuran: $id_pengukuran");
-        log_message('debug', "A_sec: {$perhitunganData['A_sec']}, B_sec: {$perhitunganData['B_sec']}");
-        log_message('debug', "US_Arah: {$bacaanData['US_Arah']}, TB_Arah: {$bacaanData['TB_Arah']}");
-        log_message('debug', "Y_US: $Y_US, X_TB: $X_TB");
-        log_message('debug', "Previous scatter: " . ($previousScatter ? 'found' : 'not found'));
-        
-        if ($previousScatter) {
-            log_message('debug', "Previous Y_cum: {$previousScatter['Y_cum']}, X_cum: {$previousScatter['X_cum']}");
+            // Rumus: Y_US = IF(US_Arah="U";A_sec;(-A_sec))
+            $Y_US = ($bacaanData['US_Arah'] == 'U') ? $perhitunganData['A_sec'] : (-$perhitunganData['A_sec']);
+            
+            // Rumus: X_TB = IF(TB_Arah="T";B_sec;(-B_sec))
+            $X_TB = ($bacaanData['TB_Arah'] == 'T') ? $perhitunganData['B_sec'] : (-$perhitunganData['B_sec']);
+            
+            // Ambil scatter data sebelumnya untuk kumulatif
+            $previousScatter = $this->getPreviousScatterData($scatterModel, $id_pengukuran);
+            
+            // Debug informasi
+            log_message('debug', "=== Scatter Calculation for $btKey ===");
+            log_message('debug', "ID Pengukuran: $id_pengukuran");
+            log_message('debug', "A_sec: {$perhitunganData['A_sec']}, B_sec: {$perhitunganData['B_sec']}");
+            log_message('debug', "US_Arah: {$bacaanData['US_Arah']}, TB_Arah: {$bacaanData['TB_Arah']}");
+            log_message('debug', "Y_US: $Y_US, X_TB: $X_TB");
+            log_message('debug', "Previous scatter: " . ($previousScatter ? 'found' : 'not found'));
+            
+            if ($previousScatter) {
+                log_message('debug', "Previous Y_cum: {$previousScatter['Y_cum']}, X_cum: {$previousScatter['X_cum']}");
+            }
+            
+            // Hitung kumulatif - gunakan 0 jika tidak ada data sebelumnya
+            $previous_Y_cum = $previousScatter ? (float)$previousScatter['Y_cum'] : 0;
+            $previous_X_cum = $previousScatter ? (float)$previousScatter['X_cum'] : 0;
+            
+            $Y_cum = $previous_Y_cum + $Y_US;
+            $X_cum = $previous_X_cum + $X_TB;
+            
+            log_message('debug', "New cum - Y: $Y_cum, X: $X_cum");
+            log_message('debug', "=== End Scatter Calculation ===");
+            
+            $scatterData = [
+                'id_pengukuran' => $id_pengukuran,
+                'Y_US' => $Y_US,
+                'X_TB' => $X_TB,
+                'Y_cum' => $Y_cum,
+                'X_cum' => $X_cum
+            ];
+            
+            // Simpan ke database
+            $existing = $scatterModel->where('id_pengukuran', $id_pengukuran)->first();
+            if ($existing) {
+                $scatterModel->update($existing['id_scatter'], $scatterData);
+                log_message('debug', "Updated scatter data for $btKey, id: $id_pengukuran");
+            } else {
+                $scatterModel->insert($scatterData);
+                log_message('debug', "Inserted scatter data for $btKey, id: $id_pengukuran");
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', "Error calculating scatter for $btKey, id: $id_pengukuran: " . $e->getMessage());
         }
-        
-        // Hitung kumulatif - gunakan 0 jika tidak ada data sebelumnya
-        $previous_Y_cum = $previousScatter ? (float)$previousScatter['Y_cum'] : 0;
-        $previous_X_cum = $previousScatter ? (float)$previousScatter['X_cum'] : 0;
-        
-        $Y_cum = $previous_Y_cum + $Y_US;
-        $X_cum = $previous_X_cum + $X_TB;
-        
-        log_message('debug', "New cum - Y: $Y_cum, X: $X_cum");
-        log_message('debug', "=== End Scatter Calculation ===");
-        
-        $scatterData = [
-            'id_pengukuran' => $id_pengukuran,
-            'Y_US' => $Y_US,
-            'X_TB' => $X_TB,
-            'Y_cum' => $Y_cum,
-            'X_cum' => $X_cum
-        ];
-        
-        // Simpan ke database
-        $existing = $scatterModel->where('id_pengukuran', $id_pengukuran)->first();
-        if ($existing) {
-            $scatterModel->update($existing['id_scatter'], $scatterData);
-            log_message('debug', "Updated scatter data for $btKey, id: $id_pengukuran");
-        } else {
-            $scatterModel->insert($scatterData);
-            log_message('debug', "Inserted scatter data for $btKey, id: $id_pengukuran");
-        }
-        
-    } catch (\Exception $e) {
-        log_message('error', "Error calculating scatter for $btKey, id: $id_pengukuran: " . $e->getMessage());
     }
-}
 
     /**
      * Ambil scatter data sebelumnya untuk perhitungan kumulatif
      */
     private function getPreviousScatterData($scatterModel, $id_pengukuran)
-{
-    try {
-        // Dapatkan nama tabel dari model secara dinamis
-        $tableName = $scatterModel->table;
-        
-        return $scatterModel->select("$tableName.*")
-            ->join('t_pengukuran_btm t', "t.id_pengukuran = $tableName.id_pengukuran")
-            ->where("$tableName.id_pengukuran <", $id_pengukuran)
-            ->orderBy('t.tanggal', 'DESC')
-            ->orderBy('t.tahun', 'DESC')
-            ->orderBy('t.periode', 'DESC')
-            ->first();
-    } catch (\Exception $e) {
-        log_message('error', 'Error in getPreviousScatterData: ' . $e->getMessage());
-        return null;
+    {
+        try {
+            // Dapatkan nama tabel dari model secara dinamis
+            $tableName = $scatterModel->table;
+            
+            return $scatterModel->select("$tableName.*")
+                ->join('t_pengukuran_btm t', "t.id_pengukuran = $tableName.id_pengukuran")
+                ->where("$tableName.id_pengukuran <", $id_pengukuran)
+                ->orderBy('t.tanggal', 'DESC')
+                ->orderBy('t.tahun', 'DESC')
+                ->orderBy('t.periode', 'DESC')
+                ->first();
+        } catch (\Exception $e) {
+            log_message('error', 'Error in getPreviousScatterData: ' . $e->getMessage());
+            return null;
+        }
     }
-}
 
     public function edit($id)
     {
@@ -507,9 +497,9 @@ private function calculateScatterFromFormula($scatterModel, $id_pengukuran, $btK
             'bacaan' => []
         ];
 
-        // Ambil data bacaan untuk semua BT (1-8)
-        for ($i = 1; $i <= 8; $i++) {
-            $btKey = "bt{$i}";
+        // Ambil data bacaan untuk semua BT (1-4,6-8)
+        $btKeys = ['bt1', 'bt2', 'bt3', 'bt4', 'bt6', 'bt7', 'bt8'];
+        foreach ($btKeys as $btKey) {
             $bacaanModel = $this->bacaanModels[$btKey] ?? null;
             
             if ($bacaanModel) {
@@ -551,9 +541,9 @@ private function calculateScatterFromFormula($scatterModel, $id_pengukuran, $btK
 
             $this->pengukuranModel->update($id, $pengukuranData);
 
-            // Update data bacaan untuk setiap BT (1-8)
-            for ($i = 1; $i <= 8; $i++) {
-                $btKey = "bt{$i}";
+            // Update data bacaan untuk setiap BT (1-4,6-8)
+            $btKeys = ['bt1', 'bt2', 'bt3', 'bt4', 'bt6', 'bt7', 'bt8'];
+            foreach ($btKeys as $btKey) {
                 $model = $this->bacaanModels[$btKey] ?? null;
                 
                 if ($model) {
@@ -636,108 +626,102 @@ private function calculateScatterFromFormula($scatterModel, $id_pengukuran, $btK
     /**
      * Hitung ulang semua scatter data dari awal
      */
-    /**
- * Hitung ulang semua scatter data dari awal
- */
-private function recalculateAllScatterData()
-{
-    try {
-        // Ambil semua data pengukuran diurutkan
-        $allPengukuran = $this->pengukuranModel
-            ->orderBy('tanggal', 'ASC')
-            ->orderBy('tahun', 'ASC')
-            ->orderBy('periode', 'ASC')
-            ->findAll();
-        
-        log_message('debug', '=== START RECALCULATING ALL SCATTER DATA ===');
-        log_message('debug', 'Total pengukuran found: ' . count($allPengukuran));
-        
-        if (empty($allPengukuran)) {
-            log_message('debug', 'No pengukuran data found');
-            return true;
-        }
+    private function recalculateAllScatterData()
+    {
+        try {
+            // Ambil semua data pengukuran diurutkan
+            $allPengukuran = $this->pengukuranModel
+                ->orderBy('tanggal', 'ASC')
+                ->orderBy('tahun', 'ASC')
+                ->orderBy('periode', 'ASC')
+                ->findAll();
+            
+            log_message('debug', '=== START RECALCULATING ALL SCATTER DATA ===');
+            log_message('debug', 'Total pengukuran found: ' . count($allPengukuran));
+            
+            if (empty($allPengukuran)) {
+                log_message('debug', 'No pengukuran data found');
+                return true;
+            }
 
-        // Reset semua scatter data
-        foreach ($this->scatterModels as $btKey => $scatterModel) {
-            $scatterModel->truncate();
-            log_message('debug', "Truncated scatter table for $btKey");
-        }
-        
-        // Proses data pertama (nilai manual)
-        $firstPengukuran = $allPengukuran[0];
-        log_message('debug', "Processing FIRST scatter data - ID: " . $firstPengukuran['id_pengukuran']);
-        
-        foreach ($this->scatterModels as $btKey => $scatterModel) {
-            $this->setFirstScatterData($scatterModel, $firstPengukuran['id_pengukuran'], $btKey);
-            log_message('debug', "Set first scatter data for $btKey");
-        }
-        
-        // Proses data kedua dan seterusnya
-        for ($i = 1; $i < count($allPengukuran); $i++) {
-            $pengukuran = $allPengukuran[$i];
-            log_message('debug', "Processing scatter data $i - ID: " . $pengukuran['id_pengukuran']);
+            // Reset semua scatter data
+            foreach ($this->scatterModels as $btKey => $scatterModel) {
+                $scatterModel->truncate();
+                log_message('debug', "Truncated scatter table for $btKey");
+            }
+            
+            // Proses data pertama (nilai manual)
+            $firstPengukuran = $allPengukuran[0];
+            log_message('debug', "Processing FIRST scatter data - ID: " . $firstPengukuran['id_pengukuran']);
             
             foreach ($this->scatterModels as $btKey => $scatterModel) {
-                $this->calculateScatterFromFormula($scatterModel, $pengukuran['id_pengukuran'], $btKey);
+                $this->setFirstScatterData($scatterModel, $firstPengukuran['id_pengukuran'], $btKey);
+                log_message('debug', "Set first scatter data for $btKey");
             }
+            
+            // Proses data kedua dan seterusnya
+            for ($i = 1; $i < count($allPengukuran); $i++) {
+                $pengukuran = $allPengukuran[$i];
+                log_message('debug', "Processing scatter data $i - ID: " . $pengukuran['id_pengukuran']);
+                
+                foreach ($this->scatterModels as $btKey => $scatterModel) {
+                    $this->calculateScatterFromFormula($scatterModel, $pengukuran['id_pengukuran'], $btKey);
+                }
+            }
+            
+            log_message('debug', '=== FINISHED RECALCULATING ALL SCATTER DATA ===');
+            return true;
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error recalculating all scatter data: ' . $e->getMessage());
+            return false;
         }
-        
-        log_message('debug', '=== FINISHED RECALCULATING ALL SCATTER DATA ===');
-        return true;
-        
-    } catch (\Exception $e) {
-        log_message('error', 'Error recalculating all scatter data: ' . $e->getMessage());
-        return false;
     }
-}
 
     /**
      * Get scatter chart data untuk BT tertentu
      */
-    /**
- * Get scatter chart data untuk BT tertentu
- */
-private function getScatterChartData($btKey = 'bt1')
-{
-    if (!isset($this->scatterModels[$btKey])) {
-        log_message('error', "Scatter model not found for: $btKey");
-        return [];
-    }
-
-    try {
-        $scatterModel = $this->scatterModels[$btKey];
-        $tableName = $scatterModel->table;
-        
-        $data = $scatterModel->select("$tableName.X_cum, $tableName.Y_cum, t.tahun, t.periode, t.tanggal")
-            ->join('t_pengukuran_btm t', "t.id_pengukuran = $tableName.id_pengukuran")
-            ->orderBy('t.tanggal', 'ASC')
-            ->orderBy('t.tahun', 'ASC')
-            ->orderBy('t.periode', 'ASC')
-            ->findAll();
-        
-        log_message('debug', "Scatter data retrieved for $btKey: " . count($data) . " records");
-        
-        $chartData = [];
-        
-        foreach ($data as $item) {
-            if (isset($item['X_cum']) && isset($item['Y_cum'])) {
-                $chartData[] = [
-                    'x' => (float)$item['X_cum'],
-                    'y' => (float)$item['Y_cum'],
-                    'label' => "Tahun: " . ($item['tahun'] ?? '') . ", Periode: " . ($item['periode'] ?? ''),
-                    'tahun' => $item['tahun'] ?? '',
-                    'periode' => $item['periode'] ?? ''
-                ];
-            }
+    private function getScatterChartData($btKey = 'bt1')
+    {
+        if (!isset($this->scatterModels[$btKey])) {
+            log_message('error', "Scatter model not found for: $btKey");
+            return [];
         }
-        
-        return $chartData;
-        
-    } catch (\Exception $e) {
-        log_message('error', 'Error getting scatter chart data for ' . $btKey . ': ' . $e->getMessage());
-        return [];
+
+        try {
+            $scatterModel = $this->scatterModels[$btKey];
+            $tableName = $scatterModel->table;
+            
+            $data = $scatterModel->select("$tableName.X_cum, $tableName.Y_cum, t.tahun, t.periode, t.tanggal")
+                ->join('t_pengukuran_btm t', "t.id_pengukuran = $tableName.id_pengukuran")
+                ->orderBy('t.tanggal', 'ASC')
+                ->orderBy('t.tahun', 'ASC')
+                ->orderBy('t.periode', 'ASC')
+                ->findAll();
+            
+            log_message('debug', "Scatter data retrieved for $btKey: " . count($data) . " records");
+            
+            $chartData = [];
+            
+            foreach ($data as $item) {
+                if (isset($item['X_cum']) && isset($item['Y_cum'])) {
+                    $chartData[] = [
+                        'x' => (float)$item['X_cum'],
+                        'y' => (float)$item['Y_cum'],
+                        'label' => "Tahun: " . ($item['tahun'] ?? '') . ", Periode: " . ($item['periode'] ?? ''),
+                        'tahun' => $item['tahun'] ?? '',
+                        'periode' => $item['periode'] ?? ''
+                    ];
+                }
+            }
+            
+            return $chartData;
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error getting scatter chart data for ' . $btKey . ': ' . $e->getMessage());
+            return [];
+        }
     }
-}
 
     // Method tambahan dari routes
     public function calculateAll()
@@ -753,36 +737,89 @@ private function getScatterChartData($btKey = 'bt1')
     }
 
     /**
- * Debug method untuk melihat data scatter
- */
-public function debugScatter($id_pengukuran = null)
-{
-    if (!$id_pengukuran) {
-        $allPengukuran = $this->pengukuranModel->findAll();
-        $id_pengukuran = $allPengukuran[0]['id_pengukuran'] ?? null;
-    }
-    
-    $debugData = [];
-    
-    foreach ($this->scatterModels as $btKey => $scatterModel) {
-        $tableName = $scatterModel->table;
-        $currentData = $scatterModel->where('id_pengukuran', $id_pengukuran)->first();
-        $previousData = $this->getPreviousScatterData($scatterModel, $id_pengukuran);
-        
-        $debugData[$btKey] = [
-            'table' => $tableName,
-            'current' => $currentData,
-            'previous' => $previousData
-        ];
-    }
-    
-    return $this->response->setJSON([
-        'success' => true,
-        'debug_data' => $debugData
-    ]);
-}
+     * Import SQL untuk BTM
+     */
+    public function importSQL()
+    {
+        try {
+            $sql = $this->request->getPost('sql');
+            
+            if (empty($sql)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'SQL query tidak boleh kosong'
+                ]);
+            }
 
-    // ============ METHOD UNTUK SETIAP BT ============
+            $db = \Config\Database::connect('btm');
+            
+            // Eksekusi multiple queries
+            $queries = explode(';', $sql);
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+
+            foreach ($queries as $query) {
+                $query = trim($query);
+                if (!empty($query)) {
+                    try {
+                        $db->query($query);
+                        $successCount++;
+                    } catch (\Exception $e) {
+                        $errorCount++;
+                        $errors[] = $e->getMessage();
+                    }
+                }
+            }
+
+            // Hitung ulang semua data setelah import
+            $this->recalculateAllScatterData();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Import selesai. Berhasil: $successCount, Gagal: $errorCount",
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Debug method untuk melihat data scatter
+     */
+    public function debugScatter($id_pengukuran = null)
+    {
+        if (!$id_pengukuran) {
+            $allPengukuran = $this->pengukuranModel->findAll();
+            $id_pengukuran = $allPengukuran[0]['id_pengukuran'] ?? null;
+        }
+        
+        $debugData = [];
+        
+        foreach ($this->scatterModels as $btKey => $scatterModel) {
+            $tableName = $scatterModel->table;
+            $currentData = $scatterModel->where('id_pengukuran', $id_pengukuran)->first();
+            $previousData = $this->getPreviousScatterData($scatterModel, $id_pengukuran);
+            
+            $debugData[$btKey] = [
+                'table' => $tableName,
+                'current' => $currentData,
+                'previous' => $previousData
+            ];
+        }
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'debug_data' => $debugData
+        ]);
+    }
+
+    // ============ METHOD UNTUK SETIAP BT (tanpa BT5) ============
 
     public function bt1()
     {
@@ -826,17 +863,6 @@ public function debugScatter($id_pengukuran = null)
         ];
 
         return view('btm/bt4', $data);
-    }
-
-    public function bt5()
-    {
-        $data = [
-            'title' => 'Bubble Tilt Meter BT-5 - PT Indonesia Power',
-            'pengukuran' => $this->getAllDataWithCalculations(),
-            'scatterData' => $this->getScatterChartData('bt5')
-        ];
-
-        return view('btm/bt5', $data);
     }
 
     public function bt6()

@@ -52,7 +52,7 @@ class PerhitunganBt8Model extends Model
         // 1. A_sec = SQRT((US_GP_sekarang - US_GP_sebelumnya)^2) * 1.14373
         // BEDA: *1.14373 (BT1: *1.14329, BT2: *1.14329, BT3: *1.14373, BT4: *1.14329, BT6: *1.1442, BT7: *1.14375)
         $selisih_US = $bacaan_sekarang['US_GP'] - $bacaanBt8Sebelumnya['US_GP'];
-        $A_sec = sqrt(pow($selisih_US, 2)) * 1.14375;
+        $A_sec = sqrt(pow($selisih_US, 2)) * 1.14373;
         
         // 2. Sin A (Rad) = SIN(RADIANS(A_sec * (1/3600)))
         // SAMA dengan semua BT
@@ -63,7 +63,7 @@ class PerhitunganBt8Model extends Model
         // 3. B_sec = SQRT((TB_GP_sekarang - TB_GP_sebelumnya)^2) * 1.14375
         // BEDA: *1.14375 (BT1: *1.14466, BT2: *1.1442, BT3: *1.14375, BT4: *1.14375, BT6: *1.14466, BT7: *1.14438)
         $selisih_TB = $bacaan_sekarang['TB_GP'] - $bacaanBt8Sebelumnya['TB_GP'];
-        $B_sec = sqrt(pow($selisih_TB, 2)) * 1.14438;
+        $B_sec = sqrt(pow($selisih_TB, 2)) * 1.14375;
         
         // 4. Sin B (Rad) = SIN(RADIANS(B_sec * (1/3600)))
         // SAMA dengan semua BT

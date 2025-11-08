@@ -171,25 +171,28 @@
         </h2>
 
         <!-- Button Group -->
-        <div class="btn-group mb-3" role="group">
-            <a href="<?= base_url('btm/bt1') ?>" class="btn btn-primary btn-bt">
-                <i class="fas fa-table"></i> BT-1
-            </a>
-            <a href="<?= base_url('btm/bt2') ?>" class="btn btn-outline-primary btn-bt">BT-2</a>
-            <a href="<?= base_url('btm/bt3') ?>" class="btn btn-outline-primary btn-bt">BT-3</a>
-            <a href="<?= base_url('btm/bt4') ?>" class="btn btn-outline-primary btn-bt">BT-4</a>
-            <a href="<?= base_url('btm/bt5') ?>" class="btn btn-outline-primary btn-bt">BT-5</a>
-            <a href="<?= base_url('btm/bt6') ?>" class="btn btn-outline-primary btn-bt">BT-6</a>
-            <a href="<?= base_url('btm/bt7') ?>" class="btn btn-outline-primary btn-bt">BT-7</a>
-            <a href="<?= base_url('btm/bt8') ?>" class="btn btn-outline-primary btn-bt">BT-8</a>
-            <a href="<?= base_url('btm/create') ?>" class="btn btn-outline-success">
-                <i class="fas fa-plus me-1"></i> Add Data
-            </a>
-            
-            <button type="button" class="btn btn-outline-info" id="exportExcel">
-                <i class="fas fa-file-excel me-1"></i> Export Excel
-            </button>
-        </div>
+<div class="btn-group mb-3" role="group">
+    <a href="<?= base_url('btm/bt1') ?>" class="btn btn-primary btn-bt">
+        <i class="fas fa-table"></i> BT-1
+    </a>
+    <a href="<?= base_url('btm/bt2') ?>" class="btn btn-outline-primary btn-bt">BT-2</a>
+    <a href="<?= base_url('btm/bt3') ?>" class="btn btn-outline-primary btn-bt">BT-3</a>
+    <a href="<?= base_url('btm/bt4') ?>" class="btn btn-outline-primary btn-bt">BT-4</a>
+    <a href="<?= base_url('btm/bt6') ?>" class="btn btn-outline-primary btn-bt">BT-6</a>
+    <a href="<?= base_url('btm/bt7') ?>" class="btn btn-outline-primary btn-bt">BT-7</a>
+    <a href="<?= base_url('btm/bt8') ?>" class="btn btn-outline-primary btn-bt">BT-8</a>
+    <a href="<?= base_url('btm/create') ?>" class="btn btn-outline-success">
+        <i class="fas fa-plus me-1"></i> Add Data
+    </a>
+    
+    <button type="button" class="btn btn-outline-info" id="exportExcel">
+        <i class="fas fa-file-excel me-1"></i> Export Excel
+    </button>
+    
+    <button type="button" class="btn btn-outline-warning" onclick="showImportModal()">
+        <i class="fas fa-database me-1"></i> Import SQL
+    </button>
+</div>
 
         <div class="table-controls">
             <div class="input-group" style="max-width: 300px;">
@@ -431,6 +434,46 @@
     </div>
 </div>
 
+<!-- Import SQL Modal -->
+<div class="modal fade" id="importSqlModal" tabindex="-1" aria-labelledby="importSqlModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importSqlModalLabel">
+                    <i class="fas fa-database me-2"></i>Import Data SQL
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Masukkan query SQL untuk import data BTM. Pastikan query sudah benar sebelum dijalankan.
+                </div>
+                <form id="importSqlForm">
+                    <div class="mb-3">
+                        <label for="sqlQuery" class="form-label">SQL Query</label>
+                        <textarea class="form-control" id="sqlQuery" rows="8" 
+                                  placeholder="INSERT INTO t_pengukuran_btm (tahun, periode, tanggal) VALUES (2024, 1, '2024-01-15');&#10;INSERT INTO t_bacaan_bt_1 (id_pengukuran, US_GP, US_Arah, TB_GP, TB_Arah) VALUES (1, 10.5, 'U', 8.3, 'T');"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Tips: Gunakan multiple queries dengan pemisah titik koma (;)
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="executeImport()">
+                    <i class="fas fa-play me-1"></i> Jalankan Query
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <?= $this->include('layouts/footer'); ?>
 
 <!-- Bootstrap & Libraries -->
@@ -569,6 +612,57 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2000);
     });
 });
+
+function showImportModal() {
+    const modal = new bootstrap.Modal(document.getElementById('importSqlModal'));
+    modal.show();
+}
+
+function executeImport() {
+    const sqlQuery = document.getElementById('sqlQuery').value;
+    
+    if (!sqlQuery.trim()) {
+        alert('SQL query tidak boleh kosong');
+        return;
+    }
+    
+    if (confirm('Apakah Anda yakin ingin menjalankan query SQL ini? Pastikan data sudah benar.')) {
+        const submitBtn = document.querySelector('#importSqlModal .btn-primary');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menjalankan...';
+        submitBtn.disabled = true;
+        
+        fetch('<?= base_url('btm/import-sql') ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'sql=' + encodeURIComponent(sqlQuery)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Import berhasil: ' + data.message);
+                if (data.errors && data.errors.length > 0) {
+                    console.error('Errors:', data.errors);
+                }
+                // Refresh page
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat import data');
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            bootstrap.Modal.getInstance(document.getElementById('importSqlModal')).hide();
+        });
+    }
+}
 </script>
 </body>
 </html>

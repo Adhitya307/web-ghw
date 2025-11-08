@@ -100,13 +100,13 @@ $routes->delete('/btm/delete/(:num)', 'BTM\BtmController::delete/$1');
 $routes->post('/btm/calculate-all', 'BTM\BtmController::calculateAll');
 $routes->get('/btm/export-excel', 'BTM\BtmController::exportExcel');
 $routes->post('/btm/check-duplicate', 'BTM\BtmController::checkDuplicate');
+$routes->post('/btm/import-sql', 'BTM\BtmController::importSQL'); // Tambahan route import SQL
 
 // Routes untuk masing-masing BT
 $routes->get('/btm/bt1', 'BTM\BtmController::bt1');
 $routes->get('/btm/bt2', 'BTM\BtmController::bt2');
 $routes->get('/btm/bt3', 'BTM\BtmController::bt3');
 $routes->get('/btm/bt4', 'BTM\BtmController::bt4');
-$routes->get('/btm/bt5', 'BTC\BtmController::bt5');
 $routes->get('/btm/bt6', 'BTM\BtmController::bt6');
 $routes->get('/btm/bt7', 'BTM\BtmController::bt7');
 $routes->get('/btm/bt8', 'BTM\BtmController::bt8');
