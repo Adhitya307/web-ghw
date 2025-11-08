@@ -178,7 +178,6 @@
                 <i class="fas fa-table"></i> BT-3
             </a>
             <a href="<?= base_url('btm/bt4') ?>" class="btn btn-outline-primary btn-bt">BT-4</a>
-            <a href="<?= base_url('btm/bt5') ?>" class="btn btn-outline-primary btn-bt">BT-5</a>
             <a href="<?= base_url('btm/bt6') ?>" class="btn btn-outline-primary btn-bt">BT-6</a>
             <a href="<?= base_url('btm/bt7') ?>" class="btn btn-outline-primary btn-bt">BT-7</a>
             <a href="<?= base_url('btm/bt8') ?>" class="btn btn-outline-primary btn-bt">BT-8</a>
@@ -188,10 +187,6 @@
             
             <button type="button" class="btn btn-outline-info" id="exportExcel">
                 <i class="fas fa-file-excel me-1"></i> Export Excel
-            </button>
-
-            <button type="button" class="btn btn-outline-warning" id="calculateAll">
-                <i class="fas fa-calculator me-1"></i> Hitung Ulang
             </button>
         </div>
 
