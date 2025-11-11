@@ -101,10 +101,10 @@ $routes->post('/btm/calculate-all', 'BTM\BtmController::calculateAll');
 $routes->get('/btm/export-excel', 'BTM\BtmController::exportExcel');
 $routes->post('/btm/check-duplicate', 'BTM\BtmController::checkDuplicate');
 
-// BTM Import SQL Routes
-$routes->post('btm/import-sql', 'BTM\ImportSQLController::processImport');
-$routes->post('btm/calculate-all', 'BTM\ImportSQLController::calculateAllBTM');
-$routes->get('btm/import-status', 'BTM\ImportSQLController::getImportStatus');
+// Di app/Config/Routes.php
+$routes->post('btm/import-sql', 'BTM\ImportBtmController::importSQL');
+$routes->post('btm/import-sql-file', 'BTM\ImportBtmController::importSQLFile');
+$routes->post('btm/import-data', 'BTM\ImportBtmController::importData');
 
 // Routes untuk masing-masing BT
 $routes->get('/btm/bt1', 'BTM\BtmController::bt1');
