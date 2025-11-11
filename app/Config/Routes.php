@@ -100,7 +100,11 @@ $routes->delete('/btm/delete/(:num)', 'BTM\BtmController::delete/$1');
 $routes->post('/btm/calculate-all', 'BTM\BtmController::calculateAll');
 $routes->get('/btm/export-excel', 'BTM\BtmController::exportExcel');
 $routes->post('/btm/check-duplicate', 'BTM\BtmController::checkDuplicate');
-$routes->post('/btm/import-sql', 'BTM\BtmController::importSQL'); // Tambahan route import SQL
+
+// BTM Import SQL Routes
+$routes->post('btm/import-sql', 'BTM\ImportSQLController::processImport');
+$routes->post('btm/calculate-all', 'BTM\ImportSQLController::calculateAllBTM');
+$routes->get('btm/import-status', 'BTM\ImportSQLController::getImportStatus');
 
 // Routes untuk masing-masing BT
 $routes->get('/btm/bt1', 'BTM\BtmController::bt1');

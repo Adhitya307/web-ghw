@@ -434,39 +434,69 @@
     </div>
 </div>
 
-<!-- Import SQL Modal -->
+<!-- Modal Import SQL -->
 <div class="modal fade" id="importSqlModal" tabindex="-1" aria-labelledby="importSqlModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importSqlModalLabel">
-                    <i class="fas fa-database me-2"></i>Import Data SQL
+                    <i class="fas fa-database me-2"></i>Import SQL dari Android
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    Masukkan query SQL untuk import data BTM. Pastikan query sudah benar sebelum dijalankan.
+                    Upload file SQL yang telah diexport dari aplikasi Android.
                 </div>
-                <form id="importSqlForm">
-                    <div class="mb-3">
-                        <label for="sqlQuery" class="form-label">SQL Query</label>
-                        <textarea class="form-control" id="sqlQuery" rows="8" 
-                                  placeholder="INSERT INTO t_pengukuran_btm (tahun, periode, tanggal) VALUES (2024, 1, '2024-01-15');&#10;INSERT INTO t_bacaan_bt_1 (id_pengukuran, US_GP, US_Arah, TB_GP, TB_Arah) VALUES (1, 10.5, 'U', 8.3, 'T');"></textarea>
+                
+                <div class="mb-3">
+                    <label for="sqlFile" class="form-label">Pilih File SQL</label>
+                    <input class="form-control" type="file" id="sqlFile" accept=".sql">
+                    <div class="form-text">
+                        Format file: .sql (Maksimal 50MB)
                     </div>
-                    <div class="mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-lightbulb me-1"></i>
-                            Tips: Gunakan multiple queries dengan pemisah titik koma (;)
-                        </small>
+                </div>
+                
+                <div class="progress mb-3" style="display: none;" id="importProgress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+                
+                <div id="importStatus" class="alert" style="display: none;"></div>
+                
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Data yang Akan Diimpor</h6>
                     </div>
-                </form>
+                    <div class="card-body small">
+                        <p class="mb-2">✅ Tabel BTM yang didukung:</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <ul class="mb-1">
+                                    <li>Data Pengukuran</li>
+                                    <li>BT-1, BT-2, BT-3</li>
+                                    <li>BT-4, BT-6, BT-7</li>
+                                    <li>BT-8</li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="mb-1">
+                                    <li>Data Bacaan</li>
+                                    <li>Data Perhitungan</li>
+                                    <li>Data Scatter</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p class="mb-0 text-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Data BT-5 akan diabaikan
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" onclick="executeImport()">
-                    <i class="fas fa-play me-1"></i> Jalankan Query
+                <button type="button" class="btn btn-primary" id="btnImportSQL">
+                    <i class="fas fa-upload me-1"></i> Import SQL
                 </button>
             </div>
         </div>
@@ -611,57 +641,237 @@ document.addEventListener('DOMContentLoaded', function () {
             scrollIndicator.style.display = 'none';
         }, 2000);
     });
-});
 
-function showImportModal() {
-    const modal = new bootstrap.Modal(document.getElementById('importSqlModal'));
-    modal.show();
-}
+    // ============ IMPORT SQL FUNCTIONALITY - DIPERBAIKI ============
+    
+    // Event listener untuk tombol Import SQL di modal
+    document.getElementById('btnImportSQL').addEventListener('click', function() {
+        console.log('[BTM IMPORT] Tombol Import diklik.');
 
-function executeImport() {
-    const sqlQuery = document.getElementById('sqlQuery').value;
-    
-    if (!sqlQuery.trim()) {
-        alert('SQL query tidak boleh kosong');
-        return;
-    }
-    
-    if (confirm('Apakah Anda yakin ingin menjalankan query SQL ini? Pastikan data sudah benar.')) {
-        const submitBtn = document.querySelector('#importSqlModal .btn-primary');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menjalankan...';
-        submitBtn.disabled = true;
+        const sqlFileInput = document.getElementById('sqlFile');
+        const importProgress = document.getElementById('importProgress');
+        const importStatus = document.getElementById('importStatus');
+        const btnImport = this;
+
+        importStatus.style.display = 'none';
+
+        // Validasi file - DIPERBAIKI
+        if (!sqlFileInput.files || sqlFileInput.files.length === 0) {
+            showImportStatus('❌ Pilih file SQL terlebih dahulu', 'danger');
+            return;
+        }
+
+        const file = sqlFileInput.files[0];
+        console.log('[BTM IMPORT] File terpilih:', file.name, '-', (file.size / 1024).toFixed(2), 'KB');
+
+        // VALIDASI EKSTENSI YANG LEBIH ROBUST - DIPERBAIKI
+        const fileName = file.name.toLowerCase();
+        const validExtensions = ['.sql'];
+        const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
         
+        if (!hasValidExtension) {
+            showImportStatus('❌ File harus berformat .sql. File yang dipilih: ' + file.name, 'danger');
+            return;
+        }
+
+        if (file.size > 50 * 1024 * 1024) {
+            showImportStatus('❌ Ukuran file maksimal 50MB. File saat ini: ' + (file.size / (1024*1024)).toFixed(2) + 'MB', 'danger');
+            return;
+        }
+
+        if (file.size === 0) {
+            showImportStatus('❌ File kosong', 'danger');
+            return;
+        }
+
+        // Progress Bar
+        importProgress.style.display = 'block';
+        const progressBar = importProgress.querySelector('.progress-bar');
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+
+        btnImport.disabled = true;
+        btnImport.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+
+        const formData = new FormData();
+        formData.append('sql_file', file);
+
+        // Simulasi progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 2;
+            if (progress <= 80) {
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress + '%';
+            }
+        }, 100);
+
+        // Fetch API - DIPERBAIKI dengan error handling yang lebih baik
         fetch('<?= base_url('btm/import-sql') ?>', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+            body: formData,
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: 'sql=' + encodeURIComponent(sqlQuery)
+            credentials: 'same-origin'
         })
-        .then(response => response.json())
+        .then(response => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            
+            // Handle non-JSON responses
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Response bukan JSON. Status: ' + response.status);
+            }
+            
+            return response.json();
+        })
         .then(data => {
+            console.log('[BTM IMPORT] Response JSON:', data);
+
             if (data.success) {
-                alert('Import berhasil: ' + data.message);
-                if (data.errors && data.errors.length > 0) {
-                    console.error('Errors:', data.errors);
+                showImportStatus('✅ ' + data.message, 'success');
+
+                if (data.stats) {
+                    const s = data.stats;
+                    let detailHtml = `
+                        <div class="mt-3 p-2 bg-light rounded">
+                            <h6 class="mb-2">📊 Statistik Import:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small>Total Query: <strong>${s.total}</strong></small><br>
+                                    <small>Berhasil: <strong class="text-success">${s.success}</strong></small><br>
+                                    <small>Gagal: <strong class="text-danger">${s.failed}</strong></small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small>Affected Rows: <strong>${s.affected_rows || 0}</strong></small>
+                                    ${s.skipped_bt5 ? `<br><small>Skip BT-5: <strong>${s.skipped_bt5}</strong></small>` : ''}
+                                </div>
+                            </div>
+                    `;
+                    
+                    // Show table statistics
+                    if (s.tables && Object.keys(s.tables).length > 0) {
+                        detailHtml += `<div class="mt-2"><h6 class="mb-1">📋 Tabel yang Diimpor:</h6>`;
+                        detailHtml += `<div class="small">`;
+                        Object.entries(s.tables).forEach(([table, count]) => {
+                            detailHtml += `<div>${table}: ${count} records</div>`;
+                        });
+                        detailHtml += `</div></div>`;
+                    }
+                    
+                    detailHtml += `</div>`;
+                    importStatus.innerHTML += detailHtml;
                 }
-                // Refresh page
-                location.reload();
+
+                // Auto-refresh setelah sukses
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('importSqlModal'));
+                    if (modal) modal.hide();
+                    window.location.reload();
+                }, 3000);
+
             } else {
-                alert('Error: ' + data.message);
+                // TAMPILKAN ERROR DARI SERVER DENGAN LEBIH DETAIL
+                let errorMessage = data.message || 'Terjadi kesalahan tidak diketahui';
+                
+                // Jika ada error display dari server, tambahkan
+                if (data.error_display) {
+                    errorMessage += '<br><br><strong>Detail Error:</strong><br>' + 
+                                   data.error_display.replace(/\n/g, '<br>');
+                }
+                
+                showImportStatus('❌ ' + errorMessage, 'danger');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat import data');
+            clearInterval(progressInterval);
+            console.error('[BTM IMPORT ERROR]', error);
+            
+            let errorMessage = 'Terjadi kesalahan: ' + error.message;
+            
+            // Handle network errors specifically
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage = '❌ Koneksi jaringan terganggu. Periksa koneksi internet Anda.';
+            }
+            
+            showImportStatus(errorMessage, 'danger');
         })
         .finally(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-            bootstrap.Modal.getInstance(document.getElementById('importSqlModal')).hide();
+            setTimeout(() => {
+                btnImport.disabled = false;
+                btnImport.innerHTML = '<i class="fas fa-upload me-1"></i> Import';
+            }, 2000);
         });
-    }
+
+        function showImportStatus(message, type) {
+            importStatus.style.display = 'block';
+            importStatus.className = `alert alert-${type} alert-dismissible fade show`;
+            importStatus.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">${message}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+    });
+
+    // Reset form ketika modal import ditutup
+    document.getElementById('importSqlModal').addEventListener('hidden.bs.modal', function() {
+        document.getElementById('sqlFile').value = '';
+        document.getElementById('importProgress').style.display = 'none';
+        document.getElementById('importStatus').style.display = 'none';
+        document.getElementById('importProgress').querySelector('.progress-bar').style.width = '0%';
+    });
+
+    // Validasi file ketika dipilih - DIPERBAIKI
+    document.getElementById('sqlFile').addEventListener('change', function(e) {
+        const file = this.files[0];
+        const importStatus = document.getElementById('importStatus');
+        const btnImport = document.getElementById('btnImportSQL');
+        
+        if (file) {
+            const fileName = file.name.toLowerCase();
+            const validExtensions = ['.sql'];
+            const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!hasValidExtension) {
+                importStatus.style.display = 'block';
+                importStatus.className = 'alert alert-warning';
+                importStatus.innerHTML = '⚠️ File harus berekstensi .sql. File yang dipilih: ' + file.name;
+                this.value = '';
+                btnImport.disabled = true;
+            } else {
+                importStatus.style.display = 'none';
+                btnImport.disabled = false;
+                
+                // Tampilkan info file yang valid
+                importStatus.style.display = 'block';
+                importStatus.className = 'alert alert-info';
+                importStatus.innerHTML = `
+                    ✅ File valid: ${file.name} (${(file.size / 1024).toFixed(2)} KB)
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+            }
+        } else {
+            btnImport.disabled = true;
+        }
+    });
+});
+
+// Function untuk menampilkan modal import
+function showImportModal() {
+    const modal = new bootstrap.Modal(document.getElementById('importSqlModal'));
+    
+    // Reset form ketika modal dibuka
+    document.getElementById('sqlFile').value = '';
+    document.getElementById('importProgress').style.display = 'none';
+    document.getElementById('importStatus').style.display = 'none';
+    document.getElementById('btnImportSQL').disabled = true;
+    
+    modal.show();
 }
 </script>
 </body>
