@@ -158,6 +158,10 @@
             text-align: right;
             font-family: 'Courier New', monospace;
         }
+        
+        .scientific-notation {
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
@@ -336,6 +340,67 @@
                         </td>
                     </tr>
                 <?php else: ?>
+                    <?php 
+                    // Fungsi untuk memformat angka sesuai permintaan - VERSI FINAL DIPERBAIKI
+                    function formatNumber($number) {
+                        if ($number === null || $number === '') {
+                            return '-';
+                        }
+                        
+                        // Jika angka sangat kecil, gunakan notasi E dengan presisi tinggi seperti Excel
+                        if (abs($number) < 0.0001 && $number != 0) {
+                            return '<span class="scientific-notation">' . sprintf('%.8E', $number) . '</span>';
+                        }
+                        
+                        // Format angka dengan 9 digit di belakang koma
+                        $formatted = number_format($number, 9, '.', '');
+                        
+                        // Hapus trailing zeros dan titik desimal yang tidak perlu
+                        $formatted = preg_replace('/\.?0+$/', '', $formatted);
+                        
+                        return $formatted;
+                    }
+
+                    // FUNGSI PERHITUNGAN YANG DIPERBAIKI - TANPA PEMBULATAN
+                    function calculateSinRad($seconds) {
+                        if ($seconds === null || $seconds === '') {
+                            return null;
+                        }
+                        
+                        // Konversi detik ke radian: (detik * π) / (180 * 3600)
+                        $radians = ($seconds * M_PI) / (180 * 3600);
+                        
+                        // Hitung sin tanpa pembulatan
+                        $sinValue = sin($radians);
+                        
+                        return $sinValue;
+                    }
+
+                    // FUNGSI PERHITUNGAN sin_C_rad YANG DIPERBAIKI
+                    function calculateSinCRad($sinA, $sinB) {
+                        if ($sinA === null || $sinB === null) {
+                            return null;
+                        }
+                        
+                        // Rumus: sin_C_rad = sqrt(sin_A_rad^2 + sin_B_rad^2)
+                        $sinC = sqrt(pow($sinA, 2) + pow($sinB, 2));
+                        
+                        return $sinC;
+                    }
+
+                    // FUNGSI KONVERSI RADIAN KE DERAJAT
+                    function radToDeg($radians) {
+                        if ($radians === null) {
+                            return null;
+                        }
+                        
+                        // Konversi radian ke derajat: rad * (180 / π)
+                        $degrees = $radians * (180 / M_PI);
+                        
+                        return $degrees;
+                    }
+                    ?>
+                    
                     <?php foreach($pengukuran as $item): 
                         $p = $item['pengukuran'];
                         $bacaan = $item['bacaan'];
@@ -347,6 +412,29 @@
                         $X_TB = $scatter['bt1']['X_TB'] ?? null;
                         $Y_cum = $scatter['bt1']['Y_cum'] ?? null;
                         $X_cum = $scatter['bt1']['X_cum'] ?? null;
+
+                        // PERHITUNGAN REAL-TIME YANG DIPERBAIKI
+                        $bt1Bacaan = $bacaan['bt1'] ?? [];
+                        $bt1Perhitungan = $perhitungan['bt1'] ?? [];
+                        
+                        // Hitung ulang sin_A_rad dan sin_B_rad dengan presisi tinggi
+                        $A_sec = $bt1Perhitungan['A_sec'] ?? null;
+                        $B_sec = $bt1Perhitungan['B_sec'] ?? null;
+                        
+                        $sin_A_rad_calculated = calculateSinRad($A_sec);
+                        $sin_B_rad_calculated = calculateSinRad($B_sec);
+                        
+                        // Hitung ulang sin_C_rad dengan presisi tinggi
+                        $sin_C_rad_calculated = calculateSinCRad($sin_A_rad_calculated, $sin_B_rad_calculated);
+                        
+                        // Hitung ulang sin_C_deg dengan presisi tinggi
+                        $sin_C_deg_calculated = $sin_C_rad_calculated !== null ? radToDeg($sin_C_rad_calculated) : null;
+
+                        // Gunakan nilai yang sudah dihitung jika tersedia, jika tidak gunakan dari database
+                        $sin_A_rad_display = $sin_A_rad_calculated ?? $bt1Perhitungan['sin_A_rad'] ?? null;
+                        $sin_B_rad_display = $sin_B_rad_calculated ?? $bt1Perhitungan['sin_B_rad'] ?? null;
+                        $sin_C_rad_display = $sin_C_rad_calculated ?? $bt1Perhitungan['sin_C_rad'] ?? null;
+                        $sin_C_deg_display = $sin_C_deg_calculated ?? $bt1Perhitungan['sin_C_deg'] ?? null;
                     ?>
                     <tr data-pid="<?= $p['id_pengukuran'] ?>">
                         <!-- Basic Info -->
@@ -355,33 +443,27 @@
                         <td class="sticky-3"><?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?></td>
                         
                         <!-- BACAAN DATA BT1 -->
-                        <?php 
-                            $bt1Bacaan = $bacaan['bt1'] ?? [];
-                        ?>
-                        <td class="number-cell"><?= isset($bt1Bacaan['US_GP']) ? number_format($bt1Bacaan['US_GP'], 2) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt1Bacaan['US_GP']) ? formatNumber($bt1Bacaan['US_GP']) : '-' ?></td>
                         <td><?= esc($bt1Bacaan['US_Arah'] ?? '-') ?></td>
-                        <td class="number-cell"><?= isset($bt1Bacaan['TB_GP']) ? number_format($bt1Bacaan['TB_GP'], 2) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt1Bacaan['TB_GP']) ? formatNumber($bt1Bacaan['TB_GP']) : '-' ?></td>
                         <td><?= esc($bt1Bacaan['TB_Arah'] ?? '-') ?></td>
 
                         <!-- PERHITUNGAN DATA BT1 -->
-                        <?php 
-                            $bt1Perhitungan = $perhitungan['bt1'] ?? [];
-                        ?>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['A_sec']) ? number_format($bt1Perhitungan['A_sec'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['sin_A_rad']) ? number_format($bt1Perhitungan['sin_A_rad'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['B_sec']) ? number_format($bt1Perhitungan['B_sec'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['sin_B_rad']) ? number_format($bt1Perhitungan['sin_B_rad'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['sin_C_rad']) ? number_format($bt1Perhitungan['sin_C_rad'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['sin_C_deg']) ? number_format($bt1Perhitungan['sin_C_deg'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['Cosa']) ? number_format($bt1Perhitungan['Cosa'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt1Perhitungan['a_rad']) ? number_format($bt1Perhitungan['a_rad'], 6) : '-' ?></td>
+                        <td class="number-cell"><?= isset($A_sec) ? formatNumber($A_sec) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_A_rad_display !== null ? formatNumber($sin_A_rad_display) : '-' ?></td>
+                        <td class="number-cell"><?= isset($B_sec) ? formatNumber($B_sec) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_B_rad_display !== null ? formatNumber($sin_B_rad_display) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_C_rad_display !== null ? formatNumber($sin_C_rad_display) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_C_deg_display !== null ? formatNumber($sin_C_deg_display) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt1Perhitungan['Cosa']) ? formatNumber($bt1Perhitungan['Cosa']) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt1Perhitungan['a_rad']) ? formatNumber($bt1Perhitungan['a_rad']) : '-' ?></td>
                         <td><?= esc($bt1Perhitungan['DMS'] ?? '-') ?></td>
                         
                         <!-- SCATTER DATA -->
-                        <td class="number-cell bg-scatter"><?= $Y_US !== null ? number_format($Y_US, 6) : '-' ?></td>
-                        <td class="number-cell bg-scatter"><?= $X_TB !== null ? number_format($X_TB, 6) : '-' ?></td>
-                        <td class="number-cell bg-scatter"><?= $Y_cum !== null ? number_format($Y_cum, 6) : '-' ?></td>
-                        <td class="number-cell bg-scatter"><?= $X_cum !== null ? number_format($X_cum, 6) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $Y_US !== null ? formatNumber($Y_US) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $X_TB !== null ? formatNumber($X_TB) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $Y_cum !== null ? formatNumber($Y_cum) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $X_cum !== null ? formatNumber($X_cum) : '-' ?></td>
                         
                         <!-- Action Buttons -->
                         <td class="action-cell">

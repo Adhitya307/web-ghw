@@ -158,6 +158,10 @@
             text-align: right;
             font-family: 'Courier New', monospace;
         }
+        
+        .scientific-notation {
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
@@ -172,7 +176,7 @@
 
         <!-- Button Group -->
         <div class="btn-group mb-3" role="group">
-            <a href="<?= base_url('btm') ?>" class="btn btn-outline-primary btn-bt">BT-1</a>
+            <a href="<?= base_url('btm/bt1') ?>" class="btn btn-outline-primary btn-bt">BT-1</a>
             <a href="<?= base_url('btm/bt2') ?>" class="btn btn-outline-primary btn-bt">BT-2</a>
             <a href="<?= base_url('btm/bt3') ?>" class="btn btn-outline-primary btn-bt">BT-3</a>
             <a href="<?= base_url('btm/bt4') ?>" class="btn btn-outline-primary btn-bt">BT-4</a>
@@ -187,6 +191,10 @@
             
             <button type="button" class="btn btn-outline-info" id="exportExcel">
                 <i class="fas fa-file-excel me-1"></i> Export Excel
+            </button>
+            
+            <button type="button" class="btn btn-outline-warning" onclick="showImportModal()">
+                <i class="fas fa-database me-1"></i> Import SQL
             </button>
         </div>
 
@@ -332,6 +340,67 @@
                         </td>
                     </tr>
                 <?php else: ?>
+                    <?php 
+                    // Fungsi untuk memformat angka sesuai permintaan - VERSI FINAL DIPERBAIKI
+                    function formatNumber($number) {
+                        if ($number === null || $number === '') {
+                            return '-';
+                        }
+                        
+                        // Jika angka sangat kecil, gunakan notasi E dengan presisi tinggi seperti Excel
+                        if (abs($number) < 0.0001 && $number != 0) {
+                            return '<span class="scientific-notation">' . sprintf('%.8E', $number) . '</span>';
+                        }
+                        
+                        // Format angka dengan 9 digit di belakang koma
+                        $formatted = number_format($number, 9, '.', '');
+                        
+                        // Hapus trailing zeros dan titik desimal yang tidak perlu
+                        $formatted = preg_replace('/\.?0+$/', '', $formatted);
+                        
+                        return $formatted;
+                    }
+
+                    // FUNGSI PERHITUNGAN YANG DIPERBAIKI - TANPA PEMBULATAN
+                    function calculateSinRad($seconds) {
+                        if ($seconds === null || $seconds === '') {
+                            return null;
+                        }
+                        
+                        // Konversi detik ke radian: (detik * π) / (180 * 3600)
+                        $radians = ($seconds * M_PI) / (180 * 3600);
+                        
+                        // Hitung sin tanpa pembulatan
+                        $sinValue = sin($radians);
+                        
+                        return $sinValue;
+                    }
+
+                    // FUNGSI PERHITUNGAN sin_C_rad YANG DIPERBAIKI
+                    function calculateSinCRad($sinA, $sinB) {
+                        if ($sinA === null || $sinB === null) {
+                            return null;
+                        }
+                        
+                        // Rumus: sin_C_rad = sqrt(sin_A_rad^2 + sin_B_rad^2)
+                        $sinC = sqrt(pow($sinA, 2) + pow($sinB, 2));
+                        
+                        return $sinC;
+                    }
+
+                    // FUNGSI KONVERSI RADIAN KE DERAJAT
+                    function radToDeg($radians) {
+                        if ($radians === null) {
+                            return null;
+                        }
+                        
+                        // Konversi radian ke derajat: rad * (180 / π)
+                        $degrees = $radians * (180 / M_PI);
+                        
+                        return $degrees;
+                    }
+                    ?>
+                    
                     <?php foreach($pengukuran as $item): 
                         $p = $item['pengukuran'];
                         $bacaan = $item['bacaan'];
@@ -343,6 +412,29 @@
                         $X_TB = $scatter['bt7']['X_TB'] ?? null;
                         $Y_cum = $scatter['bt7']['Y_cum'] ?? null;
                         $X_cum = $scatter['bt7']['X_cum'] ?? null;
+
+                        // PERHITUNGAN REAL-TIME YANG DIPERBAIKI
+                        $bt7Bacaan = $bacaan['bt7'] ?? [];
+                        $bt7Perhitungan = $perhitungan['bt7'] ?? [];
+                        
+                        // Hitung ulang sin_A_rad dan sin_B_rad dengan presisi tinggi
+                        $A_sec = $bt7Perhitungan['A_sec'] ?? null;
+                        $B_sec = $bt7Perhitungan['B_sec'] ?? null;
+                        
+                        $sin_A_rad_calculated = calculateSinRad($A_sec);
+                        $sin_B_rad_calculated = calculateSinRad($B_sec);
+                        
+                        // Hitung ulang sin_C_rad dengan presisi tinggi
+                        $sin_C_rad_calculated = calculateSinCRad($sin_A_rad_calculated, $sin_B_rad_calculated);
+                        
+                        // Hitung ulang sin_C_deg dengan presisi tinggi
+                        $sin_C_deg_calculated = $sin_C_rad_calculated !== null ? radToDeg($sin_C_rad_calculated) : null;
+
+                        // Gunakan nilai yang sudah dihitung jika tersedia, jika tidak gunakan dari database
+                        $sin_A_rad_display = $sin_A_rad_calculated ?? $bt7Perhitungan['sin_A_rad'] ?? null;
+                        $sin_B_rad_display = $sin_B_rad_calculated ?? $bt7Perhitungan['sin_B_rad'] ?? null;
+                        $sin_C_rad_display = $sin_C_rad_calculated ?? $bt7Perhitungan['sin_C_rad'] ?? null;
+                        $sin_C_deg_display = $sin_C_deg_calculated ?? $bt7Perhitungan['sin_C_deg'] ?? null;
                     ?>
                     <tr data-pid="<?= $p['id_pengukuran'] ?>">
                         <!-- Basic Info -->
@@ -351,33 +443,27 @@
                         <td class="sticky-3"><?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?></td>
                         
                         <!-- BACAAN DATA BT7 -->
-                        <?php 
-                            $bt7Bacaan = $bacaan['bt7'] ?? [];
-                        ?>
-                        <td class="number-cell"><?= isset($bt7Bacaan['US_GP']) ? number_format($bt7Bacaan['US_GP'], 2) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt7Bacaan['US_GP']) ? formatNumber($bt7Bacaan['US_GP']) : '-' ?></td>
                         <td><?= esc($bt7Bacaan['US_Arah'] ?? '-') ?></td>
-                        <td class="number-cell"><?= isset($bt7Bacaan['TB_GP']) ? number_format($bt7Bacaan['TB_GP'], 2) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt7Bacaan['TB_GP']) ? formatNumber($bt7Bacaan['TB_GP']) : '-' ?></td>
                         <td><?= esc($bt7Bacaan['TB_Arah'] ?? '-') ?></td>
 
                         <!-- PERHITUNGAN DATA BT7 -->
-                        <?php 
-                            $bt7Perhitungan = $perhitungan['bt7'] ?? [];
-                        ?>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['A_sec']) ? number_format($bt7Perhitungan['A_sec'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['sin_A_rad']) ? number_format($bt7Perhitungan['sin_A_rad'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['B_sec']) ? number_format($bt7Perhitungan['B_sec'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['sin_B_rad']) ? number_format($bt7Perhitungan['sin_B_rad'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['sin_C_rad']) ? number_format($bt7Perhitungan['sin_C_rad'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['sin_C_deg']) ? number_format($bt7Perhitungan['sin_C_deg'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['Cosa']) ? number_format($bt7Perhitungan['Cosa'], 6) : '-' ?></td>
-                        <td class="number-cell"><?= isset($bt7Perhitungan['a_rad']) ? number_format($bt7Perhitungan['a_rad'], 6) : '-' ?></td>
+                        <td class="number-cell"><?= isset($A_sec) ? formatNumber($A_sec) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_A_rad_display !== null ? formatNumber($sin_A_rad_display) : '-' ?></td>
+                        <td class="number-cell"><?= isset($B_sec) ? formatNumber($B_sec) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_B_rad_display !== null ? formatNumber($sin_B_rad_display) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_C_rad_display !== null ? formatNumber($sin_C_rad_display) : '-' ?></td>
+                        <td class="number-cell"><?= $sin_C_deg_display !== null ? formatNumber($sin_C_deg_display) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt7Perhitungan['Cosa']) ? formatNumber($bt7Perhitungan['Cosa']) : '-' ?></td>
+                        <td class="number-cell"><?= isset($bt7Perhitungan['a_rad']) ? formatNumber($bt7Perhitungan['a_rad']) : '-' ?></td>
                         <td><?= esc($bt7Perhitungan['DMS'] ?? '-') ?></td>
                         
                         <!-- SCATTER DATA -->
-                        <td class="number-cell bg-scatter"><?= $Y_US !== null ? number_format($Y_US, 6) : '-' ?></td>
-                        <td class="number-cell bg-scatter"><?= $X_TB !== null ? number_format($X_TB, 6) : '-' ?></td>
-                        <td class="number-cell bg-scatter"><?= $Y_cum !== null ? number_format($Y_cum, 6) : '-' ?></td>
-                        <td class="number-cell bg-scatter"><?= $X_cum !== null ? number_format($X_cum, 6) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $Y_US !== null ? formatNumber($Y_US) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $X_TB !== null ? formatNumber($X_TB) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $Y_cum !== null ? formatNumber($Y_cum) : '-' ?></td>
+                        <td class="number-cell bg-scatter"><?= $X_cum !== null ? formatNumber($X_cum) : '-' ?></td>
                         
                         <!-- Action Buttons -->
                         <td class="action-cell">
@@ -430,6 +516,75 @@
     </div>
 </div>
 
+<!-- Modal Import SQL -->
+<div class="modal fade" id="importSqlModal" tabindex="-1" aria-labelledby="importSqlModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importSqlModalLabel">
+                    <i class="fas fa-database me-2"></i>Import SQL dari Android
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Upload file SQL yang telah diexport dari aplikasi Android.
+                </div>
+                
+                <div class="mb-3">
+                    <label for="sqlFile" class="form-label">Pilih File SQL</label>
+                    <input class="form-control" type="file" id="sqlFile" accept=".sql">
+                    <div class="form-text">
+                        Format file: .sql (Maksimal 50MB)
+                    </div>
+                </div>
+                
+                <div class="progress mb-3" style="display: none;" id="importProgress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+                
+                <div id="importStatus" class="alert" style="display: none;"></div>
+                
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Data yang Akan Diimpor</h6>
+                    </div>
+                    <div class="card-body small">
+                        <p class="mb-2">✅ Tabel BTM yang didukung:</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <ul class="mb-1">
+                                    <li>Data Pengukuran</li>
+                                    <li>BT-1, BT-2, BT-3</li>
+                                    <li>BT-4, BT-6, BT-7</li>
+                                    <li>BT-8</li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="mb-1">
+                                    <li>Data Bacaan</li>
+                                    <li>Data Perhitungan</li>
+                                    <li>Data Scatter</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p class="mb-0 text-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Data BT-5 akan diabaikan
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="btnImportSQL">
+                    <i class="fas fa-upload me-1"></i> Import SQL
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->include('layouts/footer'); ?>
 
 <!-- Bootstrap & Libraries -->
@@ -466,41 +621,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.disabled = false;
             }
         }, 1000);
-    });
-
-    // Calculate All
-    document.getElementById('calculateAll').addEventListener('click', function() {
-        if (confirm('Hitung ulang semua data BT7? Proses ini mungkin memakan waktu.')) {
-            const btn = this;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menghitung...';
-            btn.disabled = true;
-
-            fetch('<?= base_url('btm/calculate-all-bt7') ?>', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Perhitungan BT7 berhasil!');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat menghitung data');
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        }
     });
 
     // Delete Data
@@ -602,7 +722,238 @@ document.addEventListener('DOMContentLoaded', function () {
             scrollIndicator.style.display = 'none';
         }, 2000);
     });
+
+    // ============ IMPORT SQL FUNCTIONALITY - DIPERBAIKI ============
+    
+    // Event listener untuk tombol Import SQL di modal
+    document.getElementById('btnImportSQL').addEventListener('click', function() {
+        console.log('[BTM IMPORT] Tombol Import diklik.');
+
+        const sqlFileInput = document.getElementById('sqlFile');
+        const importProgress = document.getElementById('importProgress');
+        const importStatus = document.getElementById('importStatus');
+        const btnImport = this;
+
+        importStatus.style.display = 'none';
+
+        // Validasi file - DIPERBAIKI
+        if (!sqlFileInput.files || sqlFileInput.files.length === 0) {
+            showImportStatus('❌ Pilih file SQL terlebih dahulu', 'danger');
+            return;
+        }
+
+        const file = sqlFileInput.files[0];
+        console.log('[BTM IMPORT] File terpilih:', file.name, '-', (file.size / 1024).toFixed(2), 'KB');
+
+        // VALIDASI EKSTENSI YANG LEBIH ROBUST - DIPERBAIKI
+        const fileName = file.name.toLowerCase();
+        const validExtensions = ['.sql'];
+        const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+        
+        if (!hasValidExtension) {
+            showImportStatus('❌ File harus berformat .sql. File yang dipilih: ' + file.name, 'danger');
+            return;
+        }
+
+        if (file.size > 50 * 1024 * 1024) {
+            showImportStatus('❌ Ukuran file maksimal 50MB. File saat ini: ' + (file.size / (1024*1024)).toFixed(2) + 'MB', 'danger');
+            return;
+        }
+
+        if (file.size === 0) {
+            showImportStatus('❌ File kosong', 'danger');
+            return;
+        }
+
+        // Progress Bar
+        importProgress.style.display = 'block';
+        const progressBar = importProgress.querySelector('.progress-bar');
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+
+        btnImport.disabled = true;
+        btnImport.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+
+        const formData = new FormData();
+        formData.append('sql_file', file);
+
+        // Simulasi progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 2;
+            if (progress <= 80) {
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress + '%';
+            }
+        }, 100);
+
+        // Fetch API - DIPERBAIKI dengan error handling yang lebih baik
+        fetch('<?= base_url('btm/import-sql') ?>', {
+            method: 'POST',
+            body: formData,
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            
+            // Handle non-JSON responses
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Response bukan JSON. Status: ' + response.status);
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('[BTM IMPORT] Response JSON:', data);
+
+            if (data.success) {
+                showImportStatus('✅ ' + data.message, 'success');
+
+                if (data.stats) {
+                    const s = data.stats;
+                    let detailHtml = `
+                        <div class="mt-3 p-2 bg-light rounded">
+                            <h6 class="mb-2">📊 Statistik Import:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small>Total Query: <strong>${s.total}</strong></small><br>
+                                    <small>Berhasil: <strong class="text-success">${s.success}</strong></small><br>
+                                    <small>Gagal: <strong class="text-danger">${s.failed}</strong></small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small>Affected Rows: <strong>${s.affected_rows || 0}</strong></small>
+                                    ${s.skipped_bt5 ? `<br><small>Skip BT-5: <strong>${s.skipped_bt5}</strong></small>` : ''}
+                                </div>
+                            </div>
+                    `;
+                    
+                    // Show table statistics
+                    if (s.tables && Object.keys(s.tables).length > 0) {
+                        detailHtml += `<div class="mt-2"><h6 class="mb-1">📋 Tabel yang Diimpor:</h6>`;
+                        detailHtml += `<div class="small">`;
+                        Object.entries(s.tables).forEach(([table, count]) => {
+                            detailHtml += `<div>${table}: ${count} records</div>`;
+                        });
+                        detailHtml += `</div></div>`;
+                    }
+                    
+                    detailHtml += `</div>`;
+                    importStatus.innerHTML += detailHtml;
+                }
+
+                // Auto-refresh setelah sukses
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('importSqlModal'));
+                    if (modal) modal.hide();
+                    window.location.reload();
+                }, 3000);
+
+            } else {
+                // TAMPILKAN ERROR DARI SERVER DENGAN LEBIH DETAIL
+                let errorMessage = data.message || 'Terjadi kesalahan tidak diketahui';
+                
+                // Jika ada error display dari server, tambahkan
+                if (data.error_display) {
+                    errorMessage += '<br><br><strong>Detail Error:</strong><br>' + 
+                                   data.error_display.replace(/\n/g, '<br>');
+                }
+                
+                showImportStatus('❌ ' + errorMessage, 'danger');
+            }
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            console.error('[BTM IMPORT ERROR]', error);
+            
+            let errorMessage = 'Terjadi kesalahan: ' + error.message;
+            
+            // Handle network errors specifically
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage = '❌ Koneksi jaringan terganggu. Periksa koneksi internet Anda.';
+            }
+            
+            showImportStatus(errorMessage, 'danger');
+        })
+        .finally(() => {
+            setTimeout(() => {
+                btnImport.disabled = false;
+                btnImport.innerHTML = '<i class="fas fa-upload me-1"></i> Import';
+            }, 2000);
+        });
+
+        function showImportStatus(message, type) {
+            importStatus.style.display = 'block';
+            importStatus.className = `alert alert-${type} alert-dismissible fade show`;
+            importStatus.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">${message}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+    });
+
+    // Reset form ketika modal import ditutup
+    document.getElementById('importSqlModal').addEventListener('hidden.bs.modal', function() {
+        document.getElementById('sqlFile').value = '';
+        document.getElementById('importProgress').style.display = 'none';
+        document.getElementById('importStatus').style.display = 'none';
+        document.getElementById('importProgress').querySelector('.progress-bar').style.width = '0%';
+    });
+
+    // Validasi file ketika dipilih - DIPERBAIKI
+    document.getElementById('sqlFile').addEventListener('change', function(e) {
+        const file = this.files[0];
+        const importStatus = document.getElementById('importStatus');
+        const btnImport = document.getElementById('btnImportSQL');
+        
+        if (file) {
+            const fileName = file.name.toLowerCase();
+            const validExtensions = ['.sql'];
+            const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!hasValidExtension) {
+                importStatus.style.display = 'block';
+                importStatus.className = 'alert alert-warning';
+                importStatus.innerHTML = '⚠️ File harus berekstensi .sql. File yang dipilih: ' + file.name;
+                this.value = '';
+                btnImport.disabled = true;
+            } else {
+                importStatus.style.display = 'none';
+                btnImport.disabled = false;
+                
+                // Tampilkan info file yang valid
+                importStatus.style.display = 'block';
+                importStatus.className = 'alert alert-info';
+                importStatus.innerHTML = `
+                    ✅ File valid: ${file.name} (${(file.size / 1024).toFixed(2)} KB)
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+            }
+        } else {
+            btnImport.disabled = true;
+        }
+    });
 });
+
+// Function untuk menampilkan modal import
+function showImportModal() {
+    const modal = new bootstrap.Modal(document.getElementById('importSqlModal'));
+    
+    // Reset form ketika modal dibuka
+    document.getElementById('sqlFile').value = '';
+    document.getElementById('importProgress').style.display = 'none';
+    document.getElementById('importStatus').style.display = 'none';
+    document.getElementById('btnImportSQL').disabled = true;
+    
+    modal.show();
+}
 </script>
 </body>
 </html>
