@@ -114,3 +114,16 @@ $routes->get('/btm/bt4', 'BTM\BtmController::bt4');
 $routes->get('/btm/bt6', 'BTM\BtmController::bt6');
 $routes->get('/btm/bt7', 'BTM\BtmController::bt7');
 $routes->get('/btm/bt8', 'BTM\BtmController::bt8');
+
+// Alternatif format untuk Extensometer Routes
+$routes->get('/extenso', 'EXS\ExtensoController::index');
+$routes->get('/extenso/ex1', 'EXS\ExtensoController::ex1');
+$routes->get('/extenso/ex2', 'EXS\ExtensoController::ex2');
+$routes->get('/extenso/ex3', 'EXS\ExtensoController::ex3');
+$routes->get('/extenso/ex4', 'EXS\ExtensoController::ex4');
+$routes->get('/extenso/create', 'EXS\ExtensoController::create');
+$routes->post('/extenso/store', 'EXS\ExtensoController::store');
+$routes->get('/extenso/edit/(:num)', 'EXS\ExtensoController::edit/$1');
+$routes->post('/extenso/update/(:num)', 'EXS\ExtensoController::update/$1');
+$routes->delete('/extenso/delete/(:num)', 'EXS\ExtensoController::delete/$1');
+$routes->get('/extenso/export', 'EXS\ExtensoController::exportExcel');

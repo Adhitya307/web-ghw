@@ -74,6 +74,23 @@
                 </div>
             </a>
         </div>
+
+        <!-- Menu 5: Extensometer -->
+        <div class="col-12 col-md-5 col-lg-4">
+            <a href="<?= base_url('/extenso') ?>" class="text-decoration-none">
+                <div class="card menu-card shadow-sm h-100 border-0">
+                    <div class="card-body d-flex flex-column align-items-center py-4">
+                        <div class="menu-icon bg-danger bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-rulers display-4 text-danger"></i>
+                        </div>
+                        <h5 class="mt-3 menu-title">Extensometer</h5>
+                        <p class="text-muted small mt-2 text-center">
+                            Monitoring deformasi dan perpindahan vertikal struktur bendungan.
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 
     <!-- Optional: Info Tambahan -->
