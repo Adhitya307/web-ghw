@@ -18,10 +18,14 @@
             --color-aman: #d4edda;
             --color-peringatan: #fff3cd;
             --color-bahaya: #f8d7da;
+            --color-aman-header: #4CAF50; /* Hijau ngejreng */
+            --color-peringatan-header: #FFC107; /* Kuning ngejreng */
+            --color-bahaya-header: #F44336; /* Merah ngejreng */
             --color-primary: #0d6efd;
             --color-success: #198754;
             --color-warning: #ffc107;
             --color-danger: #dc3545;
+            --color-light-gray: #f8f9fa;
         }
         
         .table th {
@@ -70,9 +74,29 @@
             margin-bottom: 1rem;
         }
         
+        /* Warna untuk kolom data (lebih gelap) */
         .status-aman { background-color: var(--color-aman) !important; }
         .status-peringatan { background-color: var(--color-peringatan) !important; }
         .status-bahaya { background-color: var(--color-bahaya) !important; }
+        
+        /* Warna untuk header (ngejreng dan cerah) */
+        .header-aman { 
+            background-color: var(--color-aman-header) !important;
+            font-weight: 600;
+            color: white !important;
+        }
+        
+        .header-peringatan { 
+            background-color: var(--color-peringatan-header) !important;
+            font-weight: 600;
+            color: black !important;
+        }
+        
+        .header-bahaya { 
+            background-color: var(--color-bahaya-header) !important;
+            font-weight: 600;
+            color: white !important;
+        }
         
         .sticky-header {
             position: sticky;
@@ -175,19 +199,37 @@
             white-space: nowrap;
         }
         
+        /* WARNA KOLOM DATA */
         .reading-cell { 
-            background-color: #e3f2fd !important;
+            background-color: var(--color-light-gray) !important;
             font-weight: 500;
         }
         
         .movement-cell { 
-            background-color: #fff8e1 !important;
+            background-color: var(--color-light-gray) !important;
             font-weight: 500;
         }
         
-        .threshold-cell { 
-            background-color: #ffebee !important;
+        /* Kolom Ambang Batas - Warna sesuai status (lebih gelap) */
+        .threshold-aman { 
+            background-color: var(--color-aman) !important;
             font-weight: 500;
+        }
+        
+        .threshold-peringatan { 
+            background-color: var(--color-peringatan) !important;
+            font-weight: 500;
+        }
+        
+        .threshold-bahaya { 
+            background-color: var(--color-bahaya) !important;
+            font-weight: 500;
+        }
+        
+        /* Header untuk kolom pembacaan dan pergerakan */
+        .threshold-header {
+            background-color: var(--color-light-gray) !important;
+            font-weight: 600;
         }
         
         .header-large {
@@ -218,7 +260,7 @@
             <i class="fas fa-arrow-left-right me-2"></i>Horizontal Displacement Meter - ELV 625
         </h2>
 
-        <!-- Button Group - HILANGKAN SYNC PERGERAKAN -->
+        <!-- Button Group -->
         <div class="btn-group mb-3" role="group">
             <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-outline-primary">
                 <i class="fas fa-table"></i> Tabel Data HDM
@@ -227,8 +269,6 @@
             <button type="button" class="btn btn-outline-success" id="exportExcel">
                 <i class="fas fa-file-excel me-1"></i> Export Excel
             </button>
-            
-            <!-- BUTTON SYNC PERGERAKAN DIHAPUS DARI SINI -->
         </div>
 
         <div class="table-controls">
@@ -324,28 +364,28 @@
                     <th rowspan="2" class="sticky-header-3 bg-light">TANGGAL</th>
                     
                     <!-- HV1 Headers -->
-                    <th colspan="1" class="bg-primary">PEMBACAAN (cm)</th>
-                    <th colspan="1" class="bg-warning">PERGERAKAN (mm)</th>
-                    <th colspan="1" class="bg-danger">Aman</th>
-                    <th colspan="1" class="bg-danger">Peringatan</th>
-                    <th colspan="1" class="bg-danger">Bahaya</th>
-                    <th colspan="1" class="bg-danger">Pergerakan</th>
+                    <th colspan="1" class="threshold-header">PEMBACAAN (cm)</th>
+                    <th colspan="1" class="threshold-header">PERGERAKAN (mm)</th>
+                    <th colspan="1" class="header-aman">Aman</th>
+                    <th colspan="1" class="header-peringatan">Peringatan</th>
+                    <th colspan="1" class="header-bahaya">Bahaya</th>
+                    <th colspan="1" class="threshold-header">Pergerakan</th>
 
                     <!-- HV2 Headers -->
-                    <th colspan="1" class="bg-primary">PEMBACAAN (cm)</th>
-                    <th colspan="1" class="bg-warning">PERGERAKAN (mm)</th>
-                    <th colspan="1" class="bg-danger">Aman</th>
-                    <th colspan="1" class="bg-danger">Peringatan</th>
-                    <th colspan="1" class="bg-danger">Bahaya</th>
-                    <th colspan="1" class="bg-danger">Pergerakan</th>
+                    <th colspan="1" class="threshold-header">PEMBACAAN (cm)</th>
+                    <th colspan="1" class="threshold-header">PERGERAKAN (mm)</th>
+                    <th colspan="1" class="header-aman">Aman</th>
+                    <th colspan="1" class="header-peringatan">Peringatan</th>
+                    <th colspan="1" class="header-bahaya">Bahaya</th>
+                    <th colspan="1" class="threshold-header">Pergerakan</th>
                     
                     <!-- HV3 Headers -->
-                    <th colspan="1" class="bg-primary">PEMBACAAN (cm)</th>
-                    <th colspan="1" class="bg-warning">PERGERAKAN (mm)</th>
-                    <th colspan="1" class="bg-danger">Aman</th>
-                    <th colspan="1" class="bg-danger">Peringatan</th>
-                    <th colspan="1" class="bg-danger">Bahaya</th>
-                    <th colspan="1" class="bg-danger">Pergerakan</th>
+                    <th colspan="1" class="threshold-header">PEMBACAAN (cm)</th>
+                    <th colspan="1" class="threshold-header">PERGERAKAN (mm)</th>
+                    <th colspan="1" class="header-aman">Aman</th>
+                    <th colspan="1" class="header-peringatan">Peringatan</th>
+                    <th colspan="1" class="header-bahaya">Bahaya</th>
+                    <th colspan="1" class="threshold-header">Pergerakan</th>
 
                     <!-- MA.Waduk Header -->
                     <th rowspan="1" class="bg-success">Elevasi (EL. m)</th>
@@ -376,6 +416,17 @@ function getStatusClass625($pergerakanValue, $depth) {
         default:
             return '';
     }
+}
+
+// Helper function untuk menentukan warna ambang batas berdasarkan nilai
+function getAmbangBatasClass($value, $aman, $peringatan, $bahaya) {
+    if ($value === null || $value === '' || $value === '-') return 'threshold-header';
+    
+    $floatVal = floatval($value);
+    
+    if ($floatVal >= $aman) return 'threshold-aman';
+    if ($floatVal <= $bahaya) return 'threshold-bahaya';
+    return 'threshold-peringatan';
 }
 
 function getAmbangBatas625($depth) {
@@ -474,9 +525,15 @@ if (!empty($data)) {
             <!-- HV 1 Data (Kedalaman 20.00m) -->
             <td class="reading-cell"><?= $pembacaan['hv_1'] ?? '-' ?></td>
             <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv1) ?></td>
-            <td class="threshold-cell"><?= $ambangH1['aman'] ?? $ambangH1['aman'] ?></td>
-            <td class="threshold-cell"><?= $ambangH1['peringatan'] ?? $ambangH1['peringatan'] ?></td>
-            <td class="threshold-cell"><?= $ambangH1['bahaya'] ?? $ambangH1['bahaya'] ?></td>
+            <td class="<?= getAmbangBatasClass($ambangH1['aman'] ?? $ambangH1['aman'], $ambangH1['aman'], $ambangH1['peringatan'], $ambangH1['bahaya']) ?>">
+                <?= $ambangH1['aman'] ?? $ambangH1['aman'] ?>
+            </td>
+            <td class="<?= getAmbangBatasClass($ambangH1['peringatan'] ?? $ambangH1['peringatan'], $ambangH1['aman'], $ambangH1['peringatan'], $ambangH1['bahaya']) ?>">
+                <?= $ambangH1['peringatan'] ?? $ambangH1['peringatan'] ?>
+            </td>
+            <td class="<?= getAmbangBatasClass($ambangH1['bahaya'] ?? $ambangH1['bahaya'], $ambangH1['aman'], $ambangH1['peringatan'], $ambangH1['bahaya']) ?>">
+                <?= $ambangH1['bahaya'] ?? $ambangH1['bahaya'] ?>
+            </td>
             <td class="<?= getStatusClass625($pergerakan_ambang_hv1, 'H1') ?>">
                 <?= formatPergerakan625($pergerakan_ambang_hv1) ?>
             </td>
@@ -484,9 +541,15 @@ if (!empty($data)) {
             <!-- HV 2 Data (Kedalaman 40.00m) -->
             <td class="reading-cell"><?= $pembacaan['hv_2'] ?? '-' ?></td>
             <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv2) ?></td>
-            <td class="threshold-cell"><?= $ambangH2['aman'] ?? $ambangH2['aman'] ?></td>
-            <td class="threshold-cell"><?= $ambangH2['peringatan'] ?? $ambangH2['peringatan'] ?></td>
-            <td class="threshold-cell"><?= $ambangH2['bahaya'] ?? $ambangH2['bahaya'] ?></td>
+            <td class="<?= getAmbangBatasClass($ambangH2['aman'] ?? $ambangH2['aman'], $ambangH2['aman'], $ambangH2['peringatan'], $ambangH2['bahaya']) ?>">
+                <?= $ambangH2['aman'] ?? $ambangH2['aman'] ?>
+            </td>
+            <td class="<?= getAmbangBatasClass($ambangH2['peringatan'] ?? $ambangH2['peringatan'], $ambangH2['aman'], $ambangH2['peringatan'], $ambangH2['bahaya']) ?>">
+                <?= $ambangH2['peringatan'] ?? $ambangH2['peringatan'] ?>
+            </td>
+            <td class="<?= getAmbangBatasClass($ambangH2['bahaya'] ?? $ambangH2['bahaya'], $ambangH2['aman'], $ambangH2['peringatan'], $ambangH2['bahaya']) ?>">
+                <?= $ambangH2['bahaya'] ?? $ambangH2['bahaya'] ?>
+            </td>
             <td class="<?= getStatusClass625($pergerakan_ambang_hv2, 'H2') ?>">
                 <?= formatPergerakan625($pergerakan_ambang_hv2) ?>
             </td>
@@ -494,9 +557,15 @@ if (!empty($data)) {
             <!-- HV 3 Data (Kedalaman 50.00m) -->
             <td class="reading-cell"><?= $pembacaan['hv_3'] ?? '-' ?></td>
             <td class="movement-cell"><?= formatPergerakan625($pergerakan_ambang_hv3) ?></td>
-            <td class="threshold-cell"><?= $ambangH3['aman'] ?? $ambangH3['aman'] ?></td>
-            <td class="threshold-cell"><?= $ambangH3['peringatan'] ?? $ambangH3['peringatan'] ?></td>
-            <td class="threshold-cell"><?= $ambangH3['bahaya'] ?? $ambangH3['bahaya'] ?></td>
+            <td class="<?= getAmbangBatasClass($ambangH3['aman'] ?? $ambangH3['aman'], $ambangH3['aman'], $ambangH3['peringatan'], $ambangH3['bahaya']) ?>">
+                <?= $ambangH3['aman'] ?? $ambangH3['aman'] ?>
+            </td>
+            <td class="<?= getAmbangBatasClass($ambangH3['peringatan'] ?? $ambangH3['peringatan'], $ambangH3['aman'], $ambangH3['peringatan'], $ambangH3['bahaya']) ?>">
+                <?= $ambangH3['peringatan'] ?? $ambangH3['peringatan'] ?>
+            </td>
+            <td class="<?= getAmbangBatasClass($ambangH3['bahaya'] ?? $ambangH3['bahaya'], $ambangH3['aman'], $ambangH3['peringatan'], $ambangH3['bahaya']) ?>">
+                <?= $ambangH3['bahaya'] ?? $ambangH3['bahaya'] ?>
+            </td>
             <td class="<?= getStatusClass625($pergerakan_ambang_hv3, 'H3') ?>">
                 <?= formatPergerakan625($pergerakan_ambang_hv3) ?>
             </td>
@@ -581,8 +650,6 @@ $(document).ready(function() {
         exportToExcel();
     });
 
-    // HAPUS FUNGSI SYNC PERGERAKAN DARI SINI
-
     function exportToExcel() {
         try {
             const originalText = $('#exportExcel').html();
@@ -618,8 +685,6 @@ $(document).ready(function() {
             $('#exportExcel').prop('disabled', false);
         }
     }
-
-    // HAPUS FUNGSI syncPergerakanAmbangBatas() DARI SINI
 
     // Initialize
     applyFilters();

@@ -127,3 +127,12 @@ $routes->get('/extenso/edit/(:num)', 'EXS\ExtensoController::edit/$1');
 $routes->post('/extenso/update/(:num)', 'EXS\ExtensoController::update/$1');
 $routes->delete('/extenso/delete/(:num)', 'EXS\ExtensoController::delete/$1');
 $routes->get('/extenso/export', 'EXS\ExtensoController::exportExcel');
+
+// Piezometer Routes - Left Bank
+$routes->get('left-piez', '\App\Controllers\LeftPiez\PiezometerController::index');
+$routes->get('left-piez/create', '\App\Controllers\LeftPiez\PiezometerController::create');
+$routes->post('left-piez/store', '\App\Controllers\LeftPiez\PiezometerController::store');
+$routes->get('left-piez/edit/(:segment)', '\App\Controllers\LeftPiez\PiezometerController::edit');
+$routes->post('left-piez/update/(:segment)', '\App\Controllers\LeftPiez\PiezometerController::update');
+$routes->delete('left-piez/delete/(:num)', '\App\Controllers\LeftPiez\PiezometerController::delete/$1');
+$routes->post('left-piez/import-sql', '\App\Controllers\LeftPiez\PiezometerController::importSql');

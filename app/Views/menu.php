@@ -91,6 +91,23 @@
                 </div>
             </a>
         </div>
+
+        <!-- Menu 6: Left Piezometer -->
+        <div class="col-12 col-md-5 col-lg-4">
+            <a href="<?= base_url('/left-piez') ?>" class="text-decoration-none">
+                <div class="card menu-card shadow-sm h-100 border-0">
+                    <div class="card-body d-flex flex-column align-items-center py-4">
+                        <div class="menu-icon bg-purple bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-water display-4 text-purple"></i>
+                        </div>
+                        <h5 class="mt-3 menu-title">Left Piezometer</h5>
+                        <p class="text-muted small mt-2 text-center">
+                            Monitoring tekanan air pori di sisi kiri bendungan (L-01 s/d L-10 & SPZ-02).
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 
     <!-- Optional: Info Tambahan -->
