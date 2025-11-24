@@ -40,7 +40,7 @@ class PiezometerController extends BaseController
 
     public function __construct()
     {
-        helper('format'); // Pastikan helper format sudah dibuat
+        helper('format');
         $this->metrikModel = new MetrikModel();
         $this->ireadingA = new IreadingA();
         $this->ireadingB = new IreadingB();
@@ -61,7 +61,7 @@ class PiezometerController extends BaseController
             'SPZ_02' => new PerhitunganSpz02Model()
         ];
         
-        // Inisialisasi model pembacaan lengkap
+        // Inisialisasi model pembacaan
         $this->pembacaanModels = [
             'L_01' => new TPembacaanL01Model(),
             'L_02' => new TPembacaanL02Model(),
@@ -116,16 +116,36 @@ class PiezometerController extends BaseController
     }
 
     /**
-     * Mendapatkan data metrik
+     * Mendapatkan data metrik (BACAAN PIEZOMETER METRIK) dari tabel b_piezo_metrik
      */
     private function getMetrikData($idPengukuran)
     {
         $data = $this->metrikModel->where('id_pengukuran', $idPengukuran)->first();
-        return $data ? $data : [];
+        
+        if ($data) {
+            // Format data metrik untuk memudahkan akses di view
+            return [
+                'M_feet' => $data['M_feet'] ?? 0.3048,
+                'M_inch' => $data['M_inch'] ?? 0.0254,
+                'L_01' => $data['l_01'] ?? null,
+                'L_02' => $data['l_02'] ?? null,
+                'L_03' => $data['l_03'] ?? null,
+                'L_04' => $data['l_04'] ?? null,
+                'L_05' => $data['l_05'] ?? null,
+                'L_06' => $data['l_06'] ?? null,
+                'L_07' => $data['l_07'] ?? null,
+                'L_08' => $data['l_08'] ?? null,
+                'L_09' => $data['l_09'] ?? null,
+                'L_10' => $data['l_10'] ?? null,
+                'SPZ_02' => $data['spz_02'] ?? null
+            ];
+        }
+        
+        return [];
     }
 
     /**
-     * Mendapatkan initial reading A
+     * Mendapatkan initial reading A dari tabel i_reading_a_all
      */
     private function getInitialReadingA($idPengukuran)
     {
@@ -134,14 +154,17 @@ class PiezometerController extends BaseController
         // Format data menjadi array asosiatif dengan titik sebagai key
         $formattedData = [];
         foreach ($data as $item) {
-            $formattedData[$item['titik_piezometer']] = $item;
+            $titik = strtoupper($item['titik_piezometer']);
+            $formattedData[$titik] = [
+                'Elv_Piez' => $item['Elv_Piez'] ?? null
+            ];
         }
         
         return $formattedData;
     }
 
     /**
-     * Mendapatkan initial reading B
+     * Mendapatkan initial reading B dari tabel i_reading_b_all
      */
     private function getInitialReadingB($idPengukuran)
     {
@@ -150,14 +173,17 @@ class PiezometerController extends BaseController
         // Format data menjadi array asosiatif dengan titik sebagai key
         $formattedData = [];
         foreach ($data as $item) {
-            $formattedData[$item['titik_piezometer']] = $item;
+            $titik = strtoupper($item['titik_piezometer']);
+            $formattedData[$titik] = [
+                'Elv_Piez' => $item['Elv_Piez'] ?? null
+            ];
         }
         
         return $formattedData;
     }
 
     /**
-     * Mendapatkan data perhitungan untuk semua titik
+     * Mendapatkan data perhitungan untuk semua titik dari tabel perhitungan_L_xx
      */
     private function getPerhitunganData($idPengukuran)
     {
@@ -166,7 +192,23 @@ class PiezometerController extends BaseController
         foreach ($this->perhitunganModels as $titik => $model) {
             $data = $model->where('id_pengukuran', $idPengukuran)->first();
             if ($data) {
-                $perhitunganData[$titik] = $data;
+                $perhitunganData[$titik] = [
+                    'Elv_Piez' => $data['Elv_Piez'] ?? null,
+                    'kedalaman' => $data['kedalaman'] ?? null,
+                    'record_max' => $data['record_max'] ?? null,
+                    'record_min' => $data['record_min'] ?? null,
+                    'koordinat_x' => $data['koordinat_x'] ?? null,
+                    'koordinat_y' => $data['koordinat_y'] ?? null
+                ];
+            } else {
+                $perhitunganData[$titik] = [
+                    'Elv_Piez' => null,
+                    'kedalaman' => null,
+                    'record_max' => null,
+                    'record_min' => null,
+                    'koordinat_x' => null,
+                    'koordinat_y' => null
+                ];
             }
         }
         
@@ -174,7 +216,7 @@ class PiezometerController extends BaseController
     }
 
     /**
-     * Mendapatkan data pembacaan untuk semua titik - INI YANG DIPERBAIKI
+     * Mendapatkan data pembacaan (BACAAN METRIK) dari tabel t_pembacaan_L_xx
      */
     private function getPembacaanData($idPengukuran)
     {
@@ -183,9 +225,11 @@ class PiezometerController extends BaseController
         foreach ($this->pembacaanModels as $titik => $model) {
             $data = $model->where('id_pengukuran', $idPengukuran)->first();
             if ($data) {
-                $pembacaanData[$titik] = $data;
+                $pembacaanData[$titik] = [
+                    'feet' => $data['feet'] ?? null,
+                    'inch' => $data['inch'] ?? null
+                ];
             } else {
-                // Default empty data jika tidak ada
                 $pembacaanData[$titik] = [
                     'feet' => null,
                     'inch' => null

@@ -174,49 +174,6 @@
             z-index: 194;
         }
 
-        /* PERBAIKAN: Pastikan selector spesifik untuk header aksi dengan z-index TINGGI */
-        .table thead tr:first-child th.action-cell {
-            top: 0;
-            right: 0;
-            z-index: 200;
-        }
-        
-        .table thead tr:nth-child(2) th.action-cell {
-            top: 56px;
-            right: 0;
-            z-index: 199;
-        }
-        
-        .table thead tr:nth-child(3) th.action-cell {
-            top: 112px;
-            right: 0;
-            z-index: 198;
-        }
-        
-        .table thead tr:nth-child(4) th.action-cell {
-            top: 168px;
-            right: 0;
-            z-index: 197;
-        }
-        
-        .table thead tr:nth-child(5) th.action-cell {
-            top: 224px;
-            right: 0;
-            z-index: 196;
-        }
-        
-        .table thead tr:nth-child(6) th.action-cell {
-            top: 280px;
-            right: 0;
-            z-index: 195;
-        }
-        
-        .table thead tr:nth-child(7) th.action-cell {
-            top: 336px;
-            right: 0;
-            z-index: 194;
-        }
-
         /* PERBAIKAN: Standarkan tinggi row header */
         .table thead tr {
             height: 56px;
@@ -806,7 +763,7 @@
                         <td class="sticky-4 bg-info-column"><?= esc($p['dma'] ?? '-') ?></td>
                         <td class="sticky-5 bg-info-column"><?= esc($p['temp_id'] ?? '-') ?></td>
                         
-                        <!-- BACAAN METRIK - Feet & Inch -->
+                        <!-- BACAAN METRIK - Feet & Inch (dari tabel t_pembacaan) -->
                         <?php foreach($titikList as $titik): 
                             $bacaanData = $pembacaan[$titik] ?? [];
                             $feet = $bacaanData['feet'] ?? null;
@@ -820,16 +777,9 @@
                         <td class="number-cell bg-calculation">0.3048</td>
                         <td class="number-cell bg-calculation">0.0254</td>
                         
-                        <!-- BACAAN PIEZOMETER METRIK (Konversi ke meter) -->
+                        <!-- BACAAN PIEZOMETER METRIK (dari tabel b_piezo_metrik) -->
                         <?php foreach($titikList as $titik): 
-                            $bacaanData = $pembacaan[$titik] ?? [];
-                            $feet = $bacaanData['feet'] ?? null;
-                            $inch = $bacaanData['inch'] ?? null;
-                            
-                            $meter = null;
-                            if ($feet !== null && is_numeric($feet) && $inch !== null && is_numeric($inch)) {
-                                $meter = ($feet * 0.3048) + ($inch * 0.0254);
-                            }
+                            $meter = $metrik[$titik] ?? null;
                         ?>
                             <td class="number-cell bg-reading"><?= formatNumber($meter) ?></td>
                         <?php endforeach; ?>
