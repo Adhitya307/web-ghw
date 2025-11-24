@@ -137,3 +137,8 @@ $routes->put('left-piez/update/(:num)', 'LeftPiez\PiezometerController::update/$
 $routes->post('left-piez/update/(:num)', 'LeftPiez\PiezometerController::update/$1');
 $routes->delete('left-piez/delete/(:num)', '\App\Controllers\LeftPiez\PiezometerController::delete/$1');
 $routes->post('left-piez/import-sql', '\App\Controllers\LeftPiez\PiezometerController::importSql');
+// Tambahkan route untuk Grafik History L1-L3
+$routes->get('left-piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::index');
+$routes->get('left_piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::index');
+$routes->get('left-piez/grafik-history-l1-l3/api', 'Leftpiez\GrafikHistoryL1L3::apiData');
+$routes->get('left-piez/grafik-history-l1-l3/debug', 'Leftpiez\GrafikHistoryL1L3::debugStructure');
