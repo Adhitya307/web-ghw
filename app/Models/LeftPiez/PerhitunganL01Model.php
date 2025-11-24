@@ -16,7 +16,8 @@ class PerhitunganL01Model extends Model
         'record_max',
         'record_min',
         'koordinat_x',
-        'koordinat_y'
+        'koordinat_y',
+        't_psmetrik_L01'
     ];
 
     protected $useTimestamps = false;

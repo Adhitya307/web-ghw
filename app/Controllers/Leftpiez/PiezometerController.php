@@ -185,44 +185,41 @@ class PiezometerController extends BaseController
     /**
      * Mendapatkan data perhitungan untuk semua titik dari tabel perhitungan_L_xx
      */
-    /**
- * Mendapatkan data perhitungan untuk semua titik dari tabel perhitungan_L_xx
- */
-private function getPerhitunganData($idPengukuran)
-{
-    $perhitunganData = [];
-    
-    foreach ($this->perhitunganModels as $titik => $model) {
-        $data = $model->where('id_pengukuran', $idPengukuran)->first();
-        if ($data) {
-            // Ambil nilai dari kolom t_psmetrik_Lxx
-            $kolomPerhitungan = 't_psmetrik_' . str_replace('_', '', $titik);
-            $nilaiPerhitungan = $data[$kolomPerhitungan] ?? null;
-            
-            $perhitunganData[$titik] = [
-                't_psmetrik' => $nilaiPerhitungan,
-                'Elv_Piez' => $data['Elv_Piez'] ?? null,
-                'kedalaman' => $data['kedalaman'] ?? null,
-                'record_max' => $data['record_max'] ?? null,
-                'record_min' => $data['record_min'] ?? null,
-                'koordinat_x' => $data['koordinat_x'] ?? null,
-                'koordinat_y' => $data['koordinat_y'] ?? null
-            ];
-        } else {
-            $perhitunganData[$titik] = [
-                't_psmetrik' => null,
-                'Elv_Piez' => null,
-                'kedalaman' => null,
-                'record_max' => null,
-                'record_min' => null,
-                'koordinat_x' => null,
-                'koordinat_y' => null
-            ];
+    private function getPerhitunganData($idPengukuran)
+    {
+        $perhitunganData = [];
+        
+        foreach ($this->perhitunganModels as $titik => $model) {
+            $data = $model->where('id_pengukuran', $idPengukuran)->first();
+            if ($data) {
+                // Ambil nilai dari kolom t_psmetrik_Lxx
+                $kolomPerhitungan = 't_psmetrik_' . str_replace('_', '', $titik);
+                $nilaiPerhitungan = $data[$kolomPerhitungan] ?? null;
+                
+                $perhitunganData[$titik] = [
+                    't_psmetrik' => $nilaiPerhitungan,
+                    'Elv_Piez' => $data['Elv_Piez'] ?? null,
+                    'kedalaman' => $data['kedalaman'] ?? null,
+                    'record_max' => $data['record_max'] ?? null,
+                    'record_min' => $data['record_min'] ?? null,
+                    'koordinat_x' => $data['koordinat_x'] ?? null,
+                    'koordinat_y' => $data['koordinat_y'] ?? null
+                ];
+            } else {
+                $perhitunganData[$titik] = [
+                    't_psmetrik' => null,
+                    'Elv_Piez' => null,
+                    'kedalaman' => null,
+                    'record_max' => null,
+                    'record_min' => null,
+                    'koordinat_x' => null,
+                    'koordinat_y' => null
+                ];
+            }
         }
+        
+        return $perhitunganData;
     }
-    
-    return $perhitunganData;
-}
 
     /**
      * Mendapatkan data pembacaan (BACAAN METRIK) dari tabel t_pembacaan_L_xx
@@ -269,6 +266,211 @@ private function getPerhitunganData($idPengukuran)
             'pembacaan' => $this->getPembacaanData($id)
         ];
     }
+
+    /**
+     * STORE METHOD - Menyimpan data piezometer baru
+     */
+    public function store()
+    {
+        if (!$this->request->is('post')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Method not allowed'
+            ])->setStatusCode(405);
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $db->transStart();
+
+            // Data pengukuran utama
+            $pengukuranData = [
+                'tahun' => $this->request->getPost('tahun'),
+                'periode' => $this->request->getPost('periode'),
+                'tanggal' => $this->request->getPost('tanggal'),
+                'dma' => $this->request->getPost('dma'),
+                'temp_id' => $this->request->getPost('temp_id')
+            ];
+
+            // Simpan data pengukuran utama
+            $this->pengukuranModel->insert($pengukuranData);
+            $idPengukuran = $this->pengukuranModel->getInsertID();
+
+            // Data pembacaan (feet & inch)
+            $pembacaanData = $this->request->getPost('pembacaan');
+            if ($pembacaanData) {
+                foreach ($pembacaanData as $titik => $data) {
+                    if (isset($this->pembacaanModels[$titik])) {
+                        $pembacaanInsert = [
+                            'id_pengukuran' => $idPengukuran,
+                            'feet' => $data['feet'] ?? null,
+                            'inch' => $data['inch'] ?? null
+                        ];
+                        $this->pembacaanModels[$titik]->insert($pembacaanInsert);
+                    }
+                }
+            }
+
+            // Hitung nilai metrik (konversi feet & inch ke meter)
+            $metrikValues = [];
+            foreach ($pembacaanData as $titik => $data) {
+                $feet = $data['feet'] ?? null;
+                $inch = $data['inch'] ?? null;
+                
+                // Hitung nilai dalam meter menggunakan MetrikModel
+                $nilaiMeter = $this->metrikModel->hitungL($feet, $inch);
+                $metrikValues[strtolower($titik)] = $nilaiMeter;
+            }
+
+            // Simpan data metrik
+            $metrikData = [
+                'id_pengukuran' => $idPengukuran,
+                'M_feet' => MetrikModel::FEET_DEFAULT,
+                'M_inch' => MetrikModel::INCH_DEFAULT
+            ];
+            
+            // Tambahkan nilai l_01, l_02, dst ke data metrik
+            foreach ($metrikValues as $key => $value) {
+                $metrikData[$key] = $value;
+            }
+            
+            $this->metrikModel->insert($metrikData);
+
+            // Default values untuk Initial Reading A
+            $initialAValues = [
+                'L_01' => 650.64,
+                'L_02' => 650.60,
+                'L_03' => 616.55,
+                'L_04' => 580.26,
+                'L_05' => 700.76,
+                'L_06' => 690.09,
+                'L_07' => 653.36,
+                'L_08' => 659.14,
+                'L_09' => 622.45,
+                'L_10' => 580.36,
+                'SPZ_02' => 700.08
+            ];
+
+            // Default values untuk Initial Reading B
+            $initialBValues = [
+                'L_01' => 579.14,
+                'L_02' => 577.60,
+                'L_03' => 557.55,
+                'L_04' => 530.26,
+                'L_05' => 638.76,
+                'L_06' => 628.09,
+                'L_07' => 613.36,
+                'L_08' => 603.64,
+                'L_09' => 565.45,
+                'L_10' => 528.86,
+                'SPZ_02' => 630.08
+            ];
+
+            // Simpan Initial Reading A
+            foreach ($initialAValues as $titik => $elevasi) {
+                $this->ireadingA->insert([
+                    'id_pengukuran' => $idPengukuran,
+                    'titik_piezometer' => $titik,
+                    'Elv_Piez' => $elevasi
+                ]);
+            }
+
+            // Simpan Initial Reading B
+            foreach ($initialBValues as $titik => $elevasi) {
+                $this->ireadingB->insert([
+                    'id_pengukuran' => $idPengukuran,
+                    'titik_piezometer' => $titik,
+                    'Elv_Piez' => $elevasi
+                ]);
+            }
+
+            // Simpan data perhitungan untuk setiap titik
+            foreach ($this->perhitunganModels as $titik => $model) {
+                $perhitunganData = [
+                    'id_pengukuran' => $idPengukuran
+                ];
+                $model->insert($perhitunganData);
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === FALSE) {
+                throw new \Exception('Gagal menyimpan data ke database');
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Data piezometer berhasil disimpan',
+                'redirect' => base_url('left-piez')
+            ]);
+
+        } catch (\Exception $e) {
+            $db->transRollback();
+            
+            log_message('error', 'Error storing piezometer data: ' . $e->getMessage());
+            
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
+    }
+
+    /**
+ * CHECK DUPLICATE METHOD - Mengecek data duplikat
+ */
+public function checkDuplicate()
+{
+    if (!$this->request->is('post')) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Method not allowed'
+        ])->setStatusCode(405);
+    }
+
+    try {
+        $tahun = $this->request->getPost('tahun');
+        $periode = $this->request->getPost('periode');
+        $tanggal = $this->request->getPost('tanggal');
+        $currentId = $this->request->getPost('current_id');
+
+        // Validasi input
+        if (empty($tahun) || empty($periode) || empty($tanggal)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'isDuplicate' => false
+            ]);
+        }
+
+        // Query untuk cek duplikat
+        $builder = $this->pengukuranModel
+            ->where('tahun', $tahun)
+            ->where('periode', $periode)
+            ->where('tanggal', $tanggal);
+
+        // Jika sedang edit, exclude data yang sedang diedit
+        if (!empty($currentId)) {
+            $builder->where('id_pengukuran !=', $currentId);
+        }
+
+        $existing = $builder->first();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'isDuplicate' => !empty($existing)
+        ]);
+
+    } catch (\Exception $e) {
+        log_message('error', 'Error in checkDuplicate: ' . $e->getMessage());
+        
+        // Return false pada error agar tidak mengganggu user
+        return $this->response->setJSON([
+            'success' => false,
+            'isDuplicate' => false,
+            'message' => 'Error checking duplicate'
+        ]);
+    }
+}
 
     /**
      * DELETE METHOD - Menghapus data piezometer beserta semua relasinya
@@ -368,12 +570,176 @@ private function getPerhitunganData($idPengukuran)
 
         $data = [
             'title' => 'Edit Data Piezometer - Left Bank',
-            'data' => $dataPiezometer
+            'data' => $dataPiezometer,
+            'id_pengukuran' => $id
         ];
 
         return view('left_piez/edit', $data);
     }
 
+ /**
+ * UPDATE METHOD - Mengupdate data piezometer
+ */
+public function update($id)
+{
+    if (!$this->request->is('put') && !$this->request->is('post')) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Method not allowed'
+        ])->setStatusCode(405);
+    }
+
+    try {
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        // Validasi data pengukuran utama
+        $pengukuranData = [
+            'tahun' => $this->request->getPost('tahun'),
+            'periode' => $this->request->getPost('periode'),
+            'tanggal' => $this->request->getPost('tanggal'),
+            'dma' => $this->request->getPost('dma') ?: null,
+            'temp_id' => $this->request->getPost('temp_id') ?: null
+        ];
+
+        // Cek apakah data pengukuran ada
+        $existingPengukuran = $this->pengukuranModel->where('id_pengukuran', $id)->first();
+        if (!$existingPengukuran) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Data pengukuran tidak ditemukan'
+            ])->setStatusCode(404);
+        }
+
+        // Update data pengukuran utama
+        $this->pengukuranModel->update($id, $pengukuranData);
+
+        // Data pembacaan (feet & inch)
+        $pembacaanData = $this->request->getPost('pembacaan');
+        $metrikValues = [];
+
+        if ($pembacaanData && is_array($pembacaanData)) {
+            foreach ($pembacaanData as $titik => $data) {
+                if (isset($this->pembacaanModels[$titik])) {
+                    // Handle empty values properly
+                    $feet = isset($data['feet']) && $data['feet'] !== '' ? $data['feet'] : null;
+                    $inch = isset($data['inch']) && $data['inch'] !== '' ? $data['inch'] : null;
+                    
+                    // Hitung nilai dalam meter menggunakan MetrikModel
+                    if ($feet !== null || $inch !== null) {
+                        $nilaiMeter = $this->metrikModel->hitungL($feet, $inch);
+                        $metrikValues[strtolower($titik)] = $nilaiMeter;
+                    } else {
+                        $metrikValues[strtolower($titik)] = null;
+                    }
+                    
+                    // Cek apakah data pembacaan sudah ada
+                    $existingPembacaan = $this->pembacaanModels[$titik]
+                        ->where('id_pengukuran', $id)
+                        ->first();
+                        
+                    if ($existingPembacaan) {
+                        // Update data yang sudah ada
+                        $updateData = [
+                            'feet' => $feet,
+                            'inch' => $inch
+                        ];
+                        
+                        $this->pembacaanModels[$titik]
+                            ->where('id_pengukuran', $id)
+                            ->set($updateData)
+                            ->update();
+                    } else {
+                        // Insert data baru jika belum ada
+                        $pembacaanInsert = [
+                            'id_pengukuran' => $id,
+                            'feet' => $feet,
+                            'inch' => $inch
+                        ];
+                        $this->pembacaanModels[$titik]->insert($pembacaanInsert);
+                    }
+                }
+            }
+        }
+
+        // Update data metrik
+        $existingMetrik = $this->metrikModel
+            ->where('id_pengukuran', $id)
+            ->first();
+            
+        if ($existingMetrik) {
+            $metrikUpdateData = [
+                'M_feet' => MetrikModel::FEET_DEFAULT,
+                'M_inch' => MetrikModel::INCH_DEFAULT
+            ];
+            
+            // Tambahkan nilai l_01, l_02, dst ke data metrik
+            foreach ($metrikValues as $key => $value) {
+                $metrikUpdateData[$key] = $value;
+            }
+            
+            $this->metrikModel
+                ->where('id_pengukuran', $id)
+                ->set($metrikUpdateData)
+                ->update();
+        } else {
+            $metrikData = [
+                'id_pengukuran' => $id,
+                'M_feet' => MetrikModel::FEET_DEFAULT,
+                'M_inch' => MetrikModel::INCH_DEFAULT
+            ];
+            
+            foreach ($metrikValues as $key => $value) {
+                $metrikData[$key] = $value;
+            }
+            
+            $this->metrikModel->insert($metrikData);
+        }
+
+        // Update perhitungan untuk setiap titik
+        foreach ($this->perhitunganModels as $titik => $model) {
+            // Cek apakah data perhitungan sudah ada
+            $existingPerhitungan = $model
+                ->where('id_pengukuran', $id)
+                ->first();
+                
+            if ($existingPerhitungan) {
+                // Update data yang sudah ada - hanya update id_pengukuran jika perlu
+                $model->where('id_pengukuran', $id)
+                      ->set(['id_pengukuran' => $id])
+                      ->update();
+            } else {
+                // Insert data baru
+                $perhitunganData = [
+                    'id_pengukuran' => $id
+                ];
+                $model->insert($perhitunganData);
+            }
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus() === FALSE) {
+            throw new \Exception('Gagal mengupdate data di database');
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Data piezometer berhasil diupdate',
+            'redirect' => base_url('left-piez')
+        ]);
+
+    } catch (\Exception $e) {
+        $db->transRollback();
+        
+        log_message('error', 'Error updating piezometer data: ' . $e->getMessage());
+        
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Terjadi kesalahan saat mengupdate data: ' . $e->getMessage()
+        ])->setStatusCode(500);
+    }
+}
     /**
      * Method untuk import SQL (jika ada)
      */
