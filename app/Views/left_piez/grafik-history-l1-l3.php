@@ -64,6 +64,11 @@
             text-align: center;
         }
         
+        .date-cell {
+            text-align: center;
+            font-size: 0.7rem;
+        }
+        
         /* Filter Section */
         .filter-section {
             background: #f8f9fa;
@@ -327,6 +332,14 @@
                         }
                     }
                     
+                    // Fungsi untuk format tanggal
+                    function formatTanggal($tanggal) {
+                        if (empty($tanggal) || $tanggal === '0000-00-00') {
+                            return '-';
+                        }
+                        return date('d-m-Y', strtotime($tanggal));
+                    }
+                    
                     foreach($pengukuran as $item): 
                         $p = $item['pengukuran'];
                         $pembacaan = $item['pembacaan'] ?? [];
@@ -353,10 +366,13 @@
                         $status_L01 = getStatus($t_psmetrik_L01, 'L1');
                         $status_L02 = getStatus($t_psmetrik_L02, 'L2');
                         $status_L03 = getStatus($t_psmetrik_L03, 'L3');
+                        
+                        // Ambil tanggal dari data pengukuran - coba beberapa field yang mungkin
+                        $tanggal = $p['tanggal'] ?? $p['created_at'] ?? $p['updated_at'] ?? '-';
                     ?>
                     <tr data-pid="<?= $p['id_pengukuran'] ?>">
-                        <!-- Pisometer No. & Tanggal -->
-                        <td class="text-cell"><?= esc($p['id_pengukuran']) ?></td>
+                        <!-- Tanggal -->
+                        <td class="date-cell"><?= formatTanggal($tanggal) ?></td>
                         
                         <!-- L-1 Data -->
                         <td class="number-cell"><?= number_format($bacaan_L01_m, 2) ?></td>
