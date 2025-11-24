@@ -642,7 +642,7 @@
                     <th rowspan="5" class="bg-initial sticky-header-level-3">650.6</th>
                     <th rowspan="5" class="bg-initial sticky-header-level-3">616.55</th>
                     <th rowspan="5" class="bg-initial sticky-header-level-3">580.26</th>
-                    <th rowspan="5" class="bg-initial sticky-header-level-3">700.67</th>
+                    <th rowspan="5" class="bg-initial sticky-header-level-3">700.76</th>
                     <th rowspan="5" class="bg-initial sticky-header-level-3">690.09</th>
                     <th rowspan="5" class="bg-initial sticky-header-level-3">653.36</th>
                     <th rowspan="5" class="bg-initial sticky-header-level-3">659.14</th>
@@ -787,13 +787,14 @@
                         <!-- PERHITUNGAN PIEZOMETER - 12 kolom -->
                         <!-- Kolom 1: Elev.Piez -->
                         <td class="number-cell bg-calculation">Elev.Piez</td>
-                        
+
                         <!-- Kolom 2-12: Data untuk L-01 sampai SPZ-02 -->
                         <?php foreach($titikList as $titik): 
                             $perhitunganData = $perhitungan[$titik] ?? [];
-                            $elvPiez = $perhitunganData['Elv_Piez'] ?? '-';
+                            // Ambil nilai dari t_psmetrik_Lxx bukan Elv_Piez
+                        $tPsMetrik = $perhitunganData['t_psmetrik'] ?? '-';
                         ?>
-                            <td class="number-cell bg-calculation"><?= formatNumber($elvPiez) ?></td>
+                        <td class="number-cell bg-calculation"><?= formatNumber($tPsMetrik) ?></td>
                         <?php endforeach; ?>
                         
                         <!-- INITIAL READINGS A - 12 kolom -->

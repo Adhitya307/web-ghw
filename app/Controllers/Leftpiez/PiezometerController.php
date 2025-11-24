@@ -185,35 +185,44 @@ class PiezometerController extends BaseController
     /**
      * Mendapatkan data perhitungan untuk semua titik dari tabel perhitungan_L_xx
      */
-    private function getPerhitunganData($idPengukuran)
-    {
-        $perhitunganData = [];
-        
-        foreach ($this->perhitunganModels as $titik => $model) {
-            $data = $model->where('id_pengukuran', $idPengukuran)->first();
-            if ($data) {
-                $perhitunganData[$titik] = [
-                    'Elv_Piez' => $data['Elv_Piez'] ?? null,
-                    'kedalaman' => $data['kedalaman'] ?? null,
-                    'record_max' => $data['record_max'] ?? null,
-                    'record_min' => $data['record_min'] ?? null,
-                    'koordinat_x' => $data['koordinat_x'] ?? null,
-                    'koordinat_y' => $data['koordinat_y'] ?? null
-                ];
-            } else {
-                $perhitunganData[$titik] = [
-                    'Elv_Piez' => null,
-                    'kedalaman' => null,
-                    'record_max' => null,
-                    'record_min' => null,
-                    'koordinat_x' => null,
-                    'koordinat_y' => null
-                ];
-            }
+    /**
+ * Mendapatkan data perhitungan untuk semua titik dari tabel perhitungan_L_xx
+ */
+private function getPerhitunganData($idPengukuran)
+{
+    $perhitunganData = [];
+    
+    foreach ($this->perhitunganModels as $titik => $model) {
+        $data = $model->where('id_pengukuran', $idPengukuran)->first();
+        if ($data) {
+            // Ambil nilai dari kolom t_psmetrik_Lxx
+            $kolomPerhitungan = 't_psmetrik_' . str_replace('_', '', $titik);
+            $nilaiPerhitungan = $data[$kolomPerhitungan] ?? null;
+            
+            $perhitunganData[$titik] = [
+                't_psmetrik' => $nilaiPerhitungan,
+                'Elv_Piez' => $data['Elv_Piez'] ?? null,
+                'kedalaman' => $data['kedalaman'] ?? null,
+                'record_max' => $data['record_max'] ?? null,
+                'record_min' => $data['record_min'] ?? null,
+                'koordinat_x' => $data['koordinat_x'] ?? null,
+                'koordinat_y' => $data['koordinat_y'] ?? null
+            ];
+        } else {
+            $perhitunganData[$titik] = [
+                't_psmetrik' => null,
+                'Elv_Piez' => null,
+                'kedalaman' => null,
+                'record_max' => null,
+                'record_min' => null,
+                'koordinat_x' => null,
+                'koordinat_y' => null
+            ];
         }
-        
-        return $perhitunganData;
     }
+    
+    return $perhitunganData;
+}
 
     /**
      * Mendapatkan data pembacaan (BACAAN METRIK) dari tabel t_pembacaan_L_xx
