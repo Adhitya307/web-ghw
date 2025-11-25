@@ -98,6 +98,20 @@
             margin-bottom: 1rem;
         }
         
+        .table-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
         .btn-piez {
             min-width: 70px;
         }
@@ -133,21 +147,25 @@
     <!-- Table Header Section -->
     <div class="table-header">
         <h2 class="table-title">
-            <i class="fas fa-tachometer-alt me-2"></i>Piezometer - Left Bank
+            <i class="fas fa-tachometer-alt me-2"></i>Piezometer - Left Bank (L1-L3)
         </h2>
 
-        <!-- Button Group -->
+        <!-- Button Group - DISAMAKAN DENGAN INDEX -->
         <div class="btn-group mb-3" role="group">
-            <a href="<?= base_url('left-piez') ?>" class="btn btn-primary btn-piez">
+            <a href="<?= base_url('left-piez') ?>" class="btn btn-outline-primary btn-piez">
                 <i class="fas fa-table"></i> Left Bank
             </a>
-            <a href="<?= base_url('left_piez/grafik-history-l1-l3') ?>" class="btn btn-outline-primary btn-piez">Grafik History L1-L3</a>
+            <a href="<?= base_url('left_piez/grafik-history-l1-l3') ?>" class="btn btn-primary btn-piez">Grafik History L1-L3</a>
+            <a href="<?= base_url('left_piez/grafik-history-l4-l6') ?>" class="btn btn-outline-primary btn-piez">Grafik History L4-L6</a>
+            <a href="<?= base_url('left_piez/grafik-history-l7-l9') ?>" class="btn btn-outline-primary btn-piez">Grafik History L7-L9</a>
+            <a href="<?= base_url('left_piez/grafik-history-l10-spz02') ?>" class="btn btn-outline-primary btn-piez">Grafik History L10-SPZ02</a>
             <a href="<?= base_url('piezometer/right') ?>" class="btn btn-outline-primary btn-piez">Right Bank</a>
             <a href="<?= base_url('left-piez/create') ?>" class="btn btn-outline-success">
                 <i class="fas fa-plus me-1"></i> Add Data
             </a>
         </div>
 
+        <!-- Search Control - DISAMAKAN DENGAN INDEX -->
         <div class="table-controls">
             <div class="input-group" style="max-width: 300px;">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -427,7 +445,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Filter Functionality
+    // Filter Functionality - DISAMAKAN DENGAN INDEX
     const tahunFilter = document.getElementById('tahunFilter');
     const searchInput = document.getElementById('searchInput');
     const resetFilter = document.getElementById('resetFilter');
@@ -441,10 +459,13 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(row => {
             if (row.querySelector('.text-center')) return;
             
+            const tahun = row.cells[0].textContent.toLowerCase();
             const rowText = row.textContent.toLowerCase();
+
+            const tahunMatch = !tahunValue || tahun === tahunValue;
             const searchMatch = !searchValue || rowText.includes(searchValue);
 
-            row.style.display = searchMatch ? '' : 'none';
+            row.style.display = tahunMatch && searchMatch ? '' : 'none';
         });
     }
 
