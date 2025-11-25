@@ -142,3 +142,6 @@ $routes->get('left-piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::inde
 $routes->get('left_piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::index');
 $routes->get('left-piez/grafik-history-l1-l3/api', 'Leftpiez\GrafikHistoryL1L3::apiData');
 $routes->get('left-piez/grafik-history-l1-l3/debug', 'Leftpiez\GrafikHistoryL1L3::debugStructure');
+$routes->get('left_piez/grafik-history-l4-l6', 'Leftpiez\GrafikHistoryL4L6::index');
+$routes->get('left_piez/grafik-history-l4-l6/api-data', 'Leftpiez\GrafikHistoryL4L6::apiData');
+$routes->get('left_piez/grafik-history-l4-l6/debug', 'Leftpiez\GrafikHistoryL4L6::debugStructure');
