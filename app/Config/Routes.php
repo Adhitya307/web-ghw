@@ -151,3 +151,13 @@ $routes->get('left_piez/grafik-history-l7-l9/debug', 'Leftpiez\GrafikHistoryL7L9
 $routes->get('left_piez/grafik-history-l10-spz02', 'Leftpiez\GrafikHistoryL10Spz02::index');
 $routes->get('left_piez/grafik-history-l10-spz02/api-data', 'Leftpiez\GrafikHistoryL10Spz02::apiData');
 $routes->get('left_piez/grafik-history-l10-spz02/debug', 'Leftpiez\GrafikHistoryL10Spz02::debugStructure');
+
+// Right Piezometer Routes - PASTIKAN INI ADA
+$routes->get('right-piez', 'Rightpiezo\RightpiezController::index');
+$routes->get('right-piez/create', 'Rightpiezo\RightpiezController::create');
+$routes->post('right-piez/store', 'Rightpiezo\RightpiezController::store');
+$routes->get('right-piez/edit/(:num)', 'Rightpiezo\RightpiezController::edit/$1');
+$routes->post('right-piez/update/(:num)', 'Rightpiezo\RightpiezController::update/$1');
+$routes->delete('right-piez/delete/(:num)', 'Rightpiezo\RightpiezController::delete/$1');
+$routes->post('right-piez/calculate/(:num)', 'Rightpiezo\RightpiezController::calculate/$1');
+$routes->post('right-piez/import-sql', 'Rightpiezo\RightpiezController::importSql');
