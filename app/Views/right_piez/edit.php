@@ -462,8 +462,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingSpinner = document.getElementById('loadingSpinner');
     const duplicateWarning = document.getElementById('duplicateWarning');
     const duplicateMessage = document.getElementById('duplicateMessage');
-    const calculationNotification = document.getElementById('calculationNotification');
-    const calculationMessage = document.getElementById('calculationMessage');
     const liveAlert = document.getElementById('liveAlert');
     const alertMessage = document.getElementById('alert-message');
 
@@ -522,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('periode').addEventListener('change', checkDuplicateEdit);
     document.getElementById('tanggal').addEventListener('change', checkDuplicateEdit);
 
-    // Submit form
+    // Submit form dengan AJAX
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -559,8 +557,36 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Menyimpan...';
         loadingSpinner.style.display = 'block';
 
-        // Submit data menggunakan form biasa (bukan AJAX) untuk redirect
-        form.submit();
+        // Submit data dengan AJAX
+        const formData = new FormData(form);
+        
+        fetch('<?= base_url('right-piez/update/' . $pengukuran['id_pengukuran']) ?>', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(data.message, 'success');
+                setTimeout(() => {
+                    window.location.href = '<?= base_url('right-piez') ?>';
+                }, 2000);
+            } else {
+                throw new Error(data.message || 'Gagal memperbarui data');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Terjadi kesalahan: ' + error.message, 'danger');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan Perubahan & Hitung Ulang';
+            loadingSpinner.style.display = 'none';
+        });
     });
 
     // Auto-clear zero values on focus
@@ -575,7 +601,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value === '' || this.value === '0' || this.value === '0.00' || this.value === '0.0') {
                 this.value = '';
             } else if (this.value) {
-                // Format angka sesuai step
                 const decimalPlaces = this.step && this.step.includes('.') ? this.step.split('.')[1].length : 2;
                 this.value = parseFloat(this.value).toFixed(decimalPlaces);
             }
@@ -595,7 +620,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const value = this.value.toUpperCase();
             if (value === 'KERING' || value === 'KERIN' || value === 'KERI' || value === 'KER') {
                 this.value = 'KERING';
-                // Auto-set inch ke 0 jika KERING
                 const titik = this.getAttribute('data-titik');
                 const inchInput = document.querySelector(`input[name="pembacaan[${titik}][inch]"]`);
                 if (inchInput) {

@@ -382,43 +382,96 @@ class RightpiezController extends BaseController
     }
     
     public function update($id)
-    {
-        $pengukuran = $this->modelPengukuran->find($id);
-        if (!$pengukuran) {
-            return redirect()->to('/right-piez')->with('error', 'Data tidak ditemukan');
-        }
+{
+    $pengukuran = $this->modelPengukuran->find($id);
+    if (!$pengukuran) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Data tidak ditemukan'
+        ]);
+    }
+    
+    $validation = \Config\Services::validation();
+    
+    $rules = [
+        'tahun' => 'required|numeric',
+        'tanggal' => 'required|valid_date',
+        'periode' => 'required',
+        'tma' => 'permit_empty|numeric',
+        'ch_hujan' => 'permit_empty|numeric'
+    ];
+    
+    if (!$this->validate($rules)) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $validation->getErrors()
+        ]);
+    }
+    
+    $db = \Config\Database::connect('db_right_piez');
+    
+    try {
+        // Mulai transaction
+        $db->transBegin();
         
-        $validation = \Config\Services::validation();
-        
-        $rules = [
-            'tahun' => 'required|numeric',
-            'tanggal' => 'required|valid_date',
-            'periode' => 'required',
-            'tma' => 'permit_empty|numeric',
-            'ch_hujan' => 'permit_empty|numeric'
+        // 1. Update data pengukuran utama
+        $dataPengukuran = [
+            'tahun' => $this->request->getPost('tahun'),
+            'tanggal' => $this->request->getPost('tanggal'),
+            'periode' => $this->request->getPost('periode'),
+            'tma' => $this->request->getPost('tma') ?: null,
+            'ch_hujan' => $this->request->getPost('ch_hujan') ?: null
         ];
         
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        if (!$this->modelPengukuran->update($id, $dataPengukuran)) {
+            throw new \Exception('Gagal memperbarui data pengukuran');
         }
         
-        try {
-            $data = [
-                'tahun' => $this->request->getPost('tahun'),
-                'tanggal' => $this->request->getPost('tanggal'),
-                'periode' => $this->request->getPost('periode'),
-                'tma' => $this->request->getPost('tma') ?: null,
-                'ch_hujan' => $this->request->getPost('ch_hujan') ?: null
-            ];
+        // 2. Hapus dan simpan ulang data pembacaan
+        $pembacaanData = $this->request->getPost('pembacaan');
+        if ($pembacaanData) {
+            // Hapus data pembacaan lama
+            $this->modelPembacaan->where('id_pengukuran', $id)->delete();
             
-            $this->modelPengukuran->update($id, $data);
-            
-            return redirect()->to('/right-piez')->with('success', 'Data berhasil diperbarui');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+            // Simpan data pembacaan baru
+            if (!$this->storePembacaan($id, $pembacaanData)) {
+                throw new \Exception('Gagal menyimpan data pembacaan');
+            }
         }
+        
+        // Commit transaction
+        $db->transCommit();
+        
+        // 3. Proses perhitungan ulang
+        $calculationResult = false;
+        $calculationMessage = '';
+        
+        try {
+            $calculationResult = $this->prosesPerhitunganSetelahSimpan($id);
+            $calculationMessage = $calculationResult ? 
+                'Data berhasil diperbarui dan perhitungan selesai' : 
+                'Data berhasil diperbarui. Perhitungan gagal, dapat dilakukan manual nanti.';
+        } catch (\Exception $e) {
+            $calculationMessage = 'Data berhasil diperbarui. Error dalam perhitungan: ' . $e->getMessage();
+            log_message('error', 'Calculation error after update: ' . $e->getMessage());
+        }
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => $calculationMessage,
+            'calculation_success' => $calculationResult
+        ]);
+        
+    } catch (\Exception $e) {
+        $db->transRollback();
+        log_message('error', 'Update error: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Gagal memperbarui data: ' . $e->getMessage()
+        ]);
     }
+}
     
     public function delete($id)
     {
@@ -577,6 +630,28 @@ class RightpiezController extends BaseController
     }
 
     /**
+     * Check duplicate data for edit (exclude current record)
+     */
+    public function checkDuplicateEdit()
+    {
+        $tahun = $this->request->getPost('tahun');
+        $periode = $this->request->getPost('periode');
+        $tanggal = $this->request->getPost('tanggal');
+        $current_id = $this->request->getPost('current_id');
+
+        $existing = $this->modelPengukuran->where('tahun', $tahun)
+                                         ->where('periode', $periode)
+                                         ->where('tanggal', $tanggal)
+                                         ->where('id_pengukuran !=', $current_id)
+                                         ->first();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'isDuplicate' => $existing !== null
+        ]);
+    }
+
+    /**
      * Debug calculation process
      */
     public function debugCalculation($id_pengukuran)
@@ -625,26 +700,4 @@ class RightpiezController extends BaseController
             ]);
         }
     }
-
-    /**
- * Check duplicate data for edit (exclude current record)
- */
-public function checkDuplicateEdit()
-{
-    $tahun = $this->request->getPost('tahun');
-    $periode = $this->request->getPost('periode');
-    $tanggal = $this->request->getPost('tanggal');
-    $current_id = $this->request->getPost('current_id');
-
-    $existing = $this->modelPengukuran->where('tahun', $tahun)
-                                     ->where('periode', $periode)
-                                     ->where('tanggal', $tanggal)
-                                     ->where('id_pengukuran !=', $current_id)
-                                     ->first();
-
-    return $this->response->setJSON([
-        'success' => true,
-        'isDuplicate' => $existing !== null
-    ]);
-}
 }
