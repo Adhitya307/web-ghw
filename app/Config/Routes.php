@@ -161,3 +161,4 @@ $routes->post('right-piez/update/(:num)', 'Rightpiezo\RightpiezController::updat
 $routes->delete('right-piez/delete/(:num)', 'Rightpiezo\RightpiezController::delete/$1');
 $routes->post('right-piez/calculate/(:num)', 'Rightpiezo\RightpiezController::calculate/$1');
 $routes->post('right-piez/import-sql', 'Rightpiezo\RightpiezController::importSql');
+$routes->post('right-piez/check-duplicate-edit', 'Rightpiezo\RightpiezController::checkDuplicateEdit');
