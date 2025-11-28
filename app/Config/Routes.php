@@ -127,6 +127,7 @@ $routes->get('/extenso/edit/(:num)', 'EXS\ExtensoController::edit/$1');
 $routes->post('/extenso/update/(:num)', 'EXS\ExtensoController::update/$1');
 $routes->delete('/extenso/delete/(:num)', 'EXS\ExtensoController::delete/$1');
 $routes->get('/extenso/export', 'EXS\ExtensoController::exportExcel');
+$routes->get('extenso/grafik-ambang', 'EXS\ExtensoController::grafikAmbang');
 
 // Piezometer Routes - Left Bank
 $routes->get('left-piez', '\App\Controllers\LeftPiez\PiezometerController::index');

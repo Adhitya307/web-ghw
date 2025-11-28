@@ -183,6 +183,9 @@
             <a href="<?= base_url('extenso/ex1') ?>" class="btn btn-primary btn-ex">
                 <i class="fas fa-table"></i> Input Data
             </a>
+            <a href="<?= base_url('extenso/grafik-ambang') ?>" class="btn btn-outline-warning">
+                <i class="fas fa-chart-bar me-1"></i> Grafik & Ambang
+            </a>
             <a href="<?= base_url('extenso/create') ?>" class="btn btn-outline-success">
                 <i class="fas fa-plus me-1"></i> Add Data
             </a>

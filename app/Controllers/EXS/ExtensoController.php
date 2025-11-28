@@ -180,12 +180,16 @@ class ExtensoController extends BaseController
             ];
         }
         
-        return view('extenso/detail', [
-            'title' => $extensoName . ' - Extensometer Monitoring',
-            'pengukuran' => $data,
-            'extensoName' => $extensoName,
-            'activeMenu' => 'extenso'
-        ]);
+        // PERBAIKAN: Ganti 'extenso/detail' dengan 'Exs/index' atau redirect ke grafik ambang
+        return redirect()->to('/extenso');
+        
+        // Atau jika ingin tetap menampilkan view, gunakan:
+        // return view('Exs/index', [
+        //     'title' => $extensoName . ' - Extensometer Monitoring',
+        //     'pengukuran' => $data,
+        //     'extensoName' => $extensoName,
+        //     'activeMenu' => 'extenso'
+        // ]);
     }
 
     public function create()
@@ -313,112 +317,111 @@ class ExtensoController extends BaseController
     }
 
     public function edit($id)
-{
-    // Ambil data berdasarkan ID
-    $pengukuran = $this->pengukuranModel->find($id);
-    
-    if (!$pengukuran) {
-        return redirect()->to('/extenso')->with('error', 'Data tidak ditemukan.');
-    }
+    {
+        // Ambil data berdasarkan ID
+        $pengukuran = $this->pengukuranModel->find($id);
+        
+        if (!$pengukuran) {
+            return redirect()->to('/extenso')->with('error', 'Data tidak ditemukan.');
+        }
 
-    // Ambil data terkait
-    $pembacaanEx1 = $this->pembacaanEx1Model->where('id_pengukuran', $id)->first();
-    $pembacaanEx2 = $this->pembacaanEx2Model->where('id_pengukuran', $id)->first();
-    $pembacaanEx3 = $this->pembacaanEx3Model->where('id_pengukuran', $id)->first();
-    $pembacaanEx4 = $this->pembacaanEx4Model->where('id_pengukuran', $id)->first();
+        // Ambil data terkait
+        $pembacaanEx1 = $this->pembacaanEx1Model->where('id_pengukuran', $id)->first();
+        $pembacaanEx2 = $this->pembacaanEx2Model->where('id_pengukuran', $id)->first();
+        $pembacaanEx3 = $this->pembacaanEx3Model->where('id_pengukuran', $id)->first();
+        $pembacaanEx4 = $this->pembacaanEx4Model->where('id_pengukuran', $id)->first();
 
-    $deformasiEx1 = $this->deformasiEx1Model->where('id_pengukuran', $id)->first();
-    $deformasiEx2 = $this->deformasiEx2Model->where('id_pengukuran', $id)->first();
-    $deformasiEx3 = $this->deformasiEx3Model->where('id_pengukuran', $id)->first();
-    $deformasiEx4 = $this->deformasiEx4Model->where('id_pengukuran', $id)->first();
+        $deformasiEx1 = $this->deformasiEx1Model->where('id_pengukuran', $id)->first();
+        $deformasiEx2 = $this->deformasiEx2Model->where('id_pengukuran', $id)->first();
+        $deformasiEx3 = $this->deformasiEx3Model->where('id_pengukuran', $id)->first();
+        $deformasiEx4 = $this->deformasiEx4Model->where('id_pengukuran', $id)->first();
 
-    $readingsEx1 = $this->readingsEx1Model->where('id_pengukuran', $id)->first();
-    $readingsEx2 = $this->readingsEx2Model->where('id_pengukuran', $id)->first();
-    $readingsEx3 = $this->readingsEx3Model->where('id_pengukuran', $id)->first();
-    $readingsEx4 = $this->readingsEx4Model->where('id_pengukuran', $id)->first();
+        $readingsEx1 = $this->readingsEx1Model->where('id_pengukuran', $id)->first();
+        $readingsEx2 = $this->readingsEx2Model->where('id_pengukuran', $id)->first();
+        $readingsEx3 = $this->readingsEx3Model->where('id_pengukuran', $id)->first();
+        $readingsEx4 = $this->readingsEx4Model->where('id_pengukuran', $id)->first();
 
-    // Gabungkan semua data menjadi satu array $extenso
-    $extenso = [
-        'id' => $pengukuran['id_pengukuran'],
-        'tahun' => $pengukuran['tahun'],
-        'periode' => $pengukuran['periode'],
-        'tanggal' => $pengukuran['tanggal'],
-        'dma' => $pengukuran['dma'],
-        // Data EX1
-        'ex1_pembacaan_10' => $pembacaanEx1 ? $pembacaanEx1['pembacaan_10'] : '',
-        'ex1_pembacaan_20' => $pembacaanEx1 ? $pembacaanEx1['pembacaan_20'] : '',
-        'ex1_pembacaan_30' => $pembacaanEx1 ? $pembacaanEx1['pembacaan_30'] : '',
-        'ex1_deformasi_10' => $deformasiEx1 ? $deformasiEx1['deformasi_10'] : 0,
-        'ex1_deformasi_20' => $deformasiEx1 ? $deformasiEx1['deformasi_20'] : 0,
-        'ex1_deformasi_30' => $deformasiEx1 ? $deformasiEx1['deformasi_30'] : 0,
-        // Data EX2
-        'ex2_pembacaan_10' => $pembacaanEx2 ? $pembacaanEx2['pembacaan_10'] : '',
-        'ex2_pembacaan_20' => $pembacaanEx2 ? $pembacaanEx2['pembacaan_20'] : '',
-        'ex2_pembacaan_30' => $pembacaanEx2 ? $pembacaanEx2['pembacaan_30'] : '',
-        'ex2_deformasi_10' => $deformasiEx2 ? $deformasiEx2['deformasi_10'] : 0,
-        'ex2_deformasi_20' => $deformasiEx2 ? $deformasiEx2['deformasi_20'] : 0,
-        'ex2_deformasi_30' => $deformasiEx2 ? $deformasiEx2['deformasi_30'] : 0,
-        // Data EX3
-        'ex3_pembacaan_10' => $pembacaanEx3 ? $pembacaanEx3['pembacaan_10'] : '',
-        'ex3_pembacaan_20' => $pembacaanEx3 ? $pembacaanEx3['pembacaan_20'] : '',
-        'ex3_pembacaan_30' => $pembacaanEx3 ? $pembacaanEx3['pembacaan_30'] : '',
-        'ex3_deformasi_10' => $deformasiEx3 ? $deformasiEx3['deformasi_10'] : 0,
-        'ex3_deformasi_20' => $deformasiEx3 ? $deformasiEx3['deformasi_20'] : 0,
-        'ex3_deformasi_30' => $deformasiEx3 ? $deformasiEx3['deformasi_30'] : 0,
-        // Data EX4
-        'ex4_pembacaan_10' => $pembacaanEx4 ? $pembacaanEx4['pembacaan_10'] : '',
-        'ex4_pembacaan_20' => $pembacaanEx4 ? $pembacaanEx4['pembacaan_20'] : '',
-        'ex4_pembacaan_30' => $pembacaanEx4 ? $pembacaanEx4['pembacaan_30'] : '',
-        'ex4_deformasi_10' => $deformasiEx4 ? $deformasiEx4['deformasi_10'] : 0,
-        'ex4_deformasi_20' => $deformasiEx4 ? $deformasiEx4['deformasi_20'] : 0,
-        'ex4_deformasi_30' => $deformasiEx4 ? $deformasiEx4['deformasi_30'] : 0,
-    ];
-
-    return view('Exs/edit', [
-        'title' => 'Edit Data Extensometer',
-        'extenso' => $extenso, // Kirim sebagai $extenso
-        'activeMenu' => 'extenso'
-    ]);
-}
-
-    public function update($id)
-{
-    // Validasi input
-    $rules = [
-        'tahun' => 'required|numeric',
-        'periode' => 'required',
-        'tanggal' => 'required|valid_date'
-    ];
-
-    if (!$this->validate($rules)) {
-        return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-    }
-
-    try {
-        // Update data pengukuran
-        $pengukuranData = [
-            'tahun' => $this->request->getPost('tahun'),
-            'periode' => $this->request->getPost('periode'),
-            'tanggal' => $this->request->getPost('tanggal'),
-            'dma' => $this->request->getPost('dma')
+        // Gabungkan semua data menjadi satu array $extenso
+        $extenso = [
+            'id' => $pengukuran['id_pengukuran'],
+            'tahun' => $pengukuran['tahun'],
+            'periode' => $pengukuran['periode'],
+            'tanggal' => $pengukuran['tanggal'],
+            'dma' => $pengukuran['dma'],
+            // Data EX1
+            'ex1_pembacaan_10' => $pembacaanEx1 ? $pembacaanEx1['pembacaan_10'] : '',
+            'ex1_pembacaan_20' => $pembacaanEx1 ? $pembacaanEx1['pembacaan_20'] : '',
+            'ex1_pembacaan_30' => $pembacaanEx1 ? $pembacaanEx1['pembacaan_30'] : '',
+            'ex1_deformasi_10' => $deformasiEx1 ? $deformasiEx1['deformasi_10'] : 0,
+            'ex1_deformasi_20' => $deformasiEx1 ? $deformasiEx1['deformasi_20'] : 0,
+            'ex1_deformasi_30' => $deformasiEx1 ? $deformasiEx1['deformasi_30'] : 0,
+            // Data EX2
+            'ex2_pembacaan_10' => $pembacaanEx2 ? $pembacaanEx2['pembacaan_10'] : '',
+            'ex2_pembacaan_20' => $pembacaanEx2 ? $pembacaanEx2['pembacaan_20'] : '',
+            'ex2_pembacaan_30' => $pembacaanEx2 ? $pembacaanEx2['pembacaan_30'] : '',
+            'ex2_deformasi_10' => $deformasiEx2 ? $deformasiEx2['deformasi_10'] : 0,
+            'ex2_deformasi_20' => $deformasiEx2 ? $deformasiEx2['deformasi_20'] : 0,
+            'ex2_deformasi_30' => $deformasiEx2 ? $deformasiEx2['deformasi_30'] : 0,
+            // Data EX3
+            'ex3_pembacaan_10' => $pembacaanEx3 ? $pembacaanEx3['pembacaan_10'] : '',
+            'ex3_pembacaan_20' => $pembacaanEx3 ? $pembacaanEx3['pembacaan_20'] : '',
+            'ex3_pembacaan_30' => $pembacaanEx3 ? $pembacaanEx3['pembacaan_30'] : '',
+            'ex3_deformasi_10' => $deformasiEx3 ? $deformasiEx3['deformasi_10'] : 0,
+            'ex3_deformasi_20' => $deformasiEx3 ? $deformasiEx3['deformasi_20'] : 0,
+            'ex3_deformasi_30' => $deformasiEx3 ? $deformasiEx3['deformasi_30'] : 0,
+            // Data EX4
+            'ex4_pembacaan_10' => $pembacaanEx4 ? $pembacaanEx4['pembacaan_10'] : '',
+            'ex4_pembacaan_20' => $pembacaanEx4 ? $pembacaanEx4['pembacaan_20'] : '',
+            'ex4_pembacaan_30' => $pembacaanEx4 ? $pembacaanEx4['pembacaan_30'] : '',
+            'ex4_deformasi_10' => $deformasiEx4 ? $deformasiEx4['deformasi_10'] : 0,
+            'ex4_deformasi_20' => $deformasiEx4 ? $deformasiEx4['deformasi_20'] : 0,
+            'ex4_deformasi_30' => $deformasiEx4 ? $deformasiEx4['deformasi_30'] : 0,
         ];
 
-        $this->pengukuranModel->update($id, $pengukuranData);
-
-        // Update data untuk setiap extensometer
-        $this->updateExtensoData($id, 'ex1');
-        $this->updateExtensoData($id, 'ex2');
-        $this->updateExtensoData($id, 'ex3');
-        $this->updateExtensoData($id, 'ex4');
-
-        // PERBAIKI BARIS INI:
-        return redirect()->to('/extenso')->with('success', 'Data extensometer berhasil diperbarui.');
-        // Dari: return redirect()->to('Exs/index')->with('success', ...
-
-    } catch (\Exception $e) {
-        return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        return view('Exs/edit', [
+            'title' => 'Edit Data Extensometer',
+            'extenso' => $extenso,
+            'activeMenu' => 'extenso'
+        ]);
     }
-}
+
+    public function update($id)
+    {
+        // Validasi input
+        $rules = [
+            'tahun' => 'required|numeric',
+            'periode' => 'required',
+            'tanggal' => 'required|valid_date'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        try {
+            // Update data pengukuran
+            $pengukuranData = [
+                'tahun' => $this->request->getPost('tahun'),
+                'periode' => $this->request->getPost('periode'),
+                'tanggal' => $this->request->getPost('tanggal'),
+                'dma' => $this->request->getPost('dma')
+            ];
+
+            $this->pengukuranModel->update($id, $pengukuranData);
+
+            // Update data untuk setiap extensometer
+            $this->updateExtensoData($id, 'ex1');
+            $this->updateExtensoData($id, 'ex2');
+            $this->updateExtensoData($id, 'ex3');
+            $this->updateExtensoData($id, 'ex4');
+
+            return redirect()->to('/extenso')->with('success', 'Data extensometer berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
     private function updateExtensoData($pengukuranId, $extensoType)
     {
         // Nilai default initial readings untuk setiap extensometer
@@ -581,6 +584,58 @@ class ExtensoController extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Export functionality will be implemented here'
+        ]);
+    }
+
+    public function grafikAmbang()
+    {
+        // Ambil semua data pengukuran
+        $pengukuranData = $this->pengukuranModel->orderBy('tahun', 'DESC')
+                                               ->orderBy('periode', 'DESC')
+                                               ->orderBy('tanggal', 'DESC')
+                                               ->findAll();
+        
+        $data = [];
+        
+        foreach ($pengukuranData as $pengukuran) {
+            $idPengukuran = $pengukuran['id_pengukuran'];
+            
+            // Ambil data untuk SEMUA extensometer
+            $pembacaanEx1 = $this->pembacaanEx1Model->where('id_pengukuran', $idPengukuran)->first();
+            $pembacaanEx2 = $this->pembacaanEx2Model->where('id_pengukuran', $idPengukuran)->first();
+            $pembacaanEx3 = $this->pembacaanEx3Model->where('id_pengukuran', $idPengukuran)->first();
+            $pembacaanEx4 = $this->pembacaanEx4Model->where('id_pengukuran', $idPengukuran)->first();
+            
+            $readingsEx1 = $this->readingsEx1Model->where('id_pengukuran', $idPengukuran)->first();
+            $readingsEx2 = $this->readingsEx2Model->where('id_pengukuran', $idPengukuran)->first();
+            $readingsEx3 = $this->readingsEx3Model->where('id_pengukuran', $idPengukuran)->first();
+            $readingsEx4 = $this->readingsEx4Model->where('id_pengukuran', $idPengukuran)->first();
+            
+            $data[] = [
+                'pengukuran' => $pengukuran,
+                'ex1' => [
+                    'pembacaan' => $pembacaanEx1,
+                    'readings' => $readingsEx1
+                ],
+                'ex2' => [
+                    'pembacaan' => $pembacaanEx2,
+                    'readings' => $readingsEx2
+                ],
+                'ex3' => [
+                    'pembacaan' => $pembacaanEx3,
+                    'readings' => $readingsEx3
+                ],
+                'ex4' => [
+                    'pembacaan' => $pembacaanEx4,
+                    'readings' => $readingsEx4
+                ]
+            ];
+        }
+        
+        return view('Exs/grafik_ambang', [
+            'title' => 'Grafik & Ambang Batas - Extensometer',
+            'pengukuran' => $data,
+            'activeMenu' => 'extenso'
         ]);
     }
 }
