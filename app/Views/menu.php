@@ -92,7 +92,24 @@
             </a>
         </div>
 
-        <!-- Menu 6: Left Piezometer -->
+        <!-- Menu 6: InclinoMeter -->
+        <div class="col-12 col-md-5 col-lg-4">
+            <a href="<?= base_url('/inclino') ?>" class="text-decoration-none">
+                <div class="card menu-card shadow-sm h-100 border-0">
+                    <div class="card-body d-flex flex-column align-items-center py-4">
+                        <div class="menu-icon bg-orange bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-compass display-4 text-orange"></i>
+                        </div>
+                        <h5 class="mt-3 menu-title">InclinoMeter</h5>
+                        <p class="text-muted small mt-2 text-center">
+                            Monitoring kemiringan dan perpindahan vertikal dengan sensor inclinometer.
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Menu 7: Left Piezometer -->
         <div class="col-12 col-md-5 col-lg-4">
             <a href="<?= base_url('/left-piez') ?>" class="text-decoration-none">
                 <div class="card menu-card shadow-sm h-100 border-0">
@@ -109,7 +126,7 @@
             </a>
         </div>
 
-        <!-- Menu 7: Right Piezometer -->
+        <!-- Menu 8: Right Piezometer -->
         <div class="col-12 col-md-5 col-lg-4">
             <a href="<?= base_url('/right-piez') ?>" class="text-decoration-none">
                 <div class="card menu-card shadow-sm h-100 border-0">

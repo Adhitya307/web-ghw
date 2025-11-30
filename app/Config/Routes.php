@@ -163,3 +163,37 @@ $routes->delete('right-piez/delete/(:num)', 'Rightpiezo\RightpiezController::del
 $routes->post('right-piez/calculate/(:num)', 'Rightpiezo\RightpiezController::calculate/$1');
 $routes->post('right-piez/import-sql', 'Rightpiezo\RightpiezController::importSql');
 $routes->post('right-piez/check-duplicate-edit', 'Rightpiezo\RightpiezController::checkDuplicateEdit');
+
+
+
+
+$routes->group('inclino', function($routes) {
+    // Main Inclino Controller Routes
+    $routes->get('/', 'Inclino\InclinoController::index');
+    $routes->get('view', 'Inclino\InclinoController::view');
+    $routes->get('create', 'Inclino\InclinoController::create');
+    $routes->get('edit/(:num)', 'Inclino\InclinoController::edit/$1');
+    
+    // Import Controller Routes
+    $routes->get('import', 'Inclino\ImportController::index');
+    $routes->post('import/uploadCSV', 'Inclino\ImportController::uploadCSV');
+    $routes->get('import/boreholes', 'Inclino\ImportController::getBoreholeData');
+    $routes->get('import/dates/(:any)', 'Inclino\ImportController::getReadingDates/$1');
+    $routes->post('import/delete', 'Inclino\ImportController::deleteData');
+    $routes->get('import/template', 'Inclino\ImportController::downloadTemplate');
+    $routes->get('import/statistics', 'Inclino\ImportController::getStatistics');
+    $routes->get('import/test', 'Inclino\ImportController::testConnection');
+    
+    // Routes untuk testing:
+    $routes->get('import/testKoneksi', 'Inclino\ImportController::testKoneksi');
+    $routes->get('import/testDbConnection', 'Inclino\ImportController::testDbConnection');
+    $routes->get('import/testManualQuery', 'Inclino\ImportController::testManualQuery');
+    
+    $routes->get('test', function() {
+        return "Inclino routes are working!";
+    });
+});
+
+// Atau tambahkan di luar group sebagai fallback:
+$routes->get('test-inclino', 'Inclino\ImportController::testKoneksi');
+$routes->get('test-inclino-db', 'Inclino\ImportController::testDbConnection');
