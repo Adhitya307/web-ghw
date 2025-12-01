@@ -159,7 +159,6 @@
             <a href="<?= base_url('left_piez/grafik-history-l4-l6') ?>" class="btn btn-outline-primary btn-piez">Grafik History L4-L6</a>
             <a href="<?= base_url('left_piez/grafik-history-l7-l9') ?>" class="btn btn-outline-primary btn-piez">Grafik History L7-L9</a>
             <a href="<?= base_url('left_piez/grafik-history-l10-spz02') ?>" class="btn btn-primary btn-piez">Grafik History L10-SPZ02</a>
-            <a href="<?= base_url('piezometer/right') ?>" class="btn btn-outline-primary btn-piez">Right Bank</a>
             <a href="<?= base_url('left-piez/create') ?>" class="btn btn-outline-success">
                 <i class="fas fa-plus me-1"></i> Add Data
             </a>
@@ -296,94 +295,110 @@
             </thead>
             <tbody id="dataTableBody">
                 <?php if(empty($pengukuran)): ?>
-                    <tr>
-                        <td colspan="13" class="text-center py-4">
-                            <i class="fas fa-database fa-2x text-muted mb-3"></i>
-                            <p class="text-muted">Tidak ada data Piezometer yang tersedia</p>
-                            <a href="<?= base_url('left-piez/create') ?>" class="btn btn-primary mt-2">
-                                <i class="fas fa-plus me-1"></i> Tambah Data Pertama
-                            </a>
-                        </td>
-                    </tr>
-                <?php else: ?>
-                    <?php 
-                    // Fungsi untuk menentukan status berdasarkan nilai default untuk L10 dan SPZ-02
-                    function getStatusL10Spz02($t_psmetrik, $type) {
-                        switch($type) {
-                            case 'L10':
-                                if ($t_psmetrik <= 560.96) return 'aman';
-                                if ($t_psmetrik <= 565.46) return 'peringatan';
-                                return 'bahaya';
-                            case 'SPZ02':
-                                if ($t_psmetrik <= 690.78) return 'aman';
-                                if ($t_psmetrik <= 691.68) return 'peringatan';
-                                return 'bahaya';
-                            default:
-                                return 'aman';
-                        }
-                    }
-                    
-                    // Fungsi untuk format tanggal
-                    function formatTanggal($tanggal) {
-                        if (empty($tanggal) || $tanggal === '0000-00-00') {
-                            return '-';
-                        }
-                        return date('d-m-Y', strtotime($tanggal));
-                    }
-                    
-                    foreach($pengukuran as $item): 
-                        $p = $item['pengukuran'];
-                        $pembacaan = $item['pembacaan'] ?? [];
-                        $perhitunganL10 = $item['perhitungan_l10'] ?? [];
-                        $perhitunganSpz02 = $item['perhitungan_spz02'] ?? [];
-                        
-                        // Ambil nilai T.Psmetrik untuk masing-masing titik dari tabel perhitungan
-                        $t_psmetrik_L10 = $perhitunganL10['t_psmetrik_L10'] ?? 0;
-                        $t_psmetrik_SPZ02 = $perhitunganSpz02['t_psmetrik_SPZ02'] ?? 0;
-                        
-                        // Ambil bacaan (feet) dari tabel pembacaan untuk masing-masing titik
-                        $bacaan_L10 = $pembacaan['L_10']['feet'] ?? 0;
-                        $bacaan_SPZ02 = $pembacaan['SPZ_02']['feet'] ?? 0;
-                        
-                        // Konversi feet ke meter (1 feet = 0.3048 meter)
-                        $bacaan_L10_m = $bacaan_L10 * 0.3048;
-                        $bacaan_SPZ02_m = $bacaan_SPZ02 * 0.3048;
-                        
-                        // Tentukan status berdasarkan nilai default untuk L10 dan SPZ-02
-                        $status_L10 = getStatusL10Spz02($t_psmetrik_L10, 'L10');
-                        $status_SPZ02 = getStatusL10Spz02($t_psmetrik_SPZ02, 'SPZ02');
-                        
-                        // Ambil tanggal dari data pengukuran
-                        $tanggal = $p['tanggal'] ?? $p['created_at'] ?? $p['updated_at'] ?? '-';
-                    ?>
-                    <tr data-pid="<?= $p['id_pengukuran'] ?>">
-                        <!-- Tanggal -->
-                        <td class="date-cell"><?= formatTanggal($tanggal) ?></td>
-                        
-                        <!-- L-10 Data -->
-                        <td class="number-cell"><?= number_format($bacaan_L10_m, 2) ?></td>
-                        <td class="number-cell"><?= number_format($t_psmetrik_L10, 2) ?></td>
-                        <!-- Kolom Aman, Peringatan, Bahaya untuk L-10 -->
-                        <td class="number-cell aman-value">560.96</td>
-                        <td class="number-cell peringatan-value">565.46</td>
-                        <td class="number-cell bahaya-value">569.76</td>
-                        <td class="number-cell <?= $status_L10 === 'aman' ? 'aman-value' : ($status_L10 === 'peringatan' ? 'peringatan-value' : 'bahaya-value') ?>">
-                            <?= number_format($t_psmetrik_L10, 2) ?>
-                        </td>
-                        
-                        <!-- SPZ-02 Data -->
-                        <td class="number-cell"><?= number_format($bacaan_SPZ02_m, 2) ?></td>
-                        <td class="number-cell"><?= number_format($t_psmetrik_SPZ02, 2) ?></td>
-                        <!-- Kolom Aman, Peringatan, Bahaya untuk SPZ-02 -->
-                        <td class="number-cell aman-value">690.78</td>
-                        <td class="number-cell peringatan-value">691.68</td>
-                        <td class="number-cell bahaya-value">694.68</td>
-                        <td class="number-cell <?= $status_SPZ02 === 'aman' ? 'aman-value' : ($status_SPZ02 === 'peringatan' ? 'peringatan-value' : 'bahaya-value') ?>">
-                            <?= number_format($t_psmetrik_SPZ02, 2) ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+    <tr>
+        <td colspan="13" class="text-center py-4">
+            <i class="fas fa-database fa-2x text-muted mb-3"></i>
+            <p class="text-muted">Tidak ada data Piezometer yang tersedia</p>
+            <a href="<?= base_url('left-piez/create') ?>" class="btn btn-primary mt-2">
+                <i class="fas fa-plus me-1"></i> Tambah Data Pertama
+            </a>
+        </td>
+    </tr>
+<?php else: ?>
+    <?php 
+    // Fungsi untuk menentukan status berdasarkan nilai default untuk L10 dan SPZ-02
+    function getStatusL10Spz02($t_psmetrik, $type) {
+        switch($type) {
+            case 'L10':
+                if ($t_psmetrik <= 560.96) return 'aman';
+                if ($t_psmetrik <= 565.46) return 'peringatan';
+                return 'bahaya';
+            case 'SPZ02':
+                if ($t_psmetrik <= 690.78) return 'aman';
+                if ($t_psmetrik <= 691.68) return 'peringatan';
+                return 'bahaya';
+            default:
+                return 'aman';
+        }
+    }
+    
+    // Fungsi untuk format tanggal
+    function formatTanggal($tanggal) {
+        if (empty($tanggal) || $tanggal === '0000-00-00') {
+            return '-';
+        }
+        return date('d-m-Y', strtotime($tanggal));
+    }
+    
+    // Fungsi untuk konversi dan validasi angka
+    function convertToFloat($value) {
+        if (is_numeric($value)) {
+            return (float)$value;
+        }
+        // Jika ada koma, ubah ke titik
+        $value = str_replace(',', '.', $value);
+        if (is_numeric($value)) {
+            return (float)$value;
+        }
+        return 0.0;
+    }
+    
+    foreach($pengukuran as $item): 
+        $p = $item['pengukuran'];
+        
+        // PERBAIKAN: Menggunakan struktur data baru dari controller
+        $bacaan_L10 = $item['pembacaan']['L_10']['feet'] ?? 0;
+        $bacaan_SPZ02 = $item['pembacaan']['SPZ_02']['feet'] ?? 0;
+        
+        // PERBAIKAN: Mengambil t_psmetrik dari struktur yang benar
+        $t_psmetrik_L10 = $item['perhitungan_l10']['t_psmetrik'] ?? 0;
+        $t_psmetrik_SPZ02 = $item['perhitungan_spz02']['t_psmetrik'] ?? 0;
+        
+        // PERBAIKAN: Konversi ke float sebelum operasi matematika
+        $bacaan_L10 = convertToFloat($bacaan_L10);
+        $bacaan_SPZ02 = convertToFloat($bacaan_SPZ02);
+        $t_psmetrik_L10 = convertToFloat($t_psmetrik_L10);
+        $t_psmetrik_SPZ02 = convertToFloat($t_psmetrik_SPZ02);
+        
+        // Konversi feet ke meter (1 feet = 0.3048 meter)
+        $bacaan_L10_m = $bacaan_L10 * 0.3048;
+        $bacaan_SPZ02_m = $bacaan_SPZ02 * 0.3048;
+        
+        // Tentukan status berdasarkan nilai default untuk L10 dan SPZ-02
+        $status_L10 = getStatusL10Spz02($t_psmetrik_L10, 'L10');
+        $status_SPZ02 = getStatusL10Spz02($t_psmetrik_SPZ02, 'SPZ02');
+        
+        // Ambil tanggal dari data pengukuran
+        $tanggal = $p['tanggal'] ?? $p['created_at'] ?? $p['updated_at'] ?? '-';
+    ?>
+    <tr data-pid="<?= $p['id_pengukuran'] ?>">
+        <!-- Tanggal -->
+        <td class="date-cell"><?= formatTanggal($tanggal) ?></td>
+        
+        <!-- L-10 Data -->
+        <td class="number-cell"><?= number_format($bacaan_L10_m, 2) ?></td>
+        <td class="number-cell"><?= number_format($t_psmetrik_L10, 2) ?></td>
+        <!-- Kolom Aman, Peringatan, Bahaya untuk L-10 -->
+        <td class="number-cell aman-value">560.96</td>
+        <td class="number-cell peringatan-value">565.46</td>
+        <td class="number-cell bahaya-value">569.76</td>
+        <td class="number-cell <?= $status_L10 === 'aman' ? 'aman-value' : ($status_L10 === 'peringatan' ? 'peringatan-value' : 'bahaya-value') ?>">
+            <?= number_format($t_psmetrik_L10, 2) ?>
+        </td>
+        
+        <!-- SPZ-02 Data -->
+        <td class="number-cell"><?= number_format($bacaan_SPZ02_m, 2) ?></td>
+        <td class="number-cell"><?= number_format($t_psmetrik_SPZ02, 2) ?></td>
+        <!-- Kolom Aman, Peringatan, Bahaya untuk SPZ-02 -->
+        <td class="number-cell aman-value">690.78</td>
+        <td class="number-cell peringatan-value">691.68</td>
+        <td class="number-cell bahaya-value">694.68</td>
+        <td class="number-cell <?= $status_SPZ02 === 'aman' ? 'aman-value' : ($status_SPZ02 === 'peringatan' ? 'peringatan-value' : 'bahaya-value') ?>">
+            <?= number_format($t_psmetrik_SPZ02, 2) ?>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+<?php endif; ?>
             </tbody>
         </table>
     </div>

@@ -8,6 +8,7 @@
     <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS tetap sama seperti sebelumnya -->
     <style>
         :root {
             --primary-color: #0d6efd;
@@ -342,9 +343,7 @@
                                 <div class="input-group-icon">
                                     <i class="fas fa-ruler-combined"></i>
                                     <input type="text" class="form-control numeric-input" id="dma" name="dma" 
-                                           pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
                                            placeholder="0.000">
-                                    <div class="invalid-feedback">Hanya angka dan titik desimal yang diperbolehkan</div>
                                 </div>
                             </div>
 
@@ -378,7 +377,6 @@
                                         <input type="text" class="form-control numeric-input pembacaan-input" 
                                                id="feet_<?= $titik ?>" name="pembacaan[<?= $titik ?>][feet]" 
                                                data-titik="<?= $titik ?>"
-                                               pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
                                                placeholder="0.00">
                                     </div>
                                     
@@ -387,7 +385,6 @@
                                         <input type="text" class="form-control numeric-input pembacaan-input" 
                                                id="inch_<?= $titik ?>" name="pembacaan[<?= $titik ?>][inch]" 
                                                data-titik="<?= $titik ?>"
-                                               pattern="[0-9]*\.?[0-9]*" title="Hanya angka dan titik diperbolehkan"
                                                placeholder="0.00">
                                     </div>
                                 </div>
@@ -431,17 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const liveAlert = document.getElementById('liveAlert');
     const alertMessage = document.getElementById('alert-message');
 
-    // Daftar titik piezometer
-    const titikList = ['L_01', 'L_02', 'L_03', 'L_04', 'L_05', 'L_06', 'L_07', 'L_08', 'L_09', 'L_10', 'SPZ_02'];
-
-    // Format input angka
-    document.querySelectorAll('.numeric-input').forEach(input => {
-        input.addEventListener('input', function() {
-            this.value = this.value.replace(/[^\d.]/g, '')
-                                 .replace(/(\..*)\./g, '$1');
-        });
-    });
-
     // Fungsi untuk menampilkan alert
     function showAlert(message, type = 'success') {
         alertMessage.textContent = message;
@@ -453,6 +439,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
+    // Format input angka
+    function formatNumericInput(input) {
+        // Hapus karakter selain angka, titik, dan minus
+        let value = input.value.replace(/[^\d.-]/g, '');
+        
+        // Hapus titik desimal berlebih
+        const parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Hapus minus berlebih
+        if ((value.match(/-/g) || []).length > 1) {
+            value = value.replace(/-/g, '');
+            if (value !== '') {
+                value = '-' + value;
+            }
+        }
+        
+        input.value = value;
+        return value;
+    }
+
+    // Event listener untuk input numerik
+    document.querySelectorAll('.numeric-input').forEach(input => {
+        input.addEventListener('input', function() {
+            formatNumericInput(this);
+            this.classList.remove('is-invalid');
+        });
+        
+        input.addEventListener('blur', function() {
+            let value = this.value;
+            
+            if (value === '' || value === '0' || value === '0.00' || value === '0.0') {
+                this.value = '';
+            } else if (value) {
+                // Format ke 2 desimal jika ada titik desimal
+                if (value.includes('.')) {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue)) {
+                        this.value = numValue.toFixed(2);
+                    }
+                }
+            }
+        });
+    });
+
     // Cek duplikat ketika tahun, periode, atau tanggal berubah
     function checkDuplicate() {
         const tahun = document.getElementById('tahun').value;
@@ -460,15 +493,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const tanggal = document.getElementById('tanggal').value;
 
         if (tahun && periode && tanggal) {
+            // Prepare form data untuk duplicate check
+            const formData = new FormData();
+            formData.append('tahun', tahun);
+            formData.append('periode', periode);
+            formData.append('tanggal', tanggal);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
             fetch('<?= base_url('left-piez/check-duplicate') ?>', {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
                     'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: `tahun=${tahun}&periode=${periode}&tanggal=${tanggal}&<?= csrf_token() ?>=<?= csrf_hash() ?>`
+                }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success && data.isDuplicate) {
                     duplicateWarning.style.display = 'block';
@@ -479,45 +523,87 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error checking duplicate:', error);
+                duplicateWarning.style.display = 'none';
             });
         }
     }
 
-    // Event listeners untuk cek duplikat
-    document.getElementById('tahun').addEventListener('change', checkDuplicate);
-    document.getElementById('periode').addEventListener('change', checkDuplicate);
-    document.getElementById('tanggal').addEventListener('change', checkDuplicate);
+    // Debounce untuk duplicate check
+    let duplicateCheckTimeout;
+    function debounceCheckDuplicate() {
+        clearTimeout(duplicateCheckTimeout);
+        duplicateCheckTimeout = setTimeout(checkDuplicate, 500);
+    }
+
+    // Event listeners untuk cek duplikat dengan debounce
+    document.getElementById('tahun').addEventListener('change', debounceCheckDuplicate);
+    document.getElementById('periode').addEventListener('change', debounceCheckDuplicate);
+    document.getElementById('tanggal').addEventListener('change', debounceCheckDuplicate);
+
+    // Validasi form sebelum submit
+    function validateForm() {
+        let isValid = true;
+
+        // Reset semua invalid state
+        document.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+
+        // Validasi field required
+        const requiredFields = [
+            { id: 'tahun', name: 'Tahun' },
+            { id: 'periode', name: 'Periode' },
+            { id: 'tanggal', name: 'Tanggal Pengukuran' }
+        ];
+
+        requiredFields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (!element.value) {
+                element.classList.add('is-invalid');
+                isValid = false;
+            }
+        });
+
+        // Validasi format numerik
+        document.querySelectorAll('.numeric-input').forEach(input => {
+            if (input.value && !/^-?\d*\.?\d{0,2}$/.test(input.value)) {
+                input.classList.add('is-invalid');
+                isValid = false;
+            }
+        });
+
+        // Validasi tahun range
+        const tahun = document.getElementById('tahun');
+        if (tahun.value && (parseInt(tahun.value) < 2000 || parseInt(tahun.value) > 2100)) {
+            tahun.classList.add('is-invalid');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // Reset validasi saat user mulai mengetik
+    document.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
 
     // Submit form
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
         // Validasi form
-        const tahun = document.getElementById('tahun').value;
-        const periode = document.getElementById('periode').value;
-        const tanggal = document.getElementById('tanggal').value;
-
-        if (!tahun || !periode || !tanggal) {
-            showAlert('Harap isi semua field yang wajib diisi!', 'danger');
+        if (!validateForm()) {
+            showAlert('Harap periksa kembali data yang diinput! Pastikan semua field required terisi dan format angka benar.', 'danger');
             return;
         }
 
-        // Validasi format angka
-        const numericInputs = document.querySelectorAll('.numeric-input');
-        let hasInvalidInput = false;
-        
-        numericInputs.forEach(input => {
-            if (input.value && !/^\d*\.?\d*$/.test(input.value)) {
-                input.classList.add('is-invalid');
-                hasInvalidInput = true;
-            } else {
-                input.classList.remove('is-invalid');
+        // Tampilkan peringatan jika ada data duplikat tapi tetap izinkan submit
+        if (duplicateWarning.style.display === 'block') {
+            if (!confirm('Data pengukuran sudah ada. Apakah Anda yakin ingin melanjutkan?')) {
+                return;
             }
-        });
-
-        if (hasInvalidInput) {
-            showAlert('Format angka tidak valid! Hanya angka dan titik desimal yang diperbolehkan.', 'danger');
-            return;
         }
 
         // Loading state
@@ -535,7 +621,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 showAlert('Data piezometer berhasil disimpan! Mengalihkan...', 'success');
@@ -543,11 +636,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = data.redirect || '<?= base_url('left-piez') ?>';
                 }, 1500);
             } else {
-                showAlert('Error: ' + data.message, 'danger');
+                throw new Error(data.message || 'Terjadi kesalahan saat menyimpan data');
             }
         })
         .catch(error => {
-            showAlert('Terjadi kesalahan jaringan: ' + error.message, 'danger');
+            console.error('Submit Error:', error);
+            
+            let errorMessage = 'Terjadi kesalahan saat menyimpan data';
+            if (error.message.includes('HTTP 500')) {
+                errorMessage = 'Terjadi kesalahan server. Silakan coba lagi atau hubungi administrator.';
+            }
+            
+            showAlert(errorMessage, 'danger');
         })
         .finally(() => {
             submitBtn.disabled = false;
@@ -560,29 +660,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('tahun').value = new Date().getFullYear();
     document.getElementById('tanggal').valueAsDate = new Date();
 
-    // Auto-clear zero values on focus
+    // Handle paste event untuk input numerik
     document.querySelectorAll('.numeric-input').forEach(input => {
-        input.addEventListener('focus', function() {
-            if (this.value === '0' || this.value === '0.00' || this.value === '0.0') {
-                this.value = '';
-            }
-        });
-        
-        input.addEventListener('blur', function() {
-            if (this.value === '' || this.value === '0' || this.value === '0.00' || this.value === '0.0') {
-                this.value = '';
-            } else if (this.value) {
-                // Format angka sesuai step
-                const decimalPlaces = this.step && this.step.includes('.') ? this.step.split('.')[1].length : 2;
-                this.value = parseFloat(this.value).toFixed(decimalPlaces);
-            }
-        });
-    });
-
-    // Hapus kelas invalid saat user mulai mengisi
-    document.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('input', function() {
-            this.classList.remove('is-invalid');
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            // Hanya izinkan angka, titik, dan minus
+            const cleaned = pastedText.replace(/[^\d.-]/g, '');
+            this.value = cleaned;
         });
     });
 });

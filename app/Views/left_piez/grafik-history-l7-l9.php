@@ -159,7 +159,6 @@
             <a href="<?= base_url('left_piez/grafik-history-l4-l6') ?>" class="btn btn-outline-primary btn-piez">Grafik History L4-L6</a>
             <a href="<?= base_url('left_piez/grafik-history-l7-l9') ?>" class="btn btn-primary btn-piez">Grafik History L7-L9</a>
             <a href="<?= base_url('left_piez/grafik-history-l10-spz02') ?>" class="btn btn-outline-primary btn-piez">Grafik History L10-SPZ02</a>
-            <a href="<?= base_url('piezometer/right') ?>" class="btn btn-outline-primary btn-piez">Right Bank</a>
             <a href="<?= base_url('left-piez/create') ?>" class="btn btn-outline-success">
                 <i class="fas fa-plus me-1"></i> Add Data
             </a>
@@ -334,14 +333,17 @@
                     function getStatusL7L9($t_psmetrik, $type) {
                         switch($type) {
                             case 'L7':
+                            case 'L07':
                                 if ($t_psmetrik <= 644.06) return 'aman';
                                 if ($t_psmetrik <= 644.96) return 'peringatan';
                                 return 'bahaya';
                             case 'L8':
+                            case 'L08':
                                 if ($t_psmetrik <= 649.84) return 'aman';
                                 if ($t_psmetrik <= 650.74) return 'peringatan';
                                 return 'bahaya';
                             case 'L9':
+                            case 'L09':
                                 if ($t_psmetrik <= 594.41) return 'aman';
                                 if ($t_psmetrik <= 596.11) return 'peringatan';
                                 return 'bahaya';
@@ -360,20 +362,16 @@
                     
                     foreach($pengukuran as $item): 
                         $p = $item['pengukuran'];
-                        $pembacaan = $item['pembacaan'] ?? [];
-                        $perhitunganL07 = $item['perhitungan_l07'] ?? [];
-                        $perhitunganL08 = $item['perhitungan_l08'] ?? [];
-                        $perhitunganL09 = $item['perhitungan_l09'] ?? [];
                         
-                        // Ambil nilai T.Psmetrik untuk masing-masing titik dari tabel perhitungan
-                        $t_psmetrik_L07 = $perhitunganL07['t_psmetrik_L07'] ?? 0;
-                        $t_psmetrik_L08 = $perhitunganL08['t_psmetrik_L08'] ?? 0;
-                        $t_psmetrik_L09 = $perhitunganL09['t_psmetrik_L09'] ?? 0;
+                        // PERBAIKAN: Menggunakan struktur data baru dari controller
+                        $bacaan_L07 = $item['pembacaan']['L_07']['feet'] ?? 0;
+                        $bacaan_L08 = $item['pembacaan']['L_08']['feet'] ?? 0;
+                        $bacaan_L09 = $item['pembacaan']['L_09']['feet'] ?? 0;
                         
-                        // Ambil bacaan (feet) dari tabel pembacaan untuk masing-masing titik
-                        $bacaan_L07 = $pembacaan['L_07']['feet'] ?? 0;
-                        $bacaan_L08 = $pembacaan['L_08']['feet'] ?? 0;
-                        $bacaan_L09 = $pembacaan['L_09']['feet'] ?? 0;
+                        // PERBAIKAN: Mengambil t_psmetrik dari struktur yang benar
+                        $t_psmetrik_L07 = $item['perhitungan_l07']['t_psmetrik'] ?? 0;
+                        $t_psmetrik_L08 = $item['perhitungan_l08']['t_psmetrik'] ?? 0;
+                        $t_psmetrik_L09 = $item['perhitungan_l09']['t_psmetrik'] ?? 0;
                         
                         // Konversi feet ke meter (1 feet = 0.3048 meter)
                         $bacaan_L07_m = $bacaan_L07 * 0.3048;
@@ -381,9 +379,9 @@
                         $bacaan_L09_m = $bacaan_L09 * 0.3048;
                         
                         // Tentukan status berdasarkan nilai default untuk L7-L9
-                        $status_L07 = getStatusL7L9($t_psmetrik_L07, 'L7');
-                        $status_L08 = getStatusL7L9($t_psmetrik_L08, 'L8');
-                        $status_L09 = getStatusL7L9($t_psmetrik_L09, 'L9');
+                        $status_L07 = getStatusL7L9($t_psmetrik_L07, 'L07');
+                        $status_L08 = getStatusL7L9($t_psmetrik_L08, 'L08');
+                        $status_L09 = getStatusL7L9($t_psmetrik_L09, 'L09');
                         
                         // Ambil tanggal dari data pengukuran
                         $tanggal = $p['tanggal'] ?? $p['created_at'] ?? $p['updated_at'] ?? '-';

@@ -131,13 +131,31 @@ $routes->get('extenso/grafik-ambang', 'EXS\ExtensoController::grafikAmbang');
 
 // Piezometer Routes - Left Bank
 $routes->get('left-piez', '\App\Controllers\LeftPiez\PiezometerController::index');
-$routes->get('left-piez/create', 'LeftPiez\PiezometerController::create');
-$routes->post('left-piez/store', 'LeftPiez\PiezometerController::store');
-$routes->get('left-piez/edit/(:num)', 'LeftPiez\PiezometerController::edit/$1');
-$routes->put('left-piez/update/(:num)', 'LeftPiez\PiezometerController::update/$1');
-$routes->post('left-piez/update/(:num)', 'LeftPiez\PiezometerController::update/$1');
+// TAMBAHKAN INI: Route untuk create
+$routes->get('left-piez/create', '\App\Controllers\LeftPiez\PiezometerController::create');
+$routes->post('left-piez/store', '\App\Controllers\LeftPiez\PiezometerController::store');
+$routes->get('left-piez/edit/(:num)', '\App\Controllers\LeftPiez\PiezometerController::edit/$1');
+$routes->put('left-piez/update/(:num)', '\App\Controllers\LeftPiez\PiezometerController::update/$1');
+$routes->post('left-piez/update/(:num)', '\App\Controllers\LeftPiez\PiezometerController::update/$1');
 $routes->delete('left-piez/delete/(:num)', '\App\Controllers\LeftPiez\PiezometerController::delete/$1');
 $routes->post('left-piez/import-sql', '\App\Controllers\LeftPiez\PiezometerController::importSql');
+// Tambahkan route untuk duplicate check
+$routes->post('left-piez/check-duplicate', '\App\Controllers\LeftPiez\PiezometerController::checkDuplicate');
+
+// Tambahkan route untuk Grafik History L1-L3
+$routes->get('left-piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::index');
+$routes->get('left_piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::index');
+$routes->get('left-piez/grafik-history-l1-l3/api', 'Leftpiez\GrafikHistoryL1L3::apiData');
+$routes->get('left-piez/grafik-history-l1-l3/debug', 'Leftpiez\GrafikHistoryL1L3::debugStructure');
+$routes->get('left_piez/grafik-history-l4-l6', 'Leftpiez\GrafikHistoryL4L6::index');
+$routes->get('left_piez/grafik-history-l4-l6/api-data', 'Leftpiez\GrafikHistoryL4L6::apiData');
+$routes->get('left_piez/grafik-history-l4-l6/debug', 'Leftpiez\GrafikHistoryL4L6::debugStructure');
+$routes->get('left_piez/grafik-history-l7-l9', 'Leftpiez\GrafikHistoryL7L9::index');
+$routes->get('left_piez/grafik-history-l7-l9/api-data', 'Leftpiez\GrafikHistoryL7L9::apiData');
+$routes->get('left_piez/grafik-history-l7-l9/debug', 'Leftpiez\GrafikHistoryL7L9::debugStructure');
+$routes->get('left_piez/grafik-history-l10-spz02', 'Leftpiez\GrafikHistoryL10Spz02::index');
+$routes->get('left_piez/grafik-history-l10-spz02/api-data', 'Leftpiez\GrafikHistoryL10Spz02::apiData');
+$routes->get('left_piez/grafik-history-l10-spz02/debug', 'Leftpiez\GrafikHistoryL10Spz02::debugStructure');
 // Tambahkan route untuk Grafik History L1-L3
 $routes->get('left-piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::index');
 $routes->get('left_piez/grafik-history-l1-l3', 'Leftpiez\GrafikHistoryL1L3::index');

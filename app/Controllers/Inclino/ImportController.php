@@ -4,6 +4,9 @@ namespace App\Controllers\Inclino;
 
 use App\Controllers\BaseController;
 use App\Models\Inclino\PembacaanInclinoModel;
+use App\Models\Inclino\Ireadingmodel;
+use App\Models\Inclino\ProfilAModel;
+use App\Models\Inclino\ProfilBModel;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\API\ResponseTrait;
 
@@ -12,10 +15,16 @@ class ImportController extends BaseController
     use ResponseTrait;
 
     protected $pembacaanModel;
+    protected $ireadingModel;
+    protected $profilAModel;
+    protected $profilBModel;
 
     public function __construct()
     {
         $this->pembacaanModel = new PembacaanInclinoModel();
+        $this->ireadingModel = new Ireadingmodel();
+        $this->profilAModel = new ProfilAModel();
+        $this->profilBModel = new ProfilBModel();
         helper(['form', 'url', 'text']);
     }
 
@@ -39,7 +48,6 @@ class ImportController extends BaseController
     {
         log_message('debug', '=== START UPLOAD CSV PROCESS ===');
         
-        // Validasi request
         if (!$this->request->isAJAX()) {
             log_message('error', 'Upload CSV: Request bukan AJAX');
             return $this->fail('Invalid request method', 400);
@@ -47,7 +55,6 @@ class ImportController extends BaseController
 
         log_message('debug', 'Upload CSV: Request adalah AJAX');
 
-        // Validasi file
         $validation = \Config\Services::validation();
         $validation->setRules([
             'csv_file' => [
@@ -79,15 +86,69 @@ class ImportController extends BaseController
         log_message('debug', 'Upload CSV: File is valid - ' . $file->getName() . ' (' . $file->getSize() . ' bytes)');
 
         try {
-            // Process CSV file
             log_message('debug', 'Upload CSV: Starting processCSVFile');
             $result = $this->processCSVFile($file);
+            
+            log_message('debug', 'Upload CSV: Starting automatic data generation process');
+            
+            // 1. GENERATE INITIAL READING DULU
+            log_message('debug', 'Upload CSV: Step 1 - Generating initial readings');
+            $initialResult = $this->generateInitialReadings($result['id_pengukuran']);
+            
+            if ($initialResult) {
+                log_message('debug', "Upload CSV: Successfully generated $initialResult initial readings");
+                $result['initial_generated'] = $initialResult;
+                
+                // **PERUBAHAN: Gunakan method yang diperbaiki untuk Profil A**
+                log_message('debug', 'Upload CSV: Step 2 - Generating profil A with CORRECT formula');
+                $profilAResult = $this->profilAModel->generateProfilAWithFormulaCorrect($result['id_pengukuran'], $result['reading_date']);
+                
+                if ($profilAResult === false) {
+                    // Jika rumus kompleks gagal, coba versi simple
+                    log_message('debug', 'Upload CSV: Trying SIMPLE version for profil A');
+                    $profilAResult = $this->profilAModel->generateProfilASimple($result['id_pengukuran'], $result['reading_date']);
+                }
+                
+                if ($profilAResult) {
+                    log_message('debug', "Upload CSV: Successfully generated $profilAResult profil A records");
+                    $result['profil_a_generated'] = $profilAResult;
+                } else {
+                    log_message('warning', 'Upload CSV: Failed to generate profil A');
+                    $result['profil_a_generated'] = 0;
+                }
+                
+                // **PERUBAHAN: Gunakan method yang diperbaiki untuk Profil B**
+                log_message('debug', 'Upload CSV: Step 3 - Generating profil B with CORRECT formula');
+                $profilBResult = $this->profilBModel->generateProfilBWithFormulaCorrect($result['id_pengukuran'], $result['reading_date']);
+                
+                if ($profilBResult === false) {
+                    // Jika rumus kompleks gagal, coba versi simple
+                    log_message('debug', 'Upload CSV: Trying SIMPLE version for profil B');
+                    $profilBResult = $this->profilBModel->generateProfilBSimple($result['id_pengukuran'], $result['reading_date']);
+                }
+                
+                if ($profilBResult) {
+                    log_message('debug', "Upload CSV: Successfully generated $profilBResult profil B records");
+                    $result['profil_b_generated'] = $profilBResult;
+                } else {
+                    log_message('warning', 'Upload CSV: Failed to generate profil B');
+                    $result['profil_b_generated'] = 0;
+                }
+            } else {
+                log_message('warning', 'Upload CSV: Failed to generate initial readings');
+                $result['initial_generated'] = 0;
+                $result['profil_a_generated'] = 0;
+                $result['profil_b_generated'] = 0;
+            }
             
             log_message('debug', 'Upload CSV: Process completed successfully - ' . $result['imported'] . ' records imported');
             
             return $this->respond([
                 'status' => 'success',
-                'message' => "✅ Berhasil mengimport {$result['imported']} data dari {$result['borehole']}",
+                'message' => "✅ Berhasil mengimport {$result['imported']} data dari {$result['borehole']}" . 
+                            ($initialResult ? " dan generate $initialResult initial readings" : "") . 
+                            (isset($result['profil_a_generated']) && $result['profil_a_generated'] > 0 ? ", {$result['profil_a_generated']} profil A" : "") . 
+                            (isset($result['profil_b_generated']) && $result['profil_b_generated'] > 0 ? ", {$result['profil_b_generated']} profil B" : ""),
                 'data' => $result
             ]);
 
@@ -99,7 +160,31 @@ class ImportController extends BaseController
     }
 
     /**
-     * Process CSV file data - DIPERBAIKI dengan debugging lengkap
+     * Generate initial readings otomatis setelah data diimport
+     */
+    private function generateInitialReadings($id_pengukuran)
+    {
+        try {
+            log_message('debug', "Generating initial readings for id_pengukuran: $id_pengukuran");
+            
+            $result = $this->ireadingModel->generateInitialReadings($id_pengukuran);
+            
+            if ($result === false) {
+                log_message('error', "Failed to generate initial readings for id_pengukuran: $id_pengukuran");
+                return false;
+            }
+            
+            log_message('debug', "Successfully generated $result initial readings for id_pengukuran: $id_pengukuran");
+            return $result;
+            
+        } catch (\Exception $e) {
+            log_message('error', 'generateInitialReadings ERROR: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Process CSV file data
      */
     private function processCSVFile($file)
     {
@@ -116,7 +201,10 @@ class ImportController extends BaseController
             throw new \Exception('File CSV kosong');
         }
 
-        // Log first few lines untuk debugging
+        $lastId = $this->pembacaanModel->getLastMeasurementId();
+        $id_pengukuran = $lastId + 1;
+        log_message('debug', "Generated id_pengukuran: $id_pengukuran untuk file " . $file->getName());
+
         for ($i = 0; $i < min(5, count($lines)); $i++) {
             log_message('debug', "processCSVFile: Line $i - " . substr($lines[$i], 0, 100));
         }
@@ -141,17 +229,14 @@ class ImportController extends BaseController
         foreach ($lines as $lineNumber => $line) {
             $currentLine = $lineNumber + 1;
             
-            // Handle different line endings and encoding
             $line = trim($line);
             if (empty($line)) {
                 continue;
             }
 
-            // Parse CSV line dengan handling khusus untuk format RST
             $data = str_getcsv($line);
             log_message('debug', "processCSVFile: Line $currentLine parsed into " . count($data) . " columns");
             
-            // Skip lines yang hanya berisi koma
             if (empty(array_filter($data, function($value) { 
                 return $value !== null && $value !== ''; 
             }))) {
@@ -159,10 +244,8 @@ class ImportController extends BaseController
                 continue;
             }
 
-            // Extract metadata - DIPERBAIKI untuk format spesifik
             $this->extractMetadata($data, $metadata);
 
-            // Detect data start - header "Depth,Face A+,Face A-,Face B+,Face B-"
             if (isset($data[0]) && trim($data[0]) === 'Depth' && 
                 isset($data[1]) && strpos(trim($data[1]), 'Face A+') !== false) {
                 $dataStarted = true;
@@ -170,17 +253,14 @@ class ImportController extends BaseController
                 continue;
             }
 
-            // Process reading data - angka depth dengan tanda minus
             if ($dataStarted && isset($data[0]) && is_numeric(trim($data[0]))) {
                 
-                // Validasi data lengkap - minimal 5 kolom
                 if (count($data) < 5) {
                     $skippedCount++;
                     log_message('debug', "processCSVFile: Data tidak lengkap pada baris $currentLine - hanya " . count($data) . " kolom: " . implode(',', $data));
                     continue;
                 }
 
-                // Parse data dengan handling empty values
                 $depth = floatval(trim($data[0]));
                 $faceAPlus = !empty(trim($data[1])) ? floatval(trim($data[1])) : 0;
                 $faceAMinus = !empty(trim($data[2])) ? floatval(trim($data[2])) : 0;
@@ -189,27 +269,24 @@ class ImportController extends BaseController
 
                 log_message('debug', "processCSVFile: Parsed data - Depth: $depth, A+: $faceAPlus, A-: $faceAMinus, B+: $faceBPlus, B-: $faceBMinus");
 
-                // Validate required metadata
                 if (empty($metadata['reading_date']) || empty($metadata['borehole_name'])) {
                     log_message('error', "processCSVFile: Metadata tidak lengkap - Date: {$metadata['reading_date']}, Borehole: {$metadata['borehole_name']}");
                     throw new \Exception("Metadata tidak lengkap (tanggal atau nama borehole tidak ditemukan). Pastikan file CSV memiliki metadata yang lengkap.");
                 }
 
-                // Validate date format
                 if (!$this->isValidDate($metadata['reading_date'])) {
                     log_message('error', "processCSVFile: Format tanggal tidak valid - {$metadata['reading_date']}");
                     throw new \Exception("Format tanggal tidak valid: {$metadata['reading_date']}");
                 }
 
-                // Check for duplicate data
                 if ($this->pembacaanModel->isDataExists($metadata['borehole_name'], $metadata['reading_date'], $depth)) {
                     $skippedCount++;
                     log_message('debug', "processCSVFile: Data duplikat skipped - Borehole: {$metadata['borehole_name']}, Date: {$metadata['reading_date']}, Depth: $depth");
                     continue;
                 }
 
-                // Prepare data untuk insert
                 $record = [
+                    'id_pengukuran' => $id_pengukuran,
                     'depth' => $depth,
                     'face_a_plus' => $faceAPlus,
                     'face_a_minus' => $faceAMinus,
@@ -228,7 +305,6 @@ class ImportController extends BaseController
                 
                 log_message('debug', "processCSVFile: Data prepared for import - " . json_encode($record));
 
-                // Insert in batches to avoid memory issues
                 if (count($importData) >= 50) {
                     log_message('debug', "processCSVFile: Executing batch insert with " . count($importData) . " records");
                     
@@ -239,7 +315,6 @@ class ImportController extends BaseController
             }
         }
 
-        // Insert remaining data
         if (!empty($importData)) {
             log_message('debug', "processCSVFile: Executing final batch insert with " . count($importData) . " records");
             
@@ -247,7 +322,6 @@ class ImportController extends BaseController
             log_message('debug', "processCSVFile: Final batch insert successful - $insertResult records inserted");
         }
 
-        // Validasi hasil import
         if ($importedCount === 0) {
             if ($skippedCount > 0) {
                 log_message('debug', "processCSVFile: No data imported - all $skippedCount records were duplicates");
@@ -267,39 +341,39 @@ class ImportController extends BaseController
             'reading_date' => $metadata['reading_date'] ?? 'Unknown',
             'probe_serial' => $metadata['probe_serial'] ?? 'Unknown',
             'reel_serial' => $metadata['reel_serial'] ?? 'Unknown',
+            'id_pengukuran' => $id_pengukuran,
             'total_lines' => count($lines),
             'file_name' => $file->getName()
         ];
     }
 
- /**
- * Insert batch data dengan error handling yang lebih baik
- */
-private function insertBatchData($data)
-{
-    try {
-        log_message('debug', 'insertBatchData: Starting with ' . count($data) . ' records');
-        
-        // Gunakan model untuk insert batch
-        $result = $this->pembacaanModel->insertBatchInclinometer($data);
-        
-        if ($result === false) {
-            $errors = $this->pembacaanModel->errors();
-            log_message('error', "insertBatchData failed: " . print_r($errors, true));
-            throw new \Exception('Gagal menyimpan data ke database');
+    /**
+     * Insert batch data
+     */
+    private function insertBatchData($data)
+    {
+        try {
+            log_message('debug', 'insertBatchData: Starting with ' . count($data) . ' records');
+            
+            $result = $this->pembacaanModel->insertBatchInclinometer($data);
+            
+            if ($result === false) {
+                $errors = $this->pembacaanModel->errors();
+                log_message('error', "insertBatchData failed: " . print_r($errors, true));
+                throw new \Exception('Gagal menyimpan data ke database');
+            }
+            
+            log_message('debug', 'insertBatchData: Successfully inserted ' . $result . ' records');
+            return $result;
+            
+        } catch (\Exception $e) {
+            log_message('error', 'insertBatchData Error: ' . $e->getMessage());
+            throw new \Exception('Gagal menyimpan data batch: ' . $e->getMessage());
         }
-        
-        log_message('debug', 'insertBatchData: Successfully inserted ' . $result . ' records');
-        return $result;
-        
-    } catch (\Exception $e) {
-        log_message('error', 'insertBatchData Error: ' . $e->getMessage());
-        throw new \Exception('Gagal menyimpan data batch: ' . $e->getMessage());
     }
-}
 
     /**
-     * Extract metadata from CSV - DIPERBAIKI dengan debugging
+     * Extract metadata from CSV
      */
     private function extractMetadata($data, &$metadata)
     {
@@ -319,7 +393,6 @@ private function insertBatchData($data)
                 
                 log_message('debug', "extractMetadata: Date string - '$dateString'");
                 
-                // Handle date format: 10/13/2025 11:44:17
                 $timestamp = strtotime($dateString);
                 if ($timestamp !== false) {
                     $metadata['reading_date'] = date('Y-m-d', $timestamp);
@@ -544,7 +617,6 @@ Depth,Face A+,Face A-,Face B+,Face B-
             if ($db->connect()) {
                 echo "✅ <strong>Koneksi database db_inclino BERHASIL</strong><br>";
                 
-                // Test query untuk cek tabel
                 $result = $db->query('SHOW TABLES LIKE "inclinometer_readings"');
                 if ($result->getNumRows() > 0) {
                     echo "✅ Tabel 'inclinometer_readings' ADA<br>";
@@ -552,7 +624,6 @@ Depth,Face A+,Face A-,Face B+,Face B-
                     echo "❌ Tabel 'inclinometer_readings' TIDAK ADA<br>";
                 }
                 
-                // Hitung total tabel
                 $result2 = $db->query('SELECT COUNT(*) as total FROM information_schema.tables WHERE table_schema = "db_inclino"');
                 $row = $result2->getRow();
                 echo "📊 Total tabel di db_inclino: " . $row->total . "<br>";
@@ -575,11 +646,9 @@ Depth,Face A+,Face A-,Face B+,Face B-
         try {
             $db = \Config\Database::connect('db_inclino');
             
-            // Test connection
             $query = $db->query('SELECT COUNT(*) as count FROM inclinometer_readings');
             $count = $query->getRow()->count;
             
-            // Check table structure
             $tables = $db->listTables();
             $tableExists = in_array('inclinometer_readings', $tables);
             
@@ -599,6 +668,109 @@ Depth,Face A+,Face A-,Face B+,Face B-
                 'status' => 'error',
                 'message' => 'Database connection failed: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * **TAMBAHAN: Test method untuk debugging Profil A & B**
+     */
+    public function testProfilCalculation($id_pengukuran = null)
+    {
+        try {
+            if (!$id_pengukuran) {
+                $id_pengukuran = $this->request->getGet('id_pengukuran') ?? 1;
+            }
+            
+            log_message('debug', "Testing profil calculation for id_pengukuran: $id_pengukuran");
+            
+            // Test Profil A
+            $testA = $this->profilAModel->testFormulaCalculationCorrect($id_pengukuran);
+            
+            // Test Profil B
+            $testB = $this->profilBModel->testFormulaCalculationCorrect($id_pengukuran);
+            
+            // Check initial reading data
+            $initialCheck = $this->profilAModel->checkInitialReadingData($id_pengukuran);
+            
+            return $this->respond([
+                'status' => 'success',
+                'data' => [
+                    'id_pengukuran' => $id_pengukuran,
+                    'initial_reading_check' => $initialCheck,
+                    'profil_a_test' => $testA,
+                    'profil_b_test' => $testB
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'testProfilCalculation ERROR: ' . $e->getMessage());
+            return $this->respond([
+                'status' => 'error',
+                'message' => 'Test failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * **TAMBAHAN: Regenerate Profil A & B jika ada masalah**
+     */
+    public function regenerateProfil($id_pengukuran)
+    {
+        try {
+            if (!$this->request->isAJAX()) {
+                return $this->fail('Invalid request method', 400);
+            }
+            
+            log_message('debug', "Regenerating profil for id_pengukuran: $id_pengukuran");
+            
+            // Cek apakah data initial reading ada
+            $initialCheck = $this->profilAModel->checkInitialReadingData($id_pengukuran);
+            
+            if (!$initialCheck || $initialCheck['total'] == 0) {
+                return $this->fail('Data initial reading tidak ditemukan', 400);
+            }
+            
+            // Ambil reading_date
+            $inclinoData = $this->pembacaanModel->db->table('inclinometer_readings')
+                                ->select('DISTINCT reading_date')
+                                ->where('id_pengukuran', $id_pengukuran)
+                                ->get()
+                                ->getRow();
+            
+            if (!$inclinoData) {
+                return $this->fail('Data pengukuran tidak ditemukan', 400);
+            }
+            
+            $reading_date = $inclinoData->reading_date;
+            
+            // Regenerate Profil A
+            $profilAResult = $this->profilAModel->generateProfilAWithFormulaCorrect($id_pengukuran, $reading_date);
+            if ($profilAResult === false) {
+                $profilAResult = $this->profilAModel->generateProfilASimple($id_pengukuran, $reading_date);
+            }
+            
+            // Regenerate Profil B
+            $profilBResult = $this->profilBModel->generateProfilBWithFormulaCorrect($id_pengukuran, $reading_date);
+            if ($profilBResult === false) {
+                $profilBResult = $this->profilBModel->generateProfilBSimple($id_pengukuran, $reading_date);
+            }
+            
+            return $this->respond([
+                'status' => 'success',
+                'message' => "✅ Berhasil regenerate profil" . 
+                            ($profilAResult ? " A ($profilAResult records)" : "") . 
+                            ($profilBResult ? " B ($profilBResult records)" : ""),
+                'data' => [
+                    'id_pengukuran' => $id_pengukuran,
+                    'profil_a_regenerated' => $profilAResult,
+                    'profil_b_regenerated' => $profilBResult,
+                    'initial_data_check' => $initialCheck
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'regenerateProfil ERROR: ' . $e->getMessage());
+            return $this->fail('Regenerate failed: ' . $e->getMessage(), 500);
         }
     }
 }

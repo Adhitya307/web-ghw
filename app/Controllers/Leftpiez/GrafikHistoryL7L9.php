@@ -3,38 +3,26 @@
 namespace App\Controllers\Leftpiez;
 
 use App\Controllers\BaseController;
-use App\Models\LeftPiez\PerhitunganL07Model;
-use App\Models\LeftPiez\PerhitunganL08Model;
-use App\Models\LeftPiez\PerhitunganL09Model;
+use App\Models\LeftPiez\PerhitunganLeftPiezModel;
 use App\Models\LeftPiez\IreadingA;
 use App\Models\LeftPiez\IreadingB;
-use App\Models\LeftPiez\TPembacaanL07Model;
-use App\Models\LeftPiez\TPembacaanL08Model;
-use App\Models\LeftPiez\TPembacaanL09Model;
+use App\Models\LeftPiez\TPembacaanLeftPiezModel;
 use App\Models\LeftPiez\TPengukuranLeftpiezModel;
 
 class GrafikHistoryL7L9 extends BaseController
 {
-    protected $perhitunganL07Model;
-    protected $perhitunganL08Model;
-    protected $perhitunganL09Model;
+    protected $perhitunganModel;
     protected $ireadingA;
     protected $ireadingB;
-    protected $pembacaanL07Model;
-    protected $pembacaanL08Model;
-    protected $pembacaanL09Model;
+    protected $pembacaanModel;
     protected $pengukuranModel;
 
     public function __construct()
     {
-        $this->perhitunganL07Model = new PerhitunganL07Model();
-        $this->perhitunganL08Model = new PerhitunganL08Model();
-        $this->perhitunganL09Model = new PerhitunganL09Model();
+        $this->perhitunganModel = new PerhitunganLeftPiezModel();
         $this->ireadingA = new IreadingA();
         $this->ireadingB = new IreadingB();
-        $this->pembacaanL07Model = new TPembacaanL07Model();
-        $this->pembacaanL08Model = new TPembacaanL08Model();
-        $this->pembacaanL09Model = new TPembacaanL09Model();
+        $this->pembacaanModel = new TPembacaanLeftPiezModel();
         $this->pengukuranModel = new TPengukuranLeftpiezModel();
     }
 
@@ -50,10 +38,10 @@ class GrafikHistoryL7L9 extends BaseController
                 'Left Piezometer' => base_url('left-piez'),
                 'Grafik History L7-L9' => current_url()
             ],
-            'pengukuran' => $dataPengukuran, // Data untuk tabel
-            'dataL07' => $this->getDataL07(),
-            'dataL08' => $this->getDataL08(),
-            'dataL09' => $this->getDataL09(),
+            'pengukuran' => $dataPengukuran,
+            'dataL07' => $this->getDataForPiezometer('L07'),
+            'dataL08' => $this->getDataForPiezometer('L08'),
+            'dataL09' => $this->getDataForPiezometer('L09'),
             'initialReadingsA' => $this->getInitialReadingsA(),
             'initialReadingsB' => $this->getInitialReadingsB()
         ];
@@ -75,15 +63,31 @@ class GrafikHistoryL7L9 extends BaseController
             foreach ($allPengukuran as $pengukuran) {
                 $id_pengukuran = $pengukuran['id_pengukuran'];
                 
-                // Ambil data pembacaan untuk setiap titik L7-L9
-                $pembacaanL07 = $this->pembacaanL07Model->where('id_pengukuran', $id_pengukuran)->first();
-                $pembacaanL08 = $this->pembacaanL08Model->where('id_pengukuran', $id_pengukuran)->first();
-                $pembacaanL09 = $this->pembacaanL09Model->where('id_pengukuran', $id_pengukuran)->first();
+                // Ambil data pembacaan untuk setiap titik dari tabel tunggal
+                $pembacaanL07 = $this->pembacaanModel->getByPengukuranDanTipe($id_pengukuran, 'L07');
+                $pembacaanL08 = $this->pembacaanModel->getByPengukuranDanTipe($id_pengukuran, 'L08');
+                $pembacaanL09 = $this->pembacaanModel->getByPengukuranDanTipe($id_pengukuran, 'L09');
                 
-                // Ambil data perhitungan untuk setiap titik L7-L9
-                $perhitunganL07 = $this->perhitunganL07Model->where('id_pengukuran', $id_pengukuran)->first();
-                $perhitunganL08 = $this->perhitunganL08Model->where('id_pengukuran', $id_pengukuran)->first();
-                $perhitunganL09 = $this->perhitunganL09Model->where('id_pengukuran', $id_pengukuran)->first();
+                // Ambil data perhitungan untuk setiap titik dari tabel tunggal
+                $perhitunganL07 = $this->perhitunganModel->getByPengukuranDanTipe($id_pengukuran, 'L07');
+                $perhitunganL08 = $this->perhitunganModel->getByPengukuranDanTipe($id_pengukuran, 'L08');
+                $perhitunganL09 = $this->perhitunganModel->getByPengukuranDanTipe($id_pengukuran, 'L09');
+                
+                // Hitung nilai t_psmetrik jika belum ada
+                if (!$perhitunganL07) {
+                    $t_psmetrik_L07 = $this->perhitunganModel->hitungNilai($id_pengukuran, 'L07');
+                    $perhitunganL07 = ['t_psmetrik' => $t_psmetrik_L07];
+                }
+                
+                if (!$perhitunganL08) {
+                    $t_psmetrik_L08 = $this->perhitunganModel->hitungNilai($id_pengukuran, 'L08');
+                    $perhitunganL08 = ['t_psmetrik' => $t_psmetrik_L08];
+                }
+                
+                if (!$perhitunganL09) {
+                    $t_psmetrik_L09 = $this->perhitunganModel->hitungNilai($id_pengukuran, 'L09');
+                    $perhitunganL09 = ['t_psmetrik' => $t_psmetrik_L09];
+                }
                 
                 $data[] = [
                     'pengukuran' => $pengukuran,
@@ -92,9 +96,9 @@ class GrafikHistoryL7L9 extends BaseController
                         'L_08' => $pembacaanL08 ?? ['feet' => 0, 'inch' => 0],
                         'L_09' => $pembacaanL09 ?? ['feet' => 0, 'inch' => 0]
                     ],
-                    'perhitungan_l07' => $perhitunganL07 ?? ['t_psmetrik_L07' => 0],
-                    'perhitungan_l08' => $perhitunganL08 ?? ['t_psmetrik_L08' => 0],
-                    'perhitungan_l09' => $perhitunganL09 ?? ['t_psmetrik_L09' => 0]
+                    'perhitungan_l07' => $perhitunganL07 ?? ['t_psmetrik' => 0],
+                    'perhitungan_l08' => $perhitunganL08 ?? ['t_psmetrik' => 0],
+                    'perhitungan_l09' => $perhitunganL09 ?? ['t_psmetrik' => 0]
                 ];
             }
             
@@ -106,22 +110,25 @@ class GrafikHistoryL7L9 extends BaseController
     }
 
     /**
-     * Get data for L07 dengan handling field yang tidak konsisten
+     * Get data for specific piezometer type
      */
-    private function getDataL07()
+    private function getDataForPiezometer($tipePiezometer)
     {
         try {
-            // Ambil semua data perhitungan L07
-            $perhitunganL07 = $this->perhitunganL07Model->findAll();
+            // Ambil semua data perhitungan untuk tipe piezometer tertentu
+            $perhitunganData = $this->perhitunganModel->getByTipe($tipePiezometer);
             
             $data = [];
-            foreach ($perhitunganL07 as $item) {
+            foreach ($perhitunganData as $item) {
+                // Ambil default values
+                $defaults = $this->perhitunganModel->defaultsByType[$tipePiezometer] ?? [];
+                
                 $data[] = [
                     'id_pengukuran' => $item['id_pengukuran'] ?? null,
-                    'elv_piez' => $item['elv_piez'] ?? $item['Elv_Piez'] ?? null,
-                    'Elv_Piez' => $item['Elv_Piez'] ?? $item['elv_piez'] ?? null,
-                    'kedalaman' => $item['kedalaman'] ?? null,
-                    't_psmetrik_L07' => $item['t_psmetrik_L07'] ?? null,
+                    'elv_piez' => $item['elv_piez'] ?? $defaults['elv_piez'] ?? null,
+                    'Elv_Piez' => $item['elv_piez'] ?? $defaults['elv_piez'] ?? null,
+                    'kedalaman' => $item['kedalaman'] ?? $defaults['kedalaman'] ?? null,
+                    't_psmetrik' => $item['t_psmetrik'] ?? null,
                     'record_max' => $item['record_max'] ?? null,
                     'record_min' => $item['record_min'] ?? null,
                     'koordinat_x' => $item['koordinat_x'] ?? null,
@@ -131,83 +138,27 @@ class GrafikHistoryL7L9 extends BaseController
             
             return $data;
         } catch (\Exception $e) {
-            log_message('error', 'Error in getDataL07: ' . $e->getMessage());
+            log_message('error', 'Error in getDataForPiezometer(' . $tipePiezometer . '): ' . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Get data for L08 dengan handling field yang tidak konsisten
-     */
-    private function getDataL08()
-    {
-        try {
-            $perhitunganL08 = $this->perhitunganL08Model->findAll();
-            
-            $data = [];
-            foreach ($perhitunganL08 as $item) {
-                $data[] = [
-                    'id_pengukuran' => $item['id_pengukuran'] ?? null,
-                    'elv_piez' => $item['elv_piez'] ?? $item['Elv_Piez'] ?? null,
-                    'Elv_Piez' => $item['Elv_Piez'] ?? $item['elv_piez'] ?? null,
-                    'kedalaman' => $item['kedalaman'] ?? null,
-                    't_psmetrik_L08' => $item['t_psmetrik_L08'] ?? null,
-                    'record_max' => $item['record_max'] ?? null,
-                    'record_min' => $item['record_min'] ?? null,
-                    'koordinat_x' => $item['koordinat_x'] ?? null,
-                    'koordinat_y' => $item['koordinat_y'] ?? null
-                ];
-            }
-            
-            return $data;
-        } catch (\Exception $e) {
-            log_message('error', 'Error in getDataL08: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Get data for L09 dengan handling field yang tidak konsisten
-     */
-    private function getDataL09()
-    {
-        try {
-            $perhitunganL09 = $this->perhitunganL09Model->findAll();
-            
-            $data = [];
-            foreach ($perhitunganL09 as $item) {
-                $data[] = [
-                    'id_pengukuran' => $item['id_pengukuran'] ?? null,
-                    'elv_piez' => $item['elv_piez'] ?? $item['Elv_Piez'] ?? null,
-                    'Elv_Piez' => $item['Elv_Piez'] ?? $item['elv_piez'] ?? null,
-                    'kedalaman' => $item['kedalaman'] ?? null,
-                    't_psmetrik_L09' => $item['t_psmetrik_L09'] ?? null,
-                    'record_max' => $item['record_max'] ?? null,
-                    'record_min' => $item['record_min'] ?? null,
-                    'koordinat_x' => $item['koordinat_x'] ?? null,
-                    'koordinat_y' => $item['koordinat_y'] ?? null
-                ];
-            }
-            
-            return $data;
-        } catch (\Exception $e) {
-            log_message('error', 'Error in getDataL09: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Get initial readings from IreadingA untuk L7-L9
+     * Get initial readings from IreadingA
      */
     private function getInitialReadingsA()
     {
         try {
             $readings = [];
             
-            // Ambil data untuk L07, L08, L09 dari IreadingA dengan error handling
-            $readings['L_07'] = method_exists($this->ireadingA, 'forAL07') ? $this->ireadingA->forAL07() : [];
-            $readings['L_08'] = method_exists($this->ireadingA, 'forAL08') ? $this->ireadingA->forAL08() : [];
-            $readings['L_09'] = method_exists($this->ireadingA, 'forAL09') ? $this->ireadingA->forAL09() : [];
+            // Ambil semua data untuk pengukuran terbaru
+            $latestPengukuran = $this->pengukuranModel->orderBy('tanggal', 'DESC')->first();
+            $idPengukuran = $latestPengukuran['id_pengukuran'] ?? null;
+            
+            // Ambil data untuk L07, L08, L09 dari IreadingA
+            $readings['L_07'] = $this->ireadingA->getByTitik('L_07', $idPengukuran);
+            $readings['L_08'] = $this->ireadingA->getByTitik('L_08', $idPengukuran);
+            $readings['L_09'] = $this->ireadingA->getByTitik('L_09', $idPengukuran);
             
             return $readings;
         } catch (\Exception $e) {
@@ -221,17 +172,21 @@ class GrafikHistoryL7L9 extends BaseController
     }
 
     /**
-     * Get initial readings from IreadingB untuk L7-L9
+     * Get initial readings from IreadingB
      */
     private function getInitialReadingsB()
     {
         try {
             $readings = [];
             
-            // Ambil data untuk L07, L08, L09 dari IreadingB dengan error handling
-            $readings['L_07'] = method_exists($this->ireadingB, 'forBL07') ? $this->ireadingB->forBL07() : [];
-            $readings['L_08'] = method_exists($this->ireadingB, 'forBL08') ? $this->ireadingB->forBL08() : [];
-            $readings['L_09'] = method_exists($this->ireadingB, 'forBL09') ? $this->ireadingB->forBL09() : [];
+            // Ambil semua data untuk pengukuran terbaru
+            $latestPengukuran = $this->pengukuranModel->orderBy('tanggal', 'DESC')->first();
+            $idPengukuran = $latestPengukuran['id_pengukuran'] ?? null;
+            
+            // Ambil data untuk L07, L08, L09 dari IreadingB
+            $readings['L_07'] = $this->ireadingB->getByTitik('L_07', $idPengukuran);
+            $readings['L_08'] = $this->ireadingB->getByTitik('L_08', $idPengukuran);
+            $readings['L_09'] = $this->ireadingB->getByTitik('L_09', $idPengukuran);
             
             return $readings;
         } catch (\Exception $e) {
@@ -252,9 +207,9 @@ class GrafikHistoryL7L9 extends BaseController
         try {
             $data = [
                 'success' => true,
-                'l07' => $this->getDataL07(),
-                'l08' => $this->getDataL08(),
-                'l09' => $this->getDataL09(),
+                'l07' => $this->getDataForPiezometer('L07'),
+                'l08' => $this->getDataForPiezometer('L08'),
+                'l09' => $this->getDataForPiezometer('L09'),
                 'initialA' => $this->getInitialReadingsA(),
                 'initialB' => $this->getInitialReadingsB()
             ];
@@ -276,47 +231,5 @@ class GrafikHistoryL7L9 extends BaseController
 
             return $this->response->setStatusCode(500)->setJSON($errorData);
         }
-    }
-
-    /**
-     * Method untuk debug - melihat struktur field sebenarnya
-     */
-    public function debugStructure()
-    {
-        // Ambil satu record dari setiap tabel untuk melihat struktur
-        $debugData = [];
-        
-        // Pengukuran
-        $samplePengukuran = $this->pengukuranModel->first();
-        $debugData['Pengukuran_fields'] = $samplePengukuran ? array_keys($samplePengukuran) : 'No data';
-        
-        // L07
-        $sampleL07 = $this->perhitunganL07Model->first();
-        $debugData['L07_fields'] = $sampleL07 ? array_keys($sampleL07) : 'No data';
-        
-        // L08
-        $sampleL08 = $this->perhitunganL08Model->first();
-        $debugData['L08_fields'] = $sampleL08 ? array_keys($sampleL08) : 'No data';
-        
-        // L09
-        $sampleL09 = $this->perhitunganL09Model->first();
-        $debugData['L09_fields'] = $sampleL09 ? array_keys($sampleL09) : 'No data';
-        
-        // Pembacaan L07
-        $samplePembacaanL07 = $this->pembacaanL07Model->first();
-        $debugData['PembacaanL07_fields'] = $samplePembacaanL07 ? array_keys($samplePembacaanL07) : 'No data';
-        
-        return $this->response->setJSON($debugData);
-    }
-
-    /**
-     * Method untuk debug data tabel
-     */
-    public function debugTableData()
-    {
-        $testData = $this->getDataForTable();
-        echo "<pre>";
-        print_r($testData);
-        echo "</pre>";
     }
 }

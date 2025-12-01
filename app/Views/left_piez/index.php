@@ -111,7 +111,7 @@
             position: sticky;
             right: 0;
             background: white;
-            z-index: 100; /* DITINGKATKAN dari 40 ke 100 */
+            z-index: 200; /* DITINGKATKAN dari 100 ke 200 */
             padding: 0.3rem;
             min-width: 80px;
             border-left: 2px solid #dee2e6 !important;
@@ -125,7 +125,7 @@
         .table th.action-cell {
             position: sticky;
             right: 0;
-            z-index: 200; /* DITINGKATKAN DRASTIS - PALING TINGGI */
+            z-index: 500; /* DITINGKATKAN DRASTIS - PALING TINGGI */
             background: #f8f9fa !important;
             border-left: 2px solid #dee2e6 !important;
             box-shadow: -2px 0 5px rgba(0,0,0,0.1);
@@ -135,43 +135,59 @@
         .table th.action-cell.sticky-header {
             top: 0;
             right: 0;
-            z-index: 200;
+            z-index: 500; /* Z-index tertinggi */
         }
 
         .table th.action-cell.sticky-header-level-2 {
             top: 56px;
             right: 0;
-            z-index: 199;
+            z-index: 499;
         }
 
         .table th.action-cell.sticky-header-level-3 {
             top: 112px;
             right: 0;
-            z-index: 198;
+            z-index: 498;
         }
 
         .table th.action-cell.sticky-header-level-4 {
             top: 168px;
             right: 0;
-            z-index: 197;
+            z-index: 497;
         }
 
         .table th.action-cell.sticky-header-level-5 {
             top: 224px;
             right: 0;
-            z-index: 196;
+            z-index: 496;
         }
 
         .table th.action-cell.sticky-header-level-6 {
             top: 280px;
             right: 0;
-            z-index: 195;
+            z-index: 495;
         }
 
         .table th.action-cell.sticky-header-level-7 {
             top: 336px;
             right: 0;
-            z-index: 194;
+            z-index: 494;
+        }
+
+        /* PERBAIKAN: Action Cell untuk data rows */
+        .table td.action-cell {
+            position: sticky;
+            right: 0;
+            background: white;
+            z-index: 400; /* Lebih tinggi dari header biasa tapi lebih rendah dari header aksi */
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        /* PERBAIKAN: Action Cell untuk data rows dengan z-index yang berbeda di setiap level */
+        .table td.action-cell.sticky {
+            top: auto; /* Tidak sticky vertikal untuk data rows */
+            left: auto;
+            z-index: 400;
         }
 
         /* PERBAIKAN: Standarkan tinggi row header */
@@ -351,6 +367,12 @@
             content: "-";
             color: #6c757d;
         }
+
+        /* Debug styling */
+        .debug-cell {
+            background-color: #ffcccc !important;
+            border: 2px solid red !important;
+        }
     </style>
 </head>
 <body>
@@ -373,7 +395,6 @@
             <a href="<?= base_url('left_piez/grafik-history-l4-l6') ?>" class="btn btn-outline-primary btn-piez">grafik history l4-l6</a>
             <a href="<?= base_url('left_piez/grafik-history-l7-l9') ?>" class="btn btn-outline-primary btn-piez">grafik history l7-l9</a>
             <a href="<?= base_url('left_piez/grafik-history-l10-spz02') ?>" class="btn btn-outline-primary btn-piez">grafik history l10-SPZ02</a>
-            <a href="<?= base_url('piezometer/right') ?>" class="btn btn-outline-primary btn-piez">Right Bank</a>
             <a href="<?= base_url('left-piez/create') ?>" class="btn btn-outline-success">
                 <i class="fas fa-plus me-1"></i> Add Data
             </a>
@@ -737,112 +758,158 @@
                 </tr>
             </thead>
             <tbody id="dataTableBody">
-                <?php if(empty($pengukuran)): ?>
-                    <tr>
-                        <td colspan="105" class="text-center py-4">
-                            <i class="fas fa-database fa-2x text-muted mb-3"></i>
-                            <p class="text-muted">Tidak ada data Piezometer yang tersedia</p>
-                            <a href="<?= base_url('left-piez/create') ?>" class="btn btn-primary mt-2">
-                                <i class="fas fa-plus me-1"></i> Tambah Data Pertama
-                            </a>
-                        </td>
-                    </tr>
-                <?php else: ?>
-                    <?php 
-                    $titikList = ['L_01', 'L_02', 'L_03', 'L_04', 'L_05', 'L_06', 'L_07', 'L_08', 'L_09', 'L_10', 'SPZ_02'];
-                    ?>
-                    
-                    <?php foreach($pengukuran as $item): 
-                        $p = $item['pengukuran'];
-                        $metrik = $item['metrik'] ?? [];
-                        $initialA = $item['initial_a'] ?? [];
-                        $initialB = $item['initial_b'] ?? [];
-                        $perhitungan = $item['perhitungan'] ?? [];
-                        $pembacaan = $item['pembacaan'] ?? [];
-                    ?>
-                    <tr data-pid="<?= $p['id_pengukuran'] ?>">
-                        <!-- Basic Information -->
-                        <td class="sticky"><?= esc($p['tahun'] ?? '-') ?></td>
-                        <td class="sticky-2"><?= esc($p['periode'] ?? '-') ?></td>
-                        <td class="sticky-3"><?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?></td>
-                        <td class="sticky-4 bg-info-column"><?= esc($p['dma'] ?? '-') ?></td>
-                        <td class="sticky-5 bg-info-column"><?= esc($p['temp_id'] ?? '-') ?></td>
-                        
-                        <!-- BACAAN METRIK - Feet & Inch (dari tabel t_pembacaan) -->
-                        <?php foreach($titikList as $titik): 
-                            $bacaanData = $pembacaan[$titik] ?? [];
-                            $feet = $bacaanData['feet'] ?? null;
-                            $inch = $bacaanData['inch'] ?? null;
-                        ?>
-                            <td class="number-cell bg-metrik"><?= formatNumber($feet, 0) ?></td>
-                            <td class="number-cell bg-metrik"><?= formatNumber($inch) ?></td>
-                        <?php endforeach; ?>
-                        
-                        <!-- KONVERSI STATIS -->
-                        <td class="number-cell bg-calculation">0.3048</td>
-                        <td class="number-cell bg-calculation">0.0254</td>
-                        
-                        <!-- BACAAN PIEZOMETER METRIK (dari tabel b_piezo_metrik) -->
-                        <?php foreach($titikList as $titik): 
-                            $meter = $metrik[$titik] ?? null;
-                        ?>
-                            <td class="number-cell bg-reading"><?= formatNumber($meter) ?></td>
-                        <?php endforeach; ?>
-                        
-                        <!-- PERHITUNGAN PIEZOMETER - 12 kolom -->
-                        <!-- Kolom 1: Elev.Piez -->
-                        <td class="number-cell bg-calculation">Elev.Piez</td>
+    <?php if(empty($pengukuran)): ?>
+        <tr>
+            <td colspan="105" class="text-center py-4">
+                <i class="fas fa-database fa-2x text-muted mb-3"></i>
+                <p class="text-muted">Tidak ada data Piezometer yang tersedia</p>
+                <a href="<?= base_url('left-piez/create') ?>" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-1"></i> Tambah Data Pertama
+                </a>
+            </td>
+        </tr>
+    <?php else: ?>
+        <?php 
+        // Daftar titik dalam format view (L_01, L_02, ..., SPZ_02)
+        $titikListView = ['L_01', 'L_02', 'L_03', 'L_04', 'L_05', 'L_06', 'L_07', 'L_08', 'L_09', 'L_10', 'SPZ_02'];
+        // Daftar titik dalam format database (L01, L02, ..., SPZ02)
+        $titikListDB = ['L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'L07', 'L08', 'L09', 'L10', 'SPZ02'];
+        
+        // Fungsi untuk menampilkan data mentah TANPA PEMBULATAN dan TANPA PENAMBAHAN 00
+        function displayRawData($value) {
+            if ($value === null || $value === '' || $value === '-') {
+                return '-';
+            }
+            if (is_numeric($value)) {
+                // Tampilkan persis seperti di database, tanpa format tambahan
+                // Hilangkan trailing zeros yang tidak perlu
+                $value = floatval($value);
+                // Konversi ke string dan hapus trailing zeros
+                $strValue = (string)$value;
+                // Jika ada titik desimal, hapus trailing zeros
+                if (strpos($strValue, '.') !== false) {
+                    $strValue = rtrim(rtrim($strValue, '0'), '.');
+                }
+                return $strValue;
+            }
+            return $value;
+        }
+        ?>
+        
+        <?php foreach($pengukuran as $item): 
+            $p = $item['pengukuran'];
+            $metrik = $item['metrik'] ?? [];
+            $initialA = $item['initial_a'] ?? [];
+            $initialB = $item['initial_b'] ?? [];
+            $perhitungan = $item['perhitungan'] ?? [];
+            $pembacaan = $item['pembacaan'] ?? [];
+        ?>
+        <tr data-pid="<?= $p['id_pengukuran'] ?>">
+            <!-- Basic Information -->
+            <td class="sticky"><?= esc($p['tahun'] ?? '-') ?></td>
+            <td class="sticky-2"><?= esc($p['periode'] ?? '-') ?></td>
+            <td class="sticky-3"><?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?></td>
+            <td class="sticky-4 bg-info-column"><?= displayRawData($p['dma'] ?? '-') ?></td>
+            <td class="sticky-5 bg-info-column"><?= displayRawData($p['temp_id'] ?? '-') ?></td>
+            
+            <!-- BACAAN METRIK - Feet & Inch (dari tabel t_pembacaan) -->
+            <?php foreach($titikListView as $titik): 
+                $bacaanData = $pembacaan[$titik] ?? [];
+                $feet = $bacaanData['feet'] ?? null;
+                $inch = $bacaanData['inch'] ?? null;
+            ?>
+                <td class="number-cell bg-metrik"><?= displayRawData($feet) ?></td>
+                <td class="number-cell bg-metrik"><?= displayRawData($inch) ?></td>
+            <?php endforeach; ?>
+            
+            <!-- KONVERSI STATIS -->
+            <td class="number-cell bg-calculation">0.3048</td>
+            <td class="number-cell bg-calculation">0.0254</td>
+            
+            <!-- BACAAN PIEZOMETER METRIK (dari tabel b_piezo_metrik) -->
+                <?php foreach($titikListView as $titik): 
+                    $meter = $metrik[$titik] ?? null;  // Langsung pakai $titik (L_01, L_02, dst)
+                ?>
+                <td class="number-cell bg-reading"><?= displayRawData($meter) ?></td>
+            <?php endforeach; ?>
+            <!-- PERHITUNGAN PIEZOMETER - 12 kolom -->
+            <!-- Kolom 1: Elev.Piez -->
+            <td class="number-cell bg-calculation">Elev.Piez</td>
 
-                        <!-- Kolom 2-12: Data untuk L-01 sampai SPZ-02 -->
-                        <?php foreach($titikList as $titik): 
-                            $perhitunganData = $perhitungan[$titik] ?? [];
-                            // Ambil nilai dari t_psmetrik_Lxx bukan Elv_Piez
-                        $tPsMetrik = $perhitunganData['t_psmetrik'] ?? '-';
-                        ?>
-                        <td class="number-cell bg-calculation"><?= formatNumber($tPsMetrik) ?></td>
-                        <?php endforeach; ?>
-                        
-                        <!-- INITIAL READINGS A - 12 kolom -->
-                        <!-- Kolom 1: Elev.Piez -->
-                        <td class="number-cell bg-initial">Elev.Piez</td>
-                        
-                        <!-- Kolom 2-12: Data untuk L-01 sampai SPZ-02 -->
-                        <?php foreach($titikList as $titik): 
-                            $initialAData = $initialA[$titik] ?? [];
-                            $elvPiezA = $initialAData['Elv_Piez'] ?? '-';
-                        ?>
-                            <td class="number-cell bg-initial"><?= formatNumber($elvPiezA) ?></td>
-                        <?php endforeach; ?>
-                        
-                        <!-- INITIAL READINGS B - 12 kolom -->
-                        <!-- Kolom 1: Elev.Piez -->
-                        <td class="number-cell bg-initial">Elev.Piez</td>
-                        
-                        <!-- Kolom 2-12: Data untuk L-01 sampai SPZ-02 -->
-                        <?php foreach($titikList as $titik): 
-                            $initialBData = $initialB[$titik] ?? [];
-                            $elvPiezB = $initialBData['Elv_Piez'] ?? '-';
-                        ?>
-                            <td class="number-cell bg-initial"><?= formatNumber($elvPiezB) ?></td>
-                        <?php endforeach; ?>
-                        
-                        <!-- ACTION BUTTONS -->
-                        <td class="action-cell">
-                            <div class="d-flex justify-content-center align-items-center">
-                                <a href="<?= base_url('left-piez/edit/' . $p['id_pengukuran']) ?>" 
-                                   class="btn-action btn-edit" title="Edit Data">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </a>
-                                <button type="button" class="btn-action btn-delete delete-data" 
-                                        data-id="<?= $p['id_pengukuran'] ?>" title="Hapus Data">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
+            <!-- Kolom 2-12: Data untuk L-01 sampai SPZ-02 -->
+            <?php 
+            foreach($titikListDB as $tipeDB): 
+                // Ambil data perhitungan untuk tipe ini
+                $perhitunganData = $perhitungan[$tipeDB] ?? [];
+                
+                // Ambil nilai t_psmetrik langsung dari array
+                $tPsMetrik = $perhitunganData['t_psmetrik'] ?? null;
+                
+                // Jika null, hitung default berdasarkan tipe
+                if ($tPsMetrik === null) {
+                    // Default values berdasarkan data database yang ada
+                    $defaultsByType = [
+                        'L01' => 579.14, // 650.64 - 71.5
+                        'L02' => 577.66, // 650.66 - 73
+                        'L03' => 557.55, // 616.55 - 59
+                        'L04' => 530.26, // 580.26 - 50
+                        'L05' => 638.76, // 700.76 - 62
+                        'L06' => 628.09, // 690.09 - 62
+                        'L07' => 613.36, // 653.36 - 40
+                        'L08' => 603.64, // 659.14 - 55.5
+                        'L09' => 565.45, // 622.45 - 57
+                        'L10' => 528.86, // 580.36 - 51.5
+                        'SPZ02' => 630.08 // 700.08 - 70
+                    ];
+                    $tPsMetrik = $defaultsByType[$tipeDB] ?? null;
+                }
+            ?>
+            <td class="number-cell bg-calculation">
+                <?= displayRawData($tPsMetrik) ?>
+            </td>
+            <?php endforeach; ?>
+            
+            <!-- INITIAL READINGS A - 12 kolom -->
+            <!-- Kolom 1: Elev.Piez -->
+            <td class="number-cell bg-initial">Elev.Piez</td>
+            
+            <!-- Kolom 2-12: Data untuk L-01 sampai SPZ-02 -->
+            <?php foreach($titikListView as $titik): 
+                $initialAData = $initialA[$titik] ?? [];
+                $elvPiezA = $initialAData['Elv_Piez'] ?? '-';
+            ?>
+                <td class="number-cell bg-initial"><?= displayRawData($elvPiezA) ?></td>
+            <?php endforeach; ?>
+            
+            <!-- INITIAL READINGS B - 12 kolom -->
+            <!-- Kolom 1: Elev.Piez -->
+            <td class="number-cell bg-initial">Elev.Piez</td>
+            
+            <!-- Kolom 2-12: Data untuk L-01 sampai SPZ-02 -->
+            <?php foreach($titikListView as $titik): 
+                $initialBData = $initialB[$titik] ?? [];
+                $elvPiezB = $initialBData['Elv_Piez'] ?? '-';
+            ?>
+                <td class="number-cell bg-initial"><?= displayRawData($elvPiezB) ?></td>
+            <?php endforeach; ?>
+            
+            <!-- ACTION BUTTONS -->
+            <td class="action-cell">
+                <div class="d-flex justify-content-center align-items-center">
+                    <a href="<?= base_url('left-piez/edit/' . $p['id_pengukuran']) ?>" 
+                       class="btn-action btn-edit" title="Edit Data">
+                        <i class="fas fa-pencil-alt"></i>
+                    </a>
+                    <button type="button" class="btn-action btn-delete delete-data" 
+                            data-id="<?= $p['id_pengukuran'] ?>" title="Hapus Data">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
         </table>
     </div>
 </div>
@@ -981,8 +1048,9 @@ function recalculateHeaderHeights() {
                 th.style.top = accumulatedHeight + 'px';
             }
             
-            // Untuk action cell khusus
+            // Untuk action cell khusus dengan z-index lebih tinggi
             if (th.classList.contains('action-cell')) {
+                th.style.zIndex = 500 - index; // Z-index tertinggi untuk header aksi
                 if (index === 0) th.style.top = accumulatedHeight + 'px';
                 else if (index === 1) th.style.top = accumulatedHeight + 'px';
                 else if (index === 2) th.style.top = accumulatedHeight + 'px';
@@ -1008,21 +1076,45 @@ function ensureActionColumnVisible() {
     }
 }
 
+// Fungsi untuk mengatur z-index action cell pada data rows
+function setActionCellZIndex() {
+    const actionCells = document.querySelectorAll('td.action-cell');
+    actionCells.forEach(cell => {
+        cell.style.zIndex = 400; // Z-index untuk data rows
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // Jalankan fungsi recalculate header heights
     recalculateHeaderHeights();
     
+    // Atur z-index untuk action cell data rows
+    setActionCellZIndex();
+    
     // Recalculate ketika window di-resize
-    window.addEventListener('resize', recalculateHeaderHeights);
+    window.addEventListener('resize', function() {
+        recalculateHeaderHeights();
+        setActionCellZIndex();
+    });
     
     // Recalculate setelah font loading
     if (document.fonts) {
-        document.fonts.ready.then(recalculateHeaderHeights);
+        document.fonts.ready.then(function() {
+            recalculateHeaderHeights();
+            setActionCellZIndex();
+        });
     }
 
     // Juga jalankan setelah delay untuk memastikan tabel sudah render sempurna
-    setTimeout(recalculateHeaderHeights, 100);
-    setTimeout(recalculateHeaderHeights, 500);
+    setTimeout(function() {
+        recalculateHeaderHeights();
+        setActionCellZIndex();
+    }, 100);
+    
+    setTimeout(function() {
+        recalculateHeaderHeights();
+        setActionCellZIndex();
+    }, 500);
 
     // Pastikan kolom aksi terlihat
     ensureActionColumnVisible();

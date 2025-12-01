@@ -13,6 +13,7 @@ class PembacaanInclinoModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'id_pengukuran', // === TAMBAHAN: ID_PENGUKURAN ===
         'depth',
         'face_a_plus',
         'face_a_minus', 
@@ -62,6 +63,26 @@ class PembacaanInclinoModel extends Model
         
         // Gunakan koneksi database db_inclino
         $this->db = \Config\Database::connect('db_inclino');
+    }
+
+    /**
+     * === TAMBAHAN: GET LAST MEASUREMENT ID ===
+     * Untuk generate id_pengukuran otomatis
+     */
+    public function getLastMeasurementId()
+    {
+        try {
+            $query = $this->db->query("
+                SELECT COALESCE(MAX(id_pengukuran), 0) as last_id 
+                FROM inclinometer_readings
+            ");
+            $result = $query->getRow();
+            log_message('debug', 'getLastMeasurementId: Last ID found - ' . $result->last_id);
+            return $result->last_id;
+        } catch (\Exception $e) {
+            log_message('error', 'getLastMeasurementId ERROR: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     /**
