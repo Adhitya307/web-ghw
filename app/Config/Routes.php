@@ -192,6 +192,11 @@ $routes->group('inclino', function($routes) {
     $routes->get('create', 'Inclino\InclinoController::create');
     $routes->get('edit/(:num)', 'Inclino\InclinoController::edit/$1');
     
+    // **TAMBAHAN: Routes untuk filter data tabel**
+    $routes->get('getDataByFilter', 'Inclino\InclinoController::getDataByFilter');
+    $routes->get('getMonthsByYear', 'Inclino\InclinoController::getMonthsByYear');
+    $routes->get('getDaysByMonth', 'Inclino\InclinoController::getDaysByMonth');
+    
     // Import Controller Routes
     $routes->get('import', 'Inclino\ImportController::index');
     $routes->post('import/uploadCSV', 'Inclino\ImportController::uploadCSV');
