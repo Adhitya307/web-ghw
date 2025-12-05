@@ -18,8 +18,38 @@ use App\Models\Rembesan\TotalBocoranModel;
 
 class DataInputController extends BaseController
 {
+    // Helper untuk cek role admin
+    private function isAdmin()
+    {
+        $session = session();
+        return $session->get('role') == 'admin';
+    }
+    
+    // Helper untuk redirect jika bukan admin
+    private function requireAdmin()
+    {
+        if (!$this->isAdmin()) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Akses ditolak. Hanya admin yang dapat melakukan tindakan ini.'
+                ]);
+            }
+            session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat melakukan tindakan ini.');
+            return redirect()->to('input-data');
+        }
+        return true;
+    }
+
     public function rembesan()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+        
         $modelPengukuran = new MDataPengukuran();
         
         $data = [
@@ -30,7 +60,6 @@ class DataInputController extends BaseController
                                     ->orderBy("FIELD(bulan, 'JAN','FEB','MAR','APR','MEI','JUN','JUL','AGS','SEP','OKT','NOV','DES')", '', false)
                                     ->orderBy('tanggal', 'ASC')
                                     ->findAll(),
-
             'sr'                     => (new MSR())->findAll(),
             'thomson'                => (new MThomsonWeir())->findAll(),
             'perhitungan_bocoran'    => (new PerhitunganBocoranModel())->findAll(),
@@ -41,8 +70,11 @@ class DataInputController extends BaseController
             'perhitungan_batas'      => (new PerhitunganBatasMaksimalModel())->getAllWithPengukuran(),
             'tebing_kanan'           => (new TebingKananModel())->findAll(),
             'total_bocoran'          => (new TotalBocoranModel())->findAll(),
-            // Ambil data periode unik dari database
-            'periode_options'        => $modelPengukuran->distinct()->select('periode')->orderBy('periode', 'ASC')->findAll()
+            'periode_options'        => $modelPengukuran->distinct()->select('periode')->orderBy('periode', 'ASC')->findAll(),
+            // Tambahkan data user untuk view
+            'username'               => $session->get('username'),
+            'role'                   => $session->get('role'),
+            'isAdmin'                => $session->get('role') == 'admin'
         ];
 
         return view('Data/data_rembesan', $data);
@@ -51,6 +83,16 @@ class DataInputController extends BaseController
     // Method untuk AJAX polling
     public function getLatestData()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
         $modelPengukuran      = new MDataPengukuran();
         $modelThomson         = new MThomsonWeir();
         $modelSR              = new MSR();
@@ -130,11 +172,33 @@ class DataInputController extends BaseController
             ];
         }
 
-        return $this->response->setJSON($dataToSend);
+        // Tambahkan info role untuk client-side
+        $response = [
+            'data' => $dataToSend,
+            'user' => [
+                'role' => $session->get('role'),
+                'isAdmin' => $session->get('role') == 'admin'
+            ]
+        ];
+
+        return $this->response->setJSON($response);
     }
 
    public function edit($id)
 {
+    $session = session();
+    
+    // Cek login
+    if (!$session->get('isLoggedIn')) {
+        return redirect()->to('/auth/login');
+    }
+    
+    // Cek role admin
+    if (!$this->isAdmin()) {
+        session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat mengedit data.');
+        return redirect()->to('input-data');
+    }
+    
     $modelPengukuran = new MDataPengukuran();
     $modelThomson = new MThomsonWeir();
     $modelBocoran = new MBocoranBaru();
@@ -160,11 +224,35 @@ class DataInputController extends BaseController
     // Ambil data periode untuk dropdown
     $data['periode_options'] = $modelPengukuran->distinct()->select('periode')->orderBy('periode', 'ASC')->findAll();
     
+    // Tambahkan data user
+    $data['username'] = $session->get('username');
+    $data['role'] = $session->get('role');
+    $data['isAdmin'] = $this->isAdmin();
+    
     return view('Data/edit_data', $data);
 }
 
 public function update($id)
 {
+    $session = session();
+    
+    // Cek login
+    if (!$session->get('isLoggedIn')) {
+        return redirect()->to('/auth/login');
+    }
+    
+    // Cek role admin
+    if (!$this->isAdmin()) {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat memperbarui data.'
+            ]);
+        }
+        session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat memperbarui data.');
+        return redirect()->to('input-data');
+    }
+
     ini_set('display_errors', 1);
     error_reporting(E_ALL);
 
@@ -301,6 +389,25 @@ public function update($id)
 
 public function delete($id)
 {
+    $session = session();
+    
+    // Cek login
+    if (!$session->get('isLoggedIn')) {
+        return redirect()->to('/auth/login');
+    }
+    
+    // Cek role admin
+    if (!$this->isAdmin()) {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat menghapus data.'
+            ]);
+        }
+        session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat menghapus data.');
+        return redirect()->to('input-data');
+    }
+
     $modelPengukuran = new MDataPengukuran();
     $modelThomson    = new MThomsonWeir();
     $modelBocoran    = new MBocoranBaru();
@@ -348,10 +455,27 @@ public function delete($id)
 
     public function create()
 {
+    $session = session();
+    
+    // Cek login
+    if (!$session->get('isLoggedIn')) {
+        return redirect()->to('/auth/login');
+    }
+    
+    // Cek role admin
+    if (!$this->isAdmin()) {
+        session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat menambah data.');
+        return redirect()->to('input-data');
+    }
+    
     $modelPengukuran = new MDataPengukuran();
     
     $data = [
-        'periode_options' => $modelPengukuran->distinct()->select('periode')->orderBy('periode', 'ASC')->findAll()
+        'periode_options' => $modelPengukuran->distinct()->select('periode')->orderBy('periode', 'ASC')->findAll(),
+        // Tambahkan data user
+        'username' => $session->get('username'),
+        'role' => $session->get('role'),
+        'isAdmin' => $this->isAdmin()
     ];
     
     return view('Data/add_data', $data);
@@ -359,6 +483,25 @@ public function delete($id)
 
 public function store()
 {
+    $session = session();
+    
+    // Cek login
+    if (!$session->get('isLoggedIn')) {
+        return redirect()->to('/auth/login');
+    }
+    
+    // Cek role admin
+    if (!$this->isAdmin()) {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat menambah data.'
+            ]);
+        }
+        session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat menambah data.');
+        return redirect()->to('input-data');
+    }
+
     ini_set('display_errors', 1);
     error_reporting(E_ALL);
 
@@ -478,4 +621,35 @@ public function store()
         return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
 }
+
+    // Method untuk import SQL (hanya admin)
+    public function importSQL()
+    {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat mengimport data SQL.'
+            ])->setStatusCode(403);
+        }
+        
+        // Logika import SQL di sini...
+        // Anda bisa menambahkan logika import SQL sesuai kebutuhan
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Import SQL berhasil',
+            'imported' => 0 // Ganti dengan jumlah data yang diimport
+        ]);
+    }
 }

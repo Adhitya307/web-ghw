@@ -169,6 +169,13 @@
               <span>Kontak</span>
             </a>
           </li>
+          <div>
+            <a href="<?= base_url('/auth/logout') ?>" 
+               class="btn btn-sm btn-outline-danger" 
+               onclick="return confirm('Yakin ingin logout?')">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
         </ul>
       </nav>
     </div>

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Gabungan - PT Indonesia Power</title>
-
+    
     <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="<?= base_url('css/data.css') ?>">
-
+    
     <!-- Export Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -62,6 +62,19 @@
             transform: translateY(-1px);
         }
         
+        .btn-disabled {
+            color: #6c757d;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+        
+        .btn-disabled:hover {
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+            transform: translateY(0);
+        }
+        
         .tooltip-inner {
             font-size: 12px;
             padding: 4px 8px;
@@ -78,25 +91,237 @@
             filter: invert(1);
         }
         
+        /* Modal peringatan hak akses - MODERN & FORMAL */
+        .modal-access .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        .modal-access .modal-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #2c3e50;
+            border-bottom: 1px solid #dee2e6;
+            padding: 20px 30px;
+            position: relative;
+        }
+        
+        .modal-access .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db 0%, #2c3e50 100%);
+        }
+        
+        .modal-access .modal-header .btn-close {
+            color: #6c757d;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .modal-access .modal-header .btn-close:hover {
+            opacity: 1;
+        }
+        
+        .modal-access .modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .modal-access .access-icon-container {
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .access-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        
+        .modal-access .access-icon i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        .modal-access .access-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .modal-access .access-message {
+            color: #5d6d7e;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .user-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .modal-access .user-role-badge i {
+            color: #3498db;
+        }
+        
+        .modal-access .access-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid #3498db;
+        }
+        
+        .modal-access .access-details h6 {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .modal-access .access-details ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        
+        .modal-access .access-details li {
+            padding: 6px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            color: #5d6d7e;
+        }
+        
+        .modal-access .access-details li i {
+            color: #27ae60;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .modal-access .access-note {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .modal-access .access-note i {
+            color: #e74c3c;
+            margin-right: 5px;
+        }
+        
+        .modal-access .modal-footer {
+            border-top: 1px solid #dee2e6;
+            padding: 20px 30px;
+            background: #f8f9fa;
+        }
+        
+        .modal-access .btn-understand {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        
+        .modal-access .btn-understand:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+        
         /* Styling untuk modal import */
         #importModal .modal-dialog {
             max-width: 500px;
         }
-
+        
         #importProgress {
             height: 20px;
             margin: 15px 0;
         }
-
+        
         #importStatus {
             margin-top: 15px;
+        }
+        
+        /* User info */
+        .user-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #0d6efd;
+        }
+        
+        .badge-admin {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .badge-user {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
         }
     </style>
 </head>
 <body>
+<?php
+// Cek session dan role
+$session = session();
+$isLoggedIn = $session->get('isLoggedIn');
+$role = $session->get('role');
+$isAdmin = $role == 'admin';
+$username = $session->get('username');
+$fullName = $session->get('fullName');
+?>
+
 <?= $this->include('layouts/header'); ?>
 
 <div class="data-container">
+    <!-- User Info -->
+    <div class="user-info mb-3 p-3 rounded">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-user-circle me-2"></i>
+                <strong><?= esc($fullName ?? $username) ?></strong>
+                <span class="badge <?= $isAdmin ? 'badge-admin' : 'badge-user' ?> ms-2">
+                    <?= $isAdmin ? 'Administrator' : 'User' ?>
+                </span>
+                <small class="text-muted d-block mt-1">
+                    <i class="fas fa-id-card me-1"></i>Username: <?= esc($username) ?>
+                </small>
+            </div>
+            <div>
+                <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    <?= date('d F Y H:i:s') ?>
+                </small>
+            </div>
+        </div>
+    </div>
+
     <div class="table-header">
         <h2 class="table-title">
             <i class="fas fa-table me-2"></i>Data Input Rembesan Bendungan
@@ -116,14 +341,33 @@
                 <i class="fas fa-chart-line"></i> Analisa Look Burt
             </a>
 
-            <a href="<?= base_url('data/create') ?>" class="btn btn-outline-primary">
-                <i class="fas fa-plus me-1"></i> Add Data
-            </a>
-            
-            <!-- Tombol Import SQL -->
-            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i class="fas fa-database"></i> Import SQL
-            </button>
+            <?php if ($isAdmin): ?>
+                <!-- Tombol untuk Admin -->
+                <a href="<?= base_url('data/create') ?>" class="btn btn-outline-primary">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </a>
+                
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="fas fa-database"></i> Import SQL
+                </button>
+            <?php else: ?>
+                <!-- Tombol untuk User Biasa dengan modal peringatan -->
+                <button type="button" class="btn btn-outline-primary btn-disabled" 
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="top" 
+                        title="Klik untuk melihat informasi hak akses"
+                       onclick="showAccessWarning('add')">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </button>
+                
+                <button type="button" class="btn btn-outline-info btn-disabled"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="top"
+                       title="Klik untuk melihat informasi hak akses"
+                       onclick="showAccessWarning('import')">
+                    <i class="fas fa-database"></i> Import SQL
+                </button>
+            <?php endif; ?>
         </div>
 
         <div class="table-controls">
@@ -134,7 +378,8 @@
         </div>
     </div>
 
-    <!-- Modal Import SQL -->
+    <!-- Modal Import SQL (Hanya untuk Admin) -->
+    <?php if ($isAdmin): ?>
     <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -165,6 +410,61 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-primary" id="btnImportSQL">
                         <i class="fas fa-upload me-1"></i> Import
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Modal Peringatan Hak Akses Modern & Formal -->
+    <div class="modal fade modal-access" id="accessWarningModal" tabindex="-1" aria-labelledby="accessWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accessWarningModalLabel">
+                        <i class="fas fa-shield-alt me-2"></i>Pengaturan Akses
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="access-icon-container">
+                        <div class="access-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                    
+                    <h3 class="access-title" id="warningTitle">
+                        <!-- Judul akan diisi oleh JavaScript -->
+                    </h3>
+                    
+                    <p class="access-message" id="warningMessage">
+                        <!-- Pesan akan diisi oleh JavaScript -->
+                    </p>
+                    
+                    <div class="user-role-badge">
+                        <i class="fas fa-user-tag"></i>
+                        <span>Level Akses: <strong><?= $isAdmin ? 'Administrator' : 'Pengguna Biasa' ?></strong></span>
+                    </div>
+                    
+                    <div class="access-details">
+                        <h6>Hak Akses yang Tersedia:</h6>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Melihat dan menelusuri data</li>
+                            <li><i class="fas fa-check"></i> Mencari dan memfilter informasi</li>
+                            <li><i class="fas fa-check"></i> Mengekspor data ke format Excel/PDF</li>
+                            <li><i class="fas fa-check"></i> Mengakses dashboard analisis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="access-note">
+                        <i class="fas fa-info-circle"></i>
+                        Untuk meminta akses tambahan, silakan hubungi Administrator sistem.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
+                        <i class="fas fa-check me-1"></i> Mengerti
                     </button>
                 </div>
             </div>
@@ -410,24 +710,43 @@
                     <td><?= $fmt($psp['ambang'] ?? null, 2) ?></td>
 
                     <td><?= $fmt($tk['sr'] ?? null, 2) ?></td>
-<td><?= $fmt($tk['ambang'] ?? null, 2) ?></td>
-<td><?= esc($tk['B5'] ?? ($tk['b5'] ?? '-')) ?></td>
+                    <td><?= $fmt($tk['ambang'] ?? null, 2) ?></td>
+                    <td><?= esc($tk['B5'] ?? ($tk['b5'] ?? '-')) ?></td>
 
-<td><?= $fmt($tbTot['R1'] ?? ($tbTot['r1'] ?? null), 2) ?></td>
+                    <td><?= $fmt($tbTot['R1'] ?? ($tbTot['r1'] ?? null), 2) ?></td>
 
-<td><?= $fmt($pbatas['batas_maksimal'] ?? null, 2) ?></td>
+                    <td><?= $fmt($pbatas['batas_maksimal'] ?? null, 2) ?></td>
 
                     <td class="action-cell">
                         <div class="d-flex justify-content-center">
-                            <a href="<?= base_url('data/edit/' . $pid) ?>" class="btn-action btn-edit" 
-                               data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Data">
-                                <i class="fas fa-pencil-alt"></i>
-                            </a>
-                            <button type="button" class="btn-action btn-delete delete-btn" 
-                                    data-id="<?= $pid ?>" data-bs-toggle="tooltip" 
-                                    data-bs-placement="top" title="Hapus Data">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <?php if ($isAdmin): ?>
+                                <!-- Tombol untuk Admin -->
+                                <a href="<?= base_url('data/edit/' . $pid) ?>" class="btn-action btn-edit"
+                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Data">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                <button type="button" class="btn-action btn-delete delete-btn" 
+                                        data-id="<?= $pid ?>" data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" title="Hapus Data">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            <?php else: ?>
+                                <!-- Tombol untuk User Biasa dengan modal peringatan -->
+                                <button type="button" class="btn-action btn-disabled" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" 
+                                        title="Klik untuk melihat informasi hak akses"
+                                       onclick="showAccessWarning('edit', '<?= esc($periode) ?>', '<?= esc($bulan) ?>', '<?= esc($tahun) ?>')">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-disabled"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Klik untuk melihat informasi hak akses"
+                                       onclick="showAccessWarning('delete', '<?= esc($periode) ?>', '<?= esc($bulan) ?>', '<?= esc($tahun) ?>')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>
@@ -448,6 +767,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
+// Variabel global untuk cek hak akses
+const isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
+
+// Modal peringatan hak akses
+const accessWarningModal = new bootstrap.Modal(document.getElementById('accessWarningModal'));
+const warningTitle = document.getElementById('warningTitle');
+const warningMessage = document.getElementById('warningMessage');
+
 document.addEventListener('DOMContentLoaded', function () {
     // Inisialisasi tooltip
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -455,26 +782,28 @@ document.addEventListener('DOMContentLoaded', function () {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Konfirmasi hapus data
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    const confirmDeleteBtn = document.getElementById('confirmDelete');
-    
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            const row = this.closest('tr');
-            const tahun = row.dataset.tahun;
-            const bulan = row.dataset.bulan;
-            const periode = row.dataset.periode;
-            
-            // Update pesan konfirmasi dengan informasi data
-            document.querySelector('#deleteModal .modal-body p').textContent = 
-                `Apakah Anda yakin ingin menghapus data ${periode} ${bulan} ${tahun}?`;
+    // Konfirmasi hapus data (hanya untuk admin)
+    if (isAdmin) {
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const row = this.closest('tr');
+                const tahun = row.dataset.tahun;
+                const bulan = row.dataset.bulan;
+                const periode = row.dataset.periode;
                 
-            confirmDeleteBtn.href = '<?= base_url('data/delete') ?>/' + id;
-            deleteModal.show();
+                // Update pesan konfirmasi dengan informasi data
+                document.querySelector('#deleteModal .modal-body p').textContent = 
+                    `Apakah Anda yakin ingin menghapus data ${periode} ${bulan} ${tahun}?`;
+                
+                confirmDeleteBtn.href = '<?= base_url('data/delete') ?>/' + id;
+                deleteModal.show();
+            });
         });
-    });
+    }
     
     // ============ FILTER FUNCTIONALITY ============
     const tahunFilter = document.getElementById('tahunFilter');
@@ -490,7 +819,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const bVal = bulanFilter.value;
         const pVal = periodeFilter.value;
         const searchVal = searchInput.value.toLowerCase();
-
+        
         tableBody.querySelectorAll('tr').forEach(tr => {
             const tahunMatch = !tVal || tr.dataset.tahun === tVal;
             const bulanMatch = !bVal || tr.dataset.bulan === bVal;
@@ -502,11 +831,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const rowText = tr.textContent.toLowerCase();
                 searchMatch = rowText.includes(searchVal);
             }
-
+            
             tr.style.display = (tahunMatch && bulanMatch && periodeMatch && searchMatch) ? '' : 'none';
         });
     }
-
+    
     // Event listeners untuk filter
     tahunFilter.addEventListener('change', filterTable);
     bulanFilter.addEventListener('change', filterTable);
@@ -523,186 +852,143 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Jalankan filter saat halaman pertama kali dimuat
     filterTable();
-
-// ============ IMPORT SQL FUNCTIONALITY ============
-const sqlFileInput = document.getElementById('sqlFile');
-const btnImportSQL = document.getElementById('btnImportSQL');
-const importProgress = document.getElementById('importProgress');
-const importStatus = document.getElementById('importStatus');
-
-// Handle import button click
-btnImportSQL.addEventListener('click', function() {
-    const file = sqlFileInput.files[0];
-    if (!file) {
-        showStatus('Pilih file SQL terlebih dahulu', 'warning');
-        return;
-    }
-
-    if (!file.name.endsWith('.sql')) {
-        showStatus('File harus berformat .sql', 'warning');
-        return;
-    }
-
-    // Tampilkan progress bar
-    importProgress.style.display = 'block';
-    importProgress.querySelector('.progress-bar').style.width = '0%';
-    btnImportSQL.disabled = true;
-    showStatus('Memproses file...', 'info');
-
-    // Baca file
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const sqlContent = e.target.result;
-        processSQLImport(sqlContent);
-    };
-    reader.onerror = function() {
-        showStatus('Gagal membaca file', 'danger');
-        importProgress.style.display = 'none';
-        btnImportSQL.disabled = false;
-    };
-    reader.readAsText(file);
-});
-
-// Fungsi untuk memproses import SQL
-function processSQLImport(sqlContent) {
-    // Tampilkan progress
-    importProgress.querySelector('.progress-bar').style.width = '30%';
-    showStatus('Mengekstrak data dari file...', 'info');
     
-    // Parse SQL content
-    try {
-        const sqlStatements = parseSQL(sqlContent);
-        importProgress.querySelector('.progress-bar').style.width = '60%';
-        showStatus(`Mengimport ${sqlStatements.length} data...`, 'info');
+    // ============ IMPORT SQL FUNCTIONALITY (Hanya untuk Admin) ============
+    if (isAdmin) {
+        const sqlFileInput = document.getElementById('sqlFile');
+        const btnImportSQL = document.getElementById('btnImportSQL');
+        const importProgress = document.getElementById('importProgress');
+        const importStatus = document.getElementById('importStatus');
         
-        // Kirim ke server untuk diproses
-        fetch('<?= base_url() ?>import-sql', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                sql: sqlStatements
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                importProgress.querySelector('.progress-bar').style.width = '100%';
-                
-                if (data.imported > 0) {
-                    showStatus(`✅ ${data.message}`, 'success');
-                    
-                    // Refresh data setelah 2 detik jika ada data baru
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000);
-                } else {
-                    showStatus(`ℹ️ ${data.message}`, 'info');
+        // Handle import button click
+        if (btnImportSQL) {
+            btnImportSQL.addEventListener('click', function() {
+                const file = sqlFileInput.files[0];
+                if (!file) {
+                    showStatus('Pilih file SQL terlebih dahulu', 'warning');
+                    return;
                 }
-            } else {
-                showStatus('❌ Import gagal: ' + data.message, 'danger');
+                
+                if (!file.name.endsWith('.sql')) {
+                    showStatus('File harus berformat .sql', 'warning');
+                    return;
+                }
+                
+                // Tampilkan progress bar
+                importProgress.style.display = 'block';
+                importProgress.querySelector('.progress-bar').style.width = '0%';
+                btnImportSQL.disabled = true;
+                showStatus('Memproses file...', 'info');
+                
+                // Baca file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const sqlContent = e.target.result;
+                    processSQLImport(sqlContent);
+                };
+                reader.onerror = function() {
+                    showStatus('Gagal membaca file', 'danger');
+                    importProgress.style.display = 'none';
+                    btnImportSQL.disabled = false;
+                };
+                reader.readAsText(file);
+            });
+        }
+        
+        // Fungsi untuk memproses import SQL
+        function processSQLImport(sqlContent) {
+            // Tampilkan progress
+            importProgress.querySelector('.progress-bar').style.width = '30%';
+            showStatus('Mengekstrak data dari file...', 'info');
+            
+            // Parse SQL content
+            try {
+                const sqlStatements = parseSQL(sqlContent);
+                importProgress.querySelector('.progress-bar').style.width = '60%';
+                showStatus(`Mengimport ${sqlStatements.length} data...`, 'info');
+                
+                // Kirim ke server untuk diproses
+                fetch('<?= base_url() ?>import-sql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        sql: sqlStatements
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        importProgress.querySelector('.progress-bar').style.width = '100%';
+                        
+                        if (data.imported > 0) {
+                            showStatus(`✅ ${data.message}`, 'success');
+                            
+                            // Refresh data setelah 2 detik jika ada data baru
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            showStatus(`ℹ️ ${data.message}`, 'info');
+                        }
+                    } else {
+                        showStatus('❌ Import gagal: ' + data.message, 'danger');
+                        importProgress.style.display = 'none';
+                    }
+                    btnImportSQL.disabled = false;
+                })
+                .catch(error => {
+                    showStatus('❌ Error: ' + error.message, 'danger');
+                    importProgress.style.display = 'none';
+                    btnImportSQL.disabled = false;
+                });
+                
+            } catch (error) {
+                showStatus('❌ Error parsing SQL: ' + error.message, 'danger');
                 importProgress.style.display = 'none';
+                btnImportSQL.disabled = false;
             }
-            btnImportSQL.disabled = false;
-        })
-        .catch(error => {
-            showStatus('❌ Error: ' + error.message, 'danger');
-            importProgress.style.display = 'none';
-            btnImportSQL.disabled = false;
-        });
+        }
         
-    } catch (error) {
-        showStatus('❌ Error parsing SQL: ' + error.message, 'danger');
-        importProgress.style.display = 'none';
-        btnImportSQL.disabled = false;
-    }
-}
-
-// Fungsi untuk parsing SQL (sederhana)
-function parseSQL(sql) {
-    // Hapus komentar
-    sql = sql.replace(/--.*$/gm, '');
-    sql = sql.replace(/\/\*[\s\S]*?\*\//g, '');
-    
-    // Pisahkan per statement
-    const statements = sql.split(';')
-        .filter(stmt => stmt.trim().length > 0)
-        .map(stmt => stmt.trim() + ';');
-    
-    return statements;
-}
-
-// Fungsi untuk menampilkan status
-function showStatus(message, type) {
-    importStatus.innerHTML = message;
-    importStatus.className = 'alert alert-' + type;
-    importStatus.style.display = 'block';
-}
-
-// Reset status ketika modal ditutup
-document.getElementById('importModal').addEventListener('hidden.bs.modal', function() {
-    sqlFileInput.value = '';
-    importProgress.style.display = 'none';
-    importStatus.style.display = 'none';
-    btnImportSQL.disabled = false;
-});
-
-// Tombol untuk mode advanced (opsional)
-document.getElementById('btnAdvancedImport').addEventListener('click', function() {
-    const file = sqlFileInput.files[0];
-    if (!file) {
-        showStatus('Pilih file SQL terlebih dahulu', 'warning');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const sqlContent = e.target.result;
-        processAdvancedImport(sqlContent);
-    };
-    reader.readAsText(file);
-});
-
-// Fungsi untuk import advanced (replace instead of insert)
-function processAdvancedImport(sqlContent) {
-    showStatus('Memproses dengan mode advanced...', 'info');
-    
-    try {
-        const sqlStatements = parseSQL(sqlContent);
+        // Fungsi untuk parsing SQL (sederhana)
+        function parseSQL(sql) {
+            // Hapus komentar
+            sql = sql.replace(/--.*$/gm, '');
+            sql = sql.replace(/\/\*[\s\S]*?\*\//g, '');
+            
+            // Pisahkan per statement
+            const statements = sql.split(';')
+                .filter(stmt => stmt.trim().length > 0)
+                .map(stmt => stmt.trim() + ';');
+            
+            return statements;
+        }
         
-        fetch('<?= base_url() ?>import-sql-advanced', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                sql: sqlStatements
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showStatus(`✅ ${data.message}`, 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            } else {
-                showStatus('❌ Advanced import gagal: ' + data.message, 'danger');
-            }
-        });
+        // Fungsi untuk menampilkan status
+        function showStatus(message, type) {
+            importStatus.innerHTML = message;
+            importStatus.className = 'alert alert-' + type;
+            importStatus.style.display = 'block';
+        }
         
-    } catch (error) {
-        showStatus('❌ Error: ' + error.message, 'danger');
+        // Reset status ketika modal ditutup
+        const importModal = document.getElementById('importModal');
+        if (importModal) {
+            importModal.addEventListener('hidden.bs.modal', function() {
+                if (sqlFileInput) sqlFileInput.value = '';
+                if (importProgress) importProgress.style.display = 'none';
+                if (importStatus) importStatus.style.display = 'none';
+                if (btnImportSQL) btnImportSQL.disabled = false;
+            });
+        }
     }
-}
     
     // Daftar SR
     const srList = [1, 40, 66, 68, 70, 79, 81, 83, 85, 92, 94, 96, 98, 100, 102, 104, 106];
@@ -712,7 +998,7 @@ function processAdvancedImport(sqlContent) {
         if (v === null || v === undefined || v === '' || v == 0) return '-';
         return parseFloat(v).toFixed(dec);
     };
-
+    
     // Ambil Q SR
     const getSrQ = (row, num) => {
         if (!row) return null;
@@ -721,10 +1007,10 @@ function processAdvancedImport(sqlContent) {
         }
         return null;
     };
-
+    
     // Simpan state rowspan tahun
     const tahunRowspans = {};
-
+    
     // Fungsi untuk AJAX polling
     function pollData() {
         fetch('<?= base_url('get-latest-data') ?>')
@@ -738,7 +1024,7 @@ function processAdvancedImport(sqlContent) {
                 setTimeout(pollData, 10000); // Coba lagi setelah 10 detik jika error
             });
     }
-
+    
     // Fungsi untuk memperbarui tabel dengan data baru
     function updateTable(data) {
         const updateStatus = document.getElementById('updateStatus');
@@ -793,7 +1079,7 @@ function processAdvancedImport(sqlContent) {
             }, 1000);
         }
     }
-
+    
     // Fungsi untuk membuat baris baru
     function createNewRow(item, pid, tahun, bulan, periode, tahunCounts) {
         const row = document.createElement('tr');
@@ -817,7 +1103,7 @@ function processAdvancedImport(sqlContent) {
         
         return row;
     }
-
+    
     // Fungsi untuk menambahkan sel ke baris
     function addCellsToRow(row, item) {
         const p = item.pengukuran;
@@ -905,51 +1191,93 @@ function processAdvancedImport(sqlContent) {
         const btnContainer = document.createElement('div');
         btnContainer.className = 'd-flex justify-content-center';
         
-        // Tombol Edit
-        const editBtn = document.createElement('a');
-        editBtn.href = '<?= base_url('data/edit/') ?>' + p.id;
-        editBtn.className = 'btn-action btn-edit';
-        editBtn.setAttribute('data-bs-toggle', 'tooltip');
-        editBtn.setAttribute('data-bs-placement', 'top');
-        editBtn.title = 'Edit Data';
-        editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
-        
-        // Tombol Hapus
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'btn-action btn-delete delete-btn';
-        deleteBtn.setAttribute('data-id', p.id);
-        deleteBtn.setAttribute('data-bs-toggle', 'tooltip');
-        deleteBtn.setAttribute('data-bs-placement', 'top');
-        deleteBtn.title = 'Hapus Data';
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        
-        // Event listener untuk tombol hapus
-        deleteBtn.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            const row = this.closest('tr');
-            const tahun = row.dataset.tahun;
-            const bulan = row.dataset.bulan;
-            const periode = row.dataset.periode;
+        if (isAdmin) {
+            // Tombol Edit untuk Admin
+            const editBtn = document.createElement('a');
+            editBtn.href = '<?= base_url('data/edit/') ?>' + p.id;
+            editBtn.className = 'btn-action btn-edit';
+            editBtn.setAttribute('data-bs-toggle', 'tooltip');
+            editBtn.setAttribute('data-bs-placement', 'top');
+            editBtn.title = 'Edit Data';
+            editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
             
-            // Update pesan konfirmasi dengan informasi data
-            document.querySelector('#deleteModal .modal-body p').textContent = 
-                `Apakah Anda yakin ingin menghapus data ${periode} ${bulan} ${tahun}?`;
+            // Tombol Hapus untuk Admin
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn-action btn-delete delete-btn';
+            deleteBtn.setAttribute('data-id', p.id);
+            deleteBtn.setAttribute('data-bs-toggle', 'tooltip');
+            deleteBtn.setAttribute('data-bs-placement', 'top');
+            deleteBtn.title = 'Hapus Data';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            
+            // Event listener untuk tombol hapus
+            deleteBtn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const row = this.closest('tr');
+                const tahun = row.dataset.tahun;
+                const bulan = row.dataset.bulan;
+                const periode = row.dataset.periode;
                 
-            confirmDeleteBtn.href = '<?= base_url('data/delete') ?>/' + id;
-            deleteModal.show();
-        });
+                // Update pesan konfirmasi dengan informasi data
+                document.querySelector('#deleteModal .modal-body p').textContent = 
+                    `Apakah Anda yakin ingin menghapus data ${periode} ${bulan} ${tahun}?`;
+                
+                const confirmDeleteBtn = document.getElementById('confirmDelete');
+                confirmDeleteBtn.href = '<?= base_url('data/delete') ?>/' + id;
+                
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                deleteModal.show();
+            });
+            
+            btnContainer.appendChild(editBtn);
+            btnContainer.appendChild(deleteBtn);
+        } else {
+            // Tombol untuk User Biasa dengan modal peringatan
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'btn-action btn-disabled';
+            editBtn.setAttribute('data-bs-toggle', 'tooltip');
+            editBtn.setAttribute('data-bs-placement', 'top');
+            editBtn.title = 'Klik untuk melihat informasi hak akses';
+            editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+            editBtn.onclick = function() {
+                const row = this.closest('tr');
+                const tahun = row.dataset.tahun;
+                const bulan = row.dataset.bulan;
+                const periode = row.dataset.periode;
+                showAccessWarning('edit', periode, bulan, tahun);
+            };
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn-action btn-disabled';
+            deleteBtn.setAttribute('data-bs-toggle', 'tooltip');
+            deleteBtn.setAttribute('data-bs-placement', 'top');
+            deleteBtn.title = 'Klik untuk melihat informasi hak akses';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.onclick = function() {
+                const row = this.closest('tr');
+                const tahun = row.dataset.tahun;
+                const bulan = row.dataset.bulan;
+                const período = row.dataset.periode;
+                showAccessWarning('delete', periode, bulan, tahun);
+            };
+            
+            btnContainer.appendChild(editBtn);
+            btnContainer.appendChild(deleteBtn);
+        }
         
-        btnContainer.appendChild(editBtn);
-        btnContainer.appendChild(deleteBtn);
         actionCell.appendChild(btnContainer);
         row.appendChild(actionCell);
         
         // Inisialisasi tooltip untuk tombol baru
-        new bootstrap.Tooltip(editBtn);
-        new bootstrap.Tooltip(deleteBtn);
+        const newTooltips = row.querySelectorAll('[data-bs-toggle="tooltip"]');
+        newTooltips.forEach(el => {
+            new bootstrap.Tooltip(el);
+        });
     }
-
+    
     // Helper untuk menambahkan sel
     function appendCell(row, value, className = '') {
         const cell = document.createElement('td');
@@ -957,7 +1285,7 @@ function processAdvancedImport(sqlContent) {
         cell.textContent = value || '-';
         row.appendChild(cell);
     }
-
+    
     // Fungsi untuk memperbarui baris yang sudah ada
     function updateExistingRow(row, item) {
         const thom = item.thomson || {};
@@ -1006,7 +1334,7 @@ function processAdvancedImport(sqlContent) {
         srList.forEach(num => {
             const q = getSrQ(psr, num);
             updateCell(row, cellIndex++, q === null ? '-' : fmt(q, 6));
-        }); 
+        });
         
         // Update Perhitungan Bocoran Baru (3 kolom)
         updateCell(row, cellIndex++, fmt(pbb.talang1, 2));
@@ -1032,7 +1360,7 @@ function processAdvancedImport(sqlContent) {
         // Update Batas Maksimal (1 kolom)
         updateCell(row, cellIndex++, fmt(pbatas.batas_maksimal, 2));
     }
-
+    
     // Helper untuk memperbarui nilai sel
     function updateCell(row, index, value) {
         const cells = row.querySelectorAll('td');
@@ -1040,7 +1368,7 @@ function processAdvancedImport(sqlContent) {
             cells[index].textContent = value || '-';
         }
     }
-
+    
     // Fungsi untuk memperbarui rowspan tahun
     function updateTahunRowspans(tahunCounts) {
         // Reset semua rowspan tahun
@@ -1085,14 +1413,14 @@ function processAdvancedImport(sqlContent) {
             }
         });
     }
-
+    
     // Fungsi untuk mengekspor data ke Excel
     function exportToExcel() {
         const table = document.getElementById('exportTable');
         const wb = XLSX.utils.table_to_book(table, {sheet: "Data Rembesan"});
         XLSX.writeFile(wb, "data_rembesan_bendungan.xlsx");
     }
-
+    
     // Fungsi untuk mengekspor data ke PDF
     function exportToPDF() {
         const { jsPDF } = window.jspdf;
@@ -1128,14 +1456,63 @@ function processAdvancedImport(sqlContent) {
             doc.save('data_rembesan_bendungan.pdf');
         });
     }
-
+    
     // Event listener untuk tombol ekspor
-    document.getElementById('exportExcel').addEventListener('click', exportToExcel);
-    document.getElementById('exportPDF').addEventListener('click', exportToPDF);
-
+    const exportExcelBtn = document.getElementById('exportExcel');
+    const exportPDFBtn = document.getElementById('exportPDF');
+    
+    if (exportExcelBtn) {
+        exportExcelBtn.addEventListener('click', exportToExcel);
+    }
+    
+    if (exportPDFBtn) {
+        exportPDFBtn.addEventListener('click', exportToPDF);
+    }
+    
     // Mulai polling data
     pollData();
 });
+
+// ============ FUNGSI HAK AKSES ============
+
+// Fungsi untuk menampilkan modal peringatan hak akses
+function showAccessWarning(actionType, periode = null, bulan = null, tahun = null) {
+    let title = '';
+    let message = '';
+    
+    switch(actionType) {
+        case 'add':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penambahan data tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'edit':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur pengeditan data <strong>${periode} ${bulan} ${tahun}</strong> tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'delete':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penghapusan data <strong>${periode} ${bulan} ${tahun}</strong> tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'import':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur import database tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        default:
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur ini tidak dapat diakses dengan level pengguna saat ini.`;
+    }
+    
+    // Update judul dan pesan
+    warningTitle.textContent = title;
+    warningMessage.innerHTML = message;
+    
+    // Tampilkan modal
+    accessWarningModal.show();
+}
 
 // Fungsi polling yang lebih sederhana dan robust
 function startPolling() {

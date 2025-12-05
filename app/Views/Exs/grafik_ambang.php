@@ -115,7 +115,7 @@
 
         <!-- Button Group -->
         <div class="btn-group mb-3" role="group">
-            <a href="<?= base_url('extenso/ex1') ?>" class="btn btn-primary btn-ex">
+            <a href="<?= base_url('/extenso') ?>" class="btn btn-primary btn-ex">
                 <i class="fas fa-table"></i> Input Data
             </a>
             <a href="<?= base_url('extenso/grafik-ambang') ?>" class="btn btn-outline-warning">

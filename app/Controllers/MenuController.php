@@ -2,18 +2,31 @@
 
 namespace App\Controllers;
 
-use App\Models\Rembesan\DataGabunganModel;
-use App\Models\Rembesan\PerhitunganSRModel;
-use App\Models\Rembesan\PerhitunganBocoranModel;
-use App\Models\Rembesan\PerhitunganIntiGaleryModel;
-use App\Models\Rembesan\PerhitunganSpillwayModel;
-use App\Models\Rembesan\TebingKananModel;
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Controllers\BaseController;
 
 class MenuController extends BaseController
 {
     public function index()
     {
-        return view('menu');
+        $session = session();
+        
+        // Cek apakah user sudah login
+        if (!$session->get('isLoggedIn')) {
+            // HAPUS SEMUA DEBUG OUTPUT
+            return redirect()->to('/auth/login');
+        }
+        
+        // Data untuk view
+        $data = [
+            'title' => 'Menu Utama - Monitoring PLTA Saguling',
+            'username' => $session->get('username'),
+            'fullName' => $session->get('fullName'),
+            'role' => $session->get('role'),
+            'email' => $session->get('email'),
+            'isAdmin' => ($session->get('role') == 'admin') // Flag untuk UI
+        ];
+        
+        // Return view tanpa debug
+        return view('menu', $data);
     }
 }

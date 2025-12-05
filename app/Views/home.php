@@ -66,7 +66,7 @@
             <p class="lead">
               Efisiensi, keamanan, dan transparansi operasional pembangkit listrik tenaga air berbasis teknologi digital.
             </p>
-            <a href="/menu" class="btn btn-primary btn-cta">
+            <a href="/auth/login" class="btn btn-primary btn-cta">
               <i class="bi bi-box-arrow-in-right me-2"></i>Masuk Sistem
             </a>
           </div>
