@@ -26,9 +26,42 @@ class HDMController extends BaseController
     protected $depthElv625Model;
     protected $depthElv600Model;
 
+    // Helper untuk cek role admin
+    private function isAdmin()
+    {
+        $session = session();
+        return $session->get('role') == 'admin';
+    }
+    
+    // Helper untuk redirect jika bukan admin
+    private function requireAdmin()
+    {
+        $session = session();
+        if (!$this->isAdmin()) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Akses ditolak. Hanya admin yang dapat melakukan tindakan ini.'
+                ]);
+            }
+            session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat melakukan tindakan ini.');
+            return redirect()->to('horizontal-displacement');
+        }
+        return true;
+    }
+
     public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
+        
+        // Cek login di setiap aksi
+        $session = session();
+        if (!$session->get('isLoggedIn')) {
+            if ($this->request->isAJAX()) {
+                die(json_encode(['success' => false, 'message' => 'Silakan login terlebih dahulu']));
+            }
+            return redirect()->to('/auth/login');
+        }
         
         try {
             // Initialize models
@@ -48,6 +81,13 @@ class HDMController extends BaseController
 
     public function index()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+        
         // Get all data untuk filter dropdown dan tabel
         $pengukuran = $this->pengukuranModel->orderBy('tahun', 'DESC')
                                            ->orderBy('tanggal', 'DESC')
@@ -88,7 +128,11 @@ class HDMController extends BaseController
                 'HDM' => ''
             ],
             'pengukuran' => $pengukuran,
-            'dataWithReadings' => $dataWithReadings
+            'dataWithReadings' => $dataWithReadings,
+            // Tambahkan data user untuk view
+            'username' => $session->get('username'),
+            'role' => $session->get('role'),
+            'isAdmin' => $session->get('role') == 'admin'
         ];
 
         return view('hdm/index', $data);
@@ -99,6 +143,13 @@ class HDMController extends BaseController
      */
     public function dataLengkap()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+        
         // Get all data
         $pengukuran = $this->pengukuranModel->orderBy('tahun', 'DESC')
                                            ->orderBy('tanggal', 'DESC')
@@ -139,7 +190,11 @@ class HDMController extends BaseController
                 'HDM' => base_url('horizontal-displacement'),
                 'Data Lengkap' => ''
             ],
-            'dataLengkap' => $dataLengkap
+            'dataLengkap' => $dataLengkap,
+            // Tambahkan data user untuk view
+            'username' => $session->get('username'),
+            'role' => $session->get('role'),
+            'isAdmin' => $session->get('role') == 'admin'
         ];
 
         return view('hdm/data_lengkap', $data);
@@ -150,6 +205,13 @@ class HDMController extends BaseController
      */
     public function getData()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Silakan login terlebih dahulu']);
+        }
+
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
         }
@@ -187,7 +249,11 @@ class HDMController extends BaseController
 
             return $this->response->setJSON([
                 'success' => true,
-                'data' => $dataWithReadings
+                'data' => $dataWithReadings,
+                'user' => [
+                    'role' => $session->get('role'),
+                    'isAdmin' => $session->get('role') == 'admin'
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -203,6 +269,13 @@ class HDMController extends BaseController
      */
     public function detail($id)
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Silakan login terlebih dahulu']);
+        }
+
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
         }
@@ -255,6 +328,13 @@ class HDMController extends BaseController
      */
     public function exportExcel()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+
         try {
             $pengukuran = $this->pengukuranModel->orderBy('tahun', 'DESC')
                                                ->orderBy('tanggal', 'DESC')
@@ -415,6 +495,19 @@ class HDMController extends BaseController
      */
     public function create()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat menambah data.');
+            return redirect()->to('horizontal-displacement');
+        }
+
         $data = [
             'title' => 'Tambah Data HDM - PT Indonesia Power',
             'pageTitle' => 'Tambah Data Horizontal Displacement Meter',
@@ -422,7 +515,11 @@ class HDMController extends BaseController
                 'Dashboard' => base_url(),
                 'HDM' => base_url('horizontal-displacement'),
                 'Tambah Data' => ''
-            ]
+            ],
+            // Tambahkan data user untuk view
+            'username' => $session->get('username'),
+            'role' => $session->get('role'),
+            'isAdmin' => $this->isAdmin()
         ];
 
         return view('hdm/create', $data);
@@ -433,6 +530,24 @@ class HDMController extends BaseController
      */
     public function store()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat menambah data.'
+            ])->setStatusCode(403);
+        }
+
         try {
             $postData = $this->request->getPost();
 
@@ -526,6 +641,16 @@ class HDMController extends BaseController
      */
     public function checkDuplicate()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+
         try {
             $tahun = $this->request->getPost('tahun');
             $periode = $this->request->getPost('periode');
@@ -592,6 +717,19 @@ class HDMController extends BaseController
      */
     public function edit($id)
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat mengedit data.');
+            return redirect()->to('horizontal-displacement');
+        }
+
         try {
             // Ambil data pengukuran
             $pengukuran = $this->pengukuranModel->find($id);
@@ -613,7 +751,11 @@ class HDMController extends BaseController
                 ],
                 'pengukuran' => $pengukuran,
                 'pembacaanElv600' => $pembacaanElv600 ?: [],
-                'pembacaanElv625' => $pembacaanElv625 ?: []
+                'pembacaanElv625' => $pembacaanElv625 ?: [],
+                // Tambahkan data user untuk view
+                'username' => $session->get('username'),
+                'role' => $session->get('role'),
+                'isAdmin' => $this->isAdmin()
             ];
 
             return view('hdm/edit', $data);
@@ -628,6 +770,24 @@ class HDMController extends BaseController
      */
     public function update($id)
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat memperbarui data.'
+            ])->setStatusCode(403);
+        }
+
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
         }
@@ -766,6 +926,24 @@ class HDMController extends BaseController
      */
     public function delete($id)
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat menghapus data.'
+            ])->setStatusCode(403);
+        }
+
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
         }
@@ -794,247 +972,266 @@ class HDMController extends BaseController
             ]);
         }
     }
-/**
- * IMPORT SQL - VERSI KONVERSI SQLITE TO MYSQL
- */
-public function importSQL()
-{
-    log_message('info', '[IMPORT SQL] === START IMPORT PROCESS ===');
-    log_message('info', '[IMPORT SQL] Request Method: ' . $this->request->getMethod());
-    log_message('info', '[IMPORT SQL] Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
 
-    if (!$this->request->isAJAX()) {
-        return $this->response->setStatusCode(405)->setJSON([
-            'success' => false, 
-            'message' => 'Hanya AJAX request yang diizinkan.'
-        ]);
-    }
-
-    try {
-        if (empty($_FILES)) {
+    /**
+     * IMPORT SQL - VERSI KONVERSI SQLITE TO MYSQL
+     */
+    public function importSQL()
+    {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Tidak ada file yang diupload.'
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat mengimport data SQL.'
+            ])->setStatusCode(403);
+        }
+
+        log_message('info', '[IMPORT SQL] === START IMPORT PROCESS ===');
+        log_message('info', '[IMPORT SQL] Request Method: ' . $this->request->getMethod());
+        log_message('info', '[IMPORT SQL] Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
+
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(405)->setJSON([
+                'success' => false, 
+                'message' => 'Hanya AJAX request yang diizinkan.'
             ]);
         }
 
-        $sqlFile = $this->request->getFile('sql_file');
-        if (!$sqlFile || !$sqlFile->isValid()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'File upload gagal: ' . ($sqlFile ? $sqlFile->getErrorString() : 'File tidak ditemukan')
-            ]);
-        }
-
-        // Validasi file
-        $originalName = $sqlFile->getClientName();
-        if (!str_ends_with(strtolower($originalName), '.sql')) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'File harus berekstensi .sql'
-            ]);
-        }
-
-        // Baca file SQL
-        $sqlContent = file_get_contents($sqlFile->getTempName());
-        if (empty($sqlContent)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'File SQL kosong'
-            ]);
-        }
-
-        log_message('info', '[IMPORT SQL] Original SQL content length: ' . strlen($sqlContent));
-
-        // ===== KONVERSI SQLITE → MYSQL =====
-        $mysqlContent = $this->convertSQLiteToMySQL($sqlContent);
-        log_message('info', '[IMPORT SQL] Converted to MySQL syntax');
-
-        $queries = $this->splitSQLQueries($mysqlContent);
-        log_message('info', "[IMPORT SQL] Total queries after conversion: " . count($queries));
-
-        if (empty($queries)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Tidak ada query SQL valid setelah konversi.'
-            ]);
-        }
-
-        // Eksekusi queries
-        $db = \Config\Database::connect('hdm');
-        $stats = [
-            'total' => count($queries), 
-            'success' => 0, 
-            'failed' => 0, 
-            'affected_rows' => 0,
-            'errors' => []
-        ];
-
-        $db->transStart();
-        $db->query('SET FOREIGN_KEY_CHECKS=0');
-
-        foreach ($queries as $index => $query) {
-            $trimmedQuery = trim($query);
-            if (empty($trimmedQuery)) continue;
-
-            // Skip commands yang tidak perlu
-            if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER)/i', $trimmedQuery)) {
-                continue;
+        try {
+            if (empty($_FILES)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Tidak ada file yang diupload.'
+                ]);
             }
 
-            try {
-                $result = $db->query($trimmedQuery);
-                if ($result !== false) {
-                    $stats['success']++;
-                    if (preg_match('/^(INSERT|UPDATE|DELETE|REPLACE)/i', $trimmedQuery)) {
-                        $stats['affected_rows'] += $db->affectedRows();
+            $sqlFile = $this->request->getFile('sql_file');
+            if (!$sqlFile || !$sqlFile->isValid()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'File upload gagal: ' . ($sqlFile ? $sqlFile->getErrorString() : 'File tidak ditemukan')
+                ]);
+            }
+
+            // Validasi file
+            $originalName = $sqlFile->getClientName();
+            if (!str_ends_with(strtolower($originalName), '.sql')) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'File harus berekstensi .sql'
+                ]);
+            }
+
+            // Baca file SQL
+            $sqlContent = file_get_contents($sqlFile->getTempName());
+            if (empty($sqlContent)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'File SQL kosong'
+                ]);
+            }
+
+            log_message('info', '[IMPORT SQL] Original SQL content length: ' . strlen($sqlContent));
+
+            // ===== KONVERSI SQLITE → MYSQL =====
+            $mysqlContent = $this->convertSQLiteToMySQL($sqlContent);
+            log_message('info', '[IMPORT SQL] Converted to MySQL syntax');
+
+            $queries = $this->splitSQLQueries($mysqlContent);
+            log_message('info', "[IMPORT SQL] Total queries after conversion: " . count($queries));
+
+            if (empty($queries)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Tidak ada query SQL valid setelah konversi.'
+                ]);
+            }
+
+            // Eksekusi queries
+            $db = \Config\Database::connect('hdm');
+            $stats = [
+                'total' => count($queries), 
+                'success' => 0, 
+                'failed' => 0, 
+                'affected_rows' => 0,
+                'errors' => []
+            ];
+
+            $db->transStart();
+            $db->query('SET FOREIGN_KEY_CHECKS=0');
+
+            foreach ($queries as $index => $query) {
+                $trimmedQuery = trim($query);
+                if (empty($trimmedQuery)) continue;
+
+                // Skip commands yang tidak perlu
+                if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER)/i', $trimmedQuery)) {
+                    continue;
+                }
+
+                try {
+                    $result = $db->query($trimmedQuery);
+                    if ($result !== false) {
+                        $stats['success']++;
+                        if (preg_match('/^(INSERT|UPDATE|DELETE|REPLACE)/i', $trimmedQuery)) {
+                            $stats['affected_rows'] += $db->affectedRows();
+                        }
+                        log_message('debug', "[IMPORT SQL] ✅ Query #" . ($index + 1) . " success");
+                    } else {
+                        $stats['failed']++;
+                        $error = $db->error();
+                        $stats['errors'][] = [
+                            'query' => $index + 1,
+                            'error' => $error['message'] ?? 'Unknown error',
+                            'sql' => substr($trimmedQuery, 0, 100) . '...'
+                        ];
+                        log_message('error', "[IMPORT SQL] ❌ Query #" . ($index + 1) . " failed: " . ($error['message'] ?? 'Unknown'));
                     }
-                    log_message('debug', "[IMPORT SQL] ✅ Query #" . ($index + 1) . " success");
-                } else {
+                } catch (\Exception $e) {
                     $stats['failed']++;
-                    $error = $db->error();
                     $stats['errors'][] = [
                         'query' => $index + 1,
-                        'error' => $error['message'] ?? 'Unknown error',
+                        'error' => $e->getMessage(),
                         'sql' => substr($trimmedQuery, 0, 100) . '...'
                     ];
-                    log_message('error', "[IMPORT SQL] ❌ Query #" . ($index + 1) . " failed: " . ($error['message'] ?? 'Unknown'));
+                    log_message('error', "[IMPORT SQL] ❌ Query #" . ($index + 1) . " exception: " . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                $stats['failed']++;
-                $stats['errors'][] = [
-                    'query' => $index + 1,
-                    'error' => $e->getMessage(),
-                    'sql' => substr($trimmedQuery, 0, 100) . '...'
-                ];
-                log_message('error', "[IMPORT SQL] ❌ Query #" . ($index + 1) . " exception: " . $e->getMessage());
+            }
+
+            $db->transComplete();
+            $db->query('SET FOREIGN_KEY_CHECKS=1');
+
+            $success = $stats['failed'] === 0;
+            
+            log_message('info', "[IMPORT SQL] Import completed. Success: {$stats['success']}, Failed: {$stats['failed']}");
+
+            $response = [
+                'success' => $success,
+                'message' => "Import selesai. Total: {$stats['total']}, Berhasil: {$stats['success']}, Gagal: {$stats['failed']}, Affected Rows: {$stats['affected_rows']}",
+                'stats' => $stats
+            ];
+
+            if (!$success && !empty($stats['errors'])) {
+                $response['error_details'] = "Beberapa query gagal:\n" . 
+                    implode("\n", array_map(function($error) {
+                        return "Query #{$error['query']}: {$error['error']}";
+                    }, $stats['errors']));
+            }
+
+            return $this->response->setJSON($response);
+
+        } catch (\Exception $e) {
+            log_message('error', '[IMPORT SQL] System Error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Konversi SQLite syntax ke MySQL syntax
+     */
+    private function convertSQLiteToMySQL($sqlContent)
+    {
+        // 1. Hapus komentar
+        $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
+        
+        // 2. Konversi INSERT OR REPLACE → REPLACE INTO (MySQL equivalent)
+        $sqlContent = preg_replace('/INSERT OR REPLACE INTO/i', 'REPLACE INTO', $sqlContent);
+        
+        // 3. Konversi datetime('now') → NOW() (MySQL equivalent)
+        $sqlContent = preg_replace("/datetime\('now'\)/i", 'NOW()', $sqlContent);
+        
+        // 4. Konversi table names jika diperlukan (sesuaikan dengan schema MySQL Anda)
+        $tableMappings = [
+            't_pengukuran_hdm' => 't_pengukuran_hdm',
+            't_pembacaan_hdm_elv625' => 't_pembacaan_hdm_elv625', 
+            't_pembacaan_hdm_elv600' => 't_pembacaan_hdm_elv600',
+            't_depth_elv625' => 't_depth_elv625',
+            't_depth_elv600' => 't_depth_elv600',
+            'm_initial_reading_elv_625' => 'm_initial_reading_elv_625',
+            'm_initial_reading_elv_600' => 'm_initial_reading_elv_600',
+            't_pergerakan_elv625' => 't_pergerakan_elv625',
+            't_pergerakan_elv600' => 't_pergerakan_elv600'
+        ];
+        
+        foreach ($tableMappings as $sqliteTable => $mysqlTable) {
+            if ($sqliteTable !== $mysqlTable) {
+                $sqlContent = str_ireplace($sqliteTable, $mysqlTable, $sqlContent);
             }
         }
-
-        $db->transComplete();
-        $db->query('SET FOREIGN_KEY_CHECKS=1');
-
-        $success = $stats['failed'] === 0;
         
-        log_message('info', "[IMPORT SQL] Import completed. Success: {$stats['success']}, Failed: {$stats['failed']}");
-
-        $response = [
-            'success' => $success,
-            'message' => "Import selesai. Total: {$stats['total']}, Berhasil: {$stats['success']}, Gagal: {$stats['failed']}, Affected Rows: {$stats['affected_rows']}",
-            'stats' => $stats
-        ];
-
-        if (!$success && !empty($stats['errors'])) {
-            $response['error_details'] = "Beberapa query gagal:\n" . 
-                implode("\n", array_map(function($error) {
-                    return "Query #{$error['query']}: {$error['error']}";
-                }, $stats['errors']));
-        }
-
-        return $this->response->setJSON($response);
-
-    } catch (\Exception $e) {
-        log_message('error', '[IMPORT SQL] System Error: ' . $e->getMessage());
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
-        ]);
+        // 5. Hapus AUTOINCREMENT jika ada (MySQL menggunakan AUTO_INCREMENT)
+        $sqlContent = preg_replace('/AUTOINCREMENT/i', 'AUTO_INCREMENT', $sqlContent);
+        
+        log_message('info', '[IMPORT SQL] SQLite to MySQL conversion completed');
+        
+        return $sqlContent;
     }
-}
 
-/**
- * Konversi SQLite syntax ke MySQL syntax
- */
-private function convertSQLiteToMySQL($sqlContent)
-{
-    // 1. Hapus komentar
-    $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
-    
-    // 2. Konversi INSERT OR REPLACE → REPLACE INTO (MySQL equivalent)
-    $sqlContent = preg_replace('/INSERT OR REPLACE INTO/i', 'REPLACE INTO', $sqlContent);
-    
-    // 3. Konversi datetime('now') → NOW() (MySQL equivalent)
-    $sqlContent = preg_replace("/datetime\('now'\)/i", 'NOW()', $sqlContent);
-    
-    // 4. Konversi table names jika diperlukan (sesuaikan dengan schema MySQL Anda)
-    $tableMappings = [
-        't_pengukuran_hdm' => 't_pengukuran_hdm',
-        't_pembacaan_hdm_elv625' => 't_pembacaan_hdm_elv625', 
-        't_pembacaan_hdm_elv600' => 't_pembacaan_hdm_elv600',
-        't_depth_elv625' => 't_depth_elv625',
-        't_depth_elv600' => 't_depth_elv600',
-        'm_initial_reading_elv_625' => 'm_initial_reading_elv_625',
-        'm_initial_reading_elv_600' => 'm_initial_reading_elv_600',
-        't_pergerakan_elv625' => 't_pergerakan_elv625',
-        't_pergerakan_elv600' => 't_pergerakan_elv600'
-    ];
-    
-    foreach ($tableMappings as $sqliteTable => $mysqlTable) {
-        if ($sqliteTable !== $mysqlTable) {
-            $sqlContent = str_ireplace($sqliteTable, $mysqlTable, $sqlContent);
-        }
-    }
-    
-    // 5. Hapus AUTOINCREMENT jika ada (MySQL menggunakan AUTO_INCREMENT)
-    $sqlContent = preg_replace('/AUTOINCREMENT/i', 'AUTO_INCREMENT', $sqlContent);
-    
-    log_message('info', '[IMPORT SQL] SQLite to MySQL conversion completed');
-    
-    return $sqlContent;
-}
-
-/**
- * Split SQL queries (tetap gunakan yang sebelumnya)
- */
-private function splitSQLQueries($sqlContent)
-{
-    // Normalize line endings
-    $sqlContent = str_replace(["\r\n", "\r"], "\n", $sqlContent);
-    
-    // Remove comments
-    $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
-    $sqlContent = preg_replace('/#.*$/m', '', $sqlContent);
-    $sqlContent = preg_replace('/\/\*.*?\*\//s', '', $sqlContent);
-    
-    // Split by semicolon
-    $tempQueries = [];
-    $currentQuery = '';
-    $inString = false;
-    $stringChar = '';
-    
-    for ($i = 0; $i < strlen($sqlContent); $i++) {
-        $char = $sqlContent[$i];
+    /**
+     * Split SQL queries (tetap gunakan yang sebelumnya)
+     */
+    private function splitSQLQueries($sqlContent)
+    {
+        // Normalize line endings
+        $sqlContent = str_replace(["\r\n", "\r"], "\n", $sqlContent);
         
-        if (($char === "'" || $char === '"') && !$inString) {
-            $inString = true;
-            $stringChar = $char;
-        } elseif ($char === $stringChar && $inString) {
-            $inString = false;
-            $stringChar = '';
+        // Remove comments
+        $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
+        $sqlContent = preg_replace('/#.*$/m', '', $sqlContent);
+        $sqlContent = preg_replace('/\/\*.*?\*\//s', '', $sqlContent);
+        
+        // Split by semicolon
+        $tempQueries = [];
+        $currentQuery = '';
+        $inString = false;
+        $stringChar = '';
+        
+        for ($i = 0; $i < strlen($sqlContent); $i++) {
+            $char = $sqlContent[$i];
+            
+            if (($char === "'" || $char === '"') && !$inString) {
+                $inString = true;
+                $stringChar = $char;
+            } elseif ($char === $stringChar && $inString) {
+                $inString = false;
+                $stringChar = '';
+            }
+            
+            if ($char === ';' && !$inString) {
+                $tempQueries[] = trim($currentQuery);
+                $currentQuery = '';
+            } else {
+                $currentQuery .= $char;
+            }
         }
         
-        if ($char === ';' && !$inString) {
+        // Add last query
+        if (!empty(trim($currentQuery))) {
             $tempQueries[] = trim($currentQuery);
-            $currentQuery = '';
-        } else {
-            $currentQuery .= $char;
         }
-    }
-    
-    // Add last query
-    if (!empty(trim($currentQuery))) {
-        $tempQueries[] = trim($currentQuery);
-    }
-    
-    // Clean queries
-    $queries = [];
-    foreach ($tempQueries as $query) {
-        $trimmedQuery = trim($query);
-        if (!empty($trimmedQuery) && strlen($trimmedQuery) > 10) {
-            $queries[] = $trimmedQuery;
+        
+        // Clean queries
+        $queries = [];
+        foreach ($tempQueries as $query) {
+            $trimmedQuery = trim($query);
+            if (!empty($trimmedQuery) && strlen($trimmedQuery) > 10) {
+                $queries[] = $trimmedQuery;
+            }
         }
+        
+        return $queries;
     }
-    
-    return $queries;
-}
 }

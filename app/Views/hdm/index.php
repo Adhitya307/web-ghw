@@ -62,9 +62,188 @@
             transform: translateY(-1px);
         }
         
+        .btn-disabled {
+            color: #6c757d;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+        
+        .btn-disabled:hover {
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+            transform: translateY(0);
+        }
+        
         .tooltip-inner {
             font-size: 12px;
             padding: 4px 8px;
+        }
+        
+        /* Modal peringatan hak akses - MODERN & FORMAL */
+        .modal-access .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        .modal-access .modal-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #2c3e50;
+            border-bottom: 1px solid #dee2e6;
+            padding: 20px 30px;
+            position: relative;
+        }
+        
+        .modal-access .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db 0%, #2c3e50 100%);
+        }
+        
+        .modal-access .modal-header .btn-close {
+            color: #6c757d;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .modal-access .modal-header .btn-close:hover {
+            opacity: 1;
+        }
+        
+        .modal-access .modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .modal-access .access-icon-container {
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .access-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        
+        .modal-access .access-icon i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        .modal-access .access-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .modal-access .access-message {
+            color: #5d6d7e;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .user-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .modal-access .user-role-badge i {
+            color: #3498db;
+        }
+        
+        .modal-access .access-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid #3498db;
+        }
+        
+        .modal-access .access-details h6 {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .modal-access .access-details ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        
+        .modal-access .access-details li {
+            padding: 6px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            color: #5d6d7e;
+        }
+        
+        .modal-access .access-details li i {
+            color: #27ae60;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .modal-access .access-note {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .modal-access .access-note i {
+            color: #e74c3c;
+            margin-right: 5px;
+        }
+        
+        .modal-access .modal-footer {
+            border-top: 1px solid #dee2e6;
+            padding: 20px 30px;
+            background: #f8f9fa;
+        }
+        
+        .modal-access .btn-understand {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        
+        .modal-access .btn-understand:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
         }
         
         /* Styling untuk tabel HDM */
@@ -219,12 +398,58 @@
         .bg-secondary { background-color: #6c757d !important; }
         .bg-primary { background-color: #0d6efd !important; }
         .bg-danger { background-color: #dc3545 !important; }
+
+        /* User info */
+        .user-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #0d6efd;
+        }
+        
+        .badge-admin {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .badge-user {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
     </style>
 </head>
 <body>
+<?php
+// Cek session dan role
+$session = session();
+$isLoggedIn = $session->get('isLoggedIn');
+$role = $session->get('role');
+$isAdmin = $role == 'admin';
+$username = $session->get('username');
+$fullName = $session->get('fullName');
+?>
+
 <?= $this->include('layouts/header'); ?>
 
 <div class="container-fluid py-4">
+    <!-- User Info -->
+    <div class="user-info mb-3 p-3 rounded">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-user-circle me-2"></i>
+                <strong><?= esc($fullName ?? $username) ?></strong>
+                <span class="badge <?= $isAdmin ? 'badge-admin' : 'badge-user' ?> ms-2">
+                    <?= $isAdmin ? 'Administrator' : 'User' ?>
+                </span>
+                <small class="text-muted d-block mt-1">
+                    <i class="fas fa-id-card me-1"></i>Username: <?= esc($username) ?>
+                </small>
+            </div>
+            <div>
+                <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    <?= date('d F Y H:i:s') ?>
+                </small>
+            </div>
+        </div>
+    </div>
+
     <!-- Table Header Section -->
     <div class="table-header">
         <h2 class="table-title">
@@ -245,16 +470,36 @@
                 <i class="fas fa-arrow-right-arrow-left"></i> HDM 600
             </a>
             
-            <button type="button" class="btn btn-outline-primary" id="addData">
-                <i class="fas fa-plus me-1"></i> Add Data
-            </button>
+            <?php if ($isAdmin): ?>
+                <!-- Tombol untuk Admin -->
+                <button type="button" class="btn btn-outline-primary" id="addData">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </button>
+                
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="fas fa-database"></i> Import SQL
+                </button>
+            <?php else: ?>
+                <!-- Tombol untuk User Biasa dengan modal peringatan -->
+                <button type="button" class="btn btn-outline-primary btn-disabled" 
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="top" 
+                        title="Klik untuk melihat informasi hak akses"
+                       onclick="showAccessWarning('add')">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </button>
+                
+                <button type="button" class="btn btn-outline-info btn-disabled"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="top"
+                       title="Klik untuk melihat informasi hak akses"
+                       onclick="showAccessWarning('import')">
+                    <i class="fas fa-database"></i> Import SQL
+                </button>
+            <?php endif; ?>
             
             <button type="button" class="btn btn-outline-success" id="exportExcel">
                 <i class="fas fa-file-excel me-1"></i> Export Excel
-            </button>
-
-            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i class="fas fa-database"></i> Import SQL
             </button>
         </div>
 
@@ -266,7 +511,8 @@
         </div>
     </div>
 
-    <!-- Modal Import SQL -->
+    <!-- Modal Import SQL (Hanya untuk Admin) -->
+    <?php if ($isAdmin): ?>
     <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -297,6 +543,61 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-primary" id="btnImportSQL">
                         <i class="fas fa-upload me-1"></i> Import
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Modal Peringatan Hak Akses Modern & Formal -->
+    <div class="modal fade modal-access" id="accessWarningModal" tabindex="-1" aria-labelledby="accessWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accessWarningModalLabel">
+                        <i class="fas fa-shield-alt me-2"></i>Pengaturan Akses
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="access-icon-container">
+                        <div class="access-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                    
+                    <h3 class="access-title" id="warningTitle">
+                        <!-- Judul akan diisi oleh JavaScript -->
+                    </h3>
+                    
+                    <p class="access-message" id="warningMessage">
+                        <!-- Pesan akan diisi oleh JavaScript -->
+                    </p>
+                    
+                    <div class="user-role-badge">
+                        <i class="fas fa-user-tag"></i>
+                        <span>Level Akses: <strong><?= $isAdmin ? 'Administrator' : 'Pengguna Biasa' ?></strong></span>
+                    </div>
+                    
+                    <div class="access-details">
+                        <h6>Hak Akses yang Tersedia:</h6>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Melihat dan menelusuri data HDM</li>
+                            <li><i class="fas fa-check"></i> Mencari dan memfilter informasi</li>
+                            <li><i class="fas fa-check"></i> Mengekspor data ke format Excel</li>
+                            <li><i class="fas fa-check"></i> Mengakses data lengkap HDM</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="access-note">
+                        <i class="fas fa-info-circle"></i>
+                        Untuk meminta akses tambahan, silakan hubungi Administrator sistem.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
+                        <i class="fas fa-check me-1"></i> Mengerti
                     </button>
                 </div>
             </div>
@@ -507,14 +808,64 @@
     </div>
 </div>
 
-<!-- Scroll Indicator -->
-<div class="scroll-indicator" id="scrollIndicator">
-    <i class="fas fa-arrows-alt-h me-1"></i>
-    <span id="scrollText">Scroll untuk melihat lebih banyak data</span>
-</div>
-
-<!-- Include Modal Hapus HDM -->
+<!-- Modal Hapus HDM (Hanya untuk Admin) -->
+<?php if ($isAdmin): ?>
 <?= $this->include('hdm/modal_hapus') ?>
+<?php endif; ?>
+
+<!-- Modal Peringatan Hak Akses -->
+<div class="modal fade modal-access" id="accessWarningModal" tabindex="-1" aria-labelledby="accessWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="accessWarningModalLabel">
+                    <i class="fas fa-shield-alt me-2"></i>Pengaturan Akses
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="access-icon-container">
+                    <div class="access-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+                
+                <h3 class="access-title" id="warningTitle">
+                    <!-- Judul akan diisi oleh JavaScript -->
+                </h3>
+                
+                <p class="access-message" id="warningMessage">
+                    <!-- Pesan akan diisi oleh JavaScript -->
+                </p>
+                
+                <div class="user-role-badge">
+                    <i class="fas fa-user-tag"></i>
+                    <span>Level Akses: <strong><?= $isAdmin ? 'Administrator' : 'Pengguna Biasa' ?></strong></span>
+                </div>
+                
+                <div class="access-details">
+                    <h6>Hak Akses yang Tersedia:</h6>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Melihat dan menelusuri data HDM</li>
+                        <li><i class="fas fa-check"></i> Mencari dan memfilter informasi</li>
+                        <li><i class="fas fa-check"></i> Mengekspor data ke format Excel</li>
+                        <li><i class="fas fa-check"></i> Mengakses data lengkap HDM</li>
+                    </ul>
+                </div>
+                
+                <div class="access-note">
+                    <i class="fas fa-info-circle"></i>
+                    Untuk meminta akses tambahan, silakan hubungi Administrator sistem.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
+                    <i class="fas fa-check me-1"></i> Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?= $this->include('layouts/footer'); ?>
 
@@ -531,6 +882,12 @@ let allData = <?= json_encode($dataWithReadings ?? []) ?>;
 let currentPage = 1;
 let pageSize = 10;
 let filteredData = [];
+let isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
+
+// Variabel global untuk modal hak akses
+const accessWarningModal = new bootstrap.Modal(document.getElementById('accessWarningModal'));
+const warningTitle = document.getElementById('warningTitle');
+const warningMessage = document.getElementById('warningMessage');
 
 // Fungsi untuk mengurutkan data berdasarkan tanggal (terlama ke terbaru)
 function sortDataByDate(data) {
@@ -579,6 +936,46 @@ function formatNumericValue(value) {
     return value;
 }
 
+// ============ FUNGSI HAK AKSES ============
+
+// Fungsi untuk menampilkan modal peringatan hak akses
+function showAccessWarning(actionType, tahun = null, periode = null, tanggal = null) {
+    let title = '';
+    let message = '';
+    
+    switch(actionType) {
+        case 'add':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penambahan data tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'edit':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur pengeditan data tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'delete':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penghapusan data tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'import':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur import database tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        default:
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur ini tidak dapat diakses dengan level pengguna saat ini.`;
+    }
+    
+    // Update judul dan pesan
+    warningTitle.textContent = title;
+    warningMessage.innerHTML = message;
+    
+    // Tampilkan modal
+    accessWarningModal.show();
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     // Inisialisasi tooltip
@@ -740,16 +1137,35 @@ function renderTableBody(data) {
 
                     <td class="action-cell">
                         <div class="d-flex justify-content-center">
-                            <button type="button" class="btn-action btn-edit edit-data" 
-                                   data-id="${pid}" data-bs-toggle="tooltip" 
-                                   data-bs-placement="top" title="Edit Data">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button type="button" class="btn-action btn-delete delete-data" 
-                                    data-id="${pid}" data-bs-toggle="tooltip" 
-                                    data-bs-placement="top" title="Hapus Data">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <?php if ($isAdmin): ?>
+                                <!-- Tombol untuk Admin -->
+                                <button type="button" class="btn-action btn-edit edit-data" 
+                                       data-id="${pid}" data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" title="Edit Data">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-delete delete-data" 
+                                        data-id="${pid}" data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" title="Hapus Data">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            <?php else: ?>
+                                <!-- Tombol untuk User Biasa dengan modal peringatan -->
+                                <button type="button" class="btn-action btn-disabled" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" 
+                                        title="Klik untuk melihat informasi hak akses"
+                                       onclick="showAccessWarning('edit', '${tahun}', '${periode}', '${displayDate}')">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-disabled"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Klik untuk melihat informasi hak akses"
+                                       onclick="showAccessWarning('delete', '${tahun}', '${periode}', '${displayDate}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>
@@ -958,18 +1374,20 @@ function renderTableBody(data) {
             });
         });
         
-        // Delete Data
-        document.querySelectorAll('.delete-data').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                // Trigger click event yang akan ditangkap oleh modal_hapus.php
-                this.dispatchEvent(new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: window
-                }));
+        // Delete Data - hanya untuk admin
+        if (isAdmin) {
+            document.querySelectorAll('.delete-data').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    // Trigger click event yang akan ditangkap oleh modal_hapus.php
+                    this.dispatchEvent(new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    }));
+                });
             });
-        });
+        }
         
         // Re-initialize tooltips
         const newTooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -979,382 +1397,390 @@ function renderTableBody(data) {
     }
     
     // ============ EXPORT EXCEL FUNCTIONALITY ============
-document.getElementById('exportExcel').addEventListener('click', function() {
-    // Show loading
-    const originalText = this.innerHTML;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
-    this.disabled = true;
+    document.getElementById('exportExcel').addEventListener('click', function() {
+        // Show loading
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
+        this.disabled = true;
 
-    setTimeout(() => {
-        try {
-            // Buat workbook baru
-            const wb = XLSX.utils.book_new();
-            
-            // Data untuk worksheet
-            const wsData = [];
-            
-            // ===== HEADER ROWS =====
-            // Row 1: Main Headers (TANPA AKSI)
-            const header1 = [
-                'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
-                // PEMBACAAN HDM - ELV 625 & ELV 600
-                ...Array(8).fill('PEMBACAAN HDM'),
-                // DEPTH (S) - ELV 625 & ELV 600
-                ...Array(8).fill('DEPTH (S)'),
-                // READINGS (S) - ELV 625 & ELV 600
-                ...Array(8).fill('READINGS (S)'),
-                // PERGERAKAN (CM) - ELV 625 & ELV 600
-                ...Array(8).fill('PERGERAKAN (CM)')
-                // AKSI DIHAPUS DARI EXPORT
-            ];
-            wsData.push(header1);
-            
-            // Row 2: Sub Headers (TANPA AKSI)
-            const header2 = [
-                '', '', '', '',
-                // PEMBACAAN HDM
-                ...Array(3).fill('ELV.625'),
-                ...Array(5).fill('ELV.600'),
-                // DEPTH (S)
-                ...Array(3).fill('ELV.625'),
-                ...Array(5).fill('ELV.600'),
-                // READINGS (S)
-                ...Array(3).fill('ELV.625'),
-                ...Array(5).fill('ELV.600'),
-                // PERGERAKAN (CM)
-                ...Array(3).fill('ELV.625'),
-                ...Array(5).fill('ELV.600')
-                // AKSI DIHAPUS DARI EXPORT
-            ];
-            wsData.push(header2);
-            
-            // Row 3: Measurement Headers (TANPA AKSI)
-            const header3 = [
-                'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
-                // PEMBACAAN HDM - ELV 625
-                'HV-1', 'HV-2', 'HV-3',
-                // PEMBACAAN HDM - ELV 600
-                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
-                // DEPTH (S) - ELV 625
-                'HV-1', 'HV-2', 'HV-3',
-                // DEPTH (S) - ELV 600
-                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
-                // READINGS (S) - ELV 625
-                'HV-1', 'HV-2', 'HV-3',
-                // READINGS (S) - ELV 600
-                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
-                // PERGERAKAN (CM) - ELV 625
-                'HV-1', 'HV-2', 'HV-3',
-                // PERGERAKAN (CM) - ELV 600
-                'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5'
-                // AKSI DIHAPUS DARI EXPORT
-            ];
-            wsData.push(header3);
-            
-            // ===== DATA ROWS =====
-            filteredData.forEach(item => {
-                const p = item.pengukuran || {};
-                const pembacaanElv600 = item.pembacaan_elv600 || {};
-                const pembacaanElv625 = item.pembacaan_elv625 || {};
-                const depthElv600 = item.depth_elv600 || {};
-                const depthElv625 = item.depth_elv625 || {};
-                const initialReadingElv600 = item.initial_reading_elv600 || {};
-                const initialReadingElv625 = item.initial_reading_elv625 || {};
-                const pergerakanElv600 = item.pergerakan_elv600 || {};
-                const pergerakanElv625 = item.pergerakan_elv625 || {};
+        setTimeout(() => {
+            try {
+                // Buat workbook baru
+                const wb = XLSX.utils.book_new();
                 
-                // Format tanggal untuk Excel (DD/MM/YYYY)
-                const excelDate = p.tanggal ? formatDateForExport(p.tanggal) : '-';
+                // Data untuk worksheet
+                const wsData = [];
                 
-                // Format nilai numerik - pastikan sebagai string dengan format yang benar
-                const formatNumber = (value) => {
-                    if (value === null || value === undefined || value === '' || value === '-') {
-                        return '-';
-                    }
-                    
-                    // Konversi ke number dulu
-                    const numValue = typeof value === 'number' ? value : parseFloat(value);
-                    
-                    // Jika bukan number, return as is
-                    if (isNaN(numValue)) return value;
-                    
-                    // Format dengan 2 digit desimal dan konversi ke string
-                    return numValue.toFixed(2);
-                };
-
-                const row = [
-                    // Basic Info
-                    p.tahun || '-',
-                    p.periode || '-',
-                    excelDate,
-                    formatNumber(p.dma),
-                    
-                    // PEMBACAAN HDM - ELV 625
-                    formatNumber(pembacaanElv625.hv_1),
-                    formatNumber(pembacaanElv625.hv_2),
-                    formatNumber(pembacaanElv625.hv_3),
-                    
-                    // PEMBACAAN HDM - ELV 600
-                    formatNumber(pembacaanElv600.hv_1),
-                    formatNumber(pembacaanElv600.hv_2),
-                    formatNumber(pembacaanElv600.hv_3),
-                    formatNumber(pembacaanElv600.hv_4),
-                    formatNumber(pembacaanElv600.hv_5),
-                    
-                    // DEPTH (S) - ELV 625
-                    formatNumber(depthElv625.hv_1),
-                    formatNumber(depthElv625.hv_2),
-                    formatNumber(depthElv625.hv_3),
-                    
-                    // DEPTH (S) - ELV 600
-                    formatNumber(depthElv600.hv_1),
-                    formatNumber(depthElv600.hv_2),
-                    formatNumber(depthElv600.hv_3),
-                    formatNumber(depthElv600.hv_4),
-                    formatNumber(depthElv600.hv_5),
-                    
-                    // READINGS (S) - ELV 625
-                    formatNumber(initialReadingElv625.hv_1),
-                    formatNumber(initialReadingElv625.hv_2),
-                    formatNumber(initialReadingElv625.hv_3),
-                    
-                    // READINGS (S) - ELV 600
-                    formatNumber(initialReadingElv600.hv_1),
-                    formatNumber(initialReadingElv600.hv_2),
-                    formatNumber(initialReadingElv600.hv_3),
-                    formatNumber(initialReadingElv600.hv_4),
-                    formatNumber(initialReadingElv600.hv_5),
-                    
-                    // PERGERAKAN (CM) - ELV 625
-                    formatNumber(pergerakanElv625.hv_1),
-                    formatNumber(pergerakanElv625.hv_2),
-                    formatNumber(pergerakanElv625.hv_3),
-                    
-                    // PERGERAKAN (CM) - ELV 600
-                    formatNumber(pergerakanElv600.hv_1),
-                    formatNumber(pergerakanElv600.hv_2),
-                    formatNumber(pergerakanElv600.hv_3),
-                    formatNumber(pergerakanElv600.hv_4),
-                    formatNumber(pergerakanElv600.hv_5)
-                    
+                // ===== HEADER ROWS =====
+                // Row 1: Main Headers (TANPA AKSI)
+                const header1 = [
+                    'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
+                    // PEMBACAAN HDM - ELV 625 & ELV 600
+                    ...Array(8).fill('PEMBACAAN HDM'),
+                    // DEPTH (S) - ELV 625 & ELV 600
+                    ...Array(8).fill('DEPTH (S)'),
+                    // READINGS (S) - ELV 625 & ELV 600
+                    ...Array(8).fill('READINGS (S)'),
+                    // PERGERAKAN (CM) - ELV 625 & ELV 600
+                    ...Array(8).fill('PERGERAKAN (CM)')
                     // AKSI DIHAPUS DARI EXPORT
                 ];
-                wsData.push(row);
-            });
-            
-            // Buat worksheet
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            
-            // ===== STYLING DENGAN WARNA =====
-            if (!ws['!merges']) ws['!merges'] = [];
-            
-            // Merge untuk Header Row 1 (Main Sections) - TANPA AKSI
-            const mainSections = [
-                { start: 4, end: 11, label: 'PEMBACAAN HDM' },    // 8 columns
-                { start: 12, end: 19, label: 'DEPTH (S)' },       // 8 columns
-                { start: 20, end: 27, label: 'READINGS (S)' },    // 8 columns
-                { start: 28, end: 35, label: 'PERGERAKAN (CM)' }  // 8 columns
-            ];
-            
-            mainSections.forEach(section => {
-                ws['!merges'].push({ 
-                    s: { r: 0, c: section.start }, 
-                    e: { r: 0, c: section.end } 
-                });
-            });
-            
-            // Merge untuk Header Row 2 (ELV Sections) - TANPA AKSI
-            const elvSections = [
-                // PEMBACAAN HDM
-                { start: 4, end: 6, label: 'ELV.625' },      // 3 columns
-                { start: 7, end: 11, label: 'ELV.600' },     // 5 columns
-                // DEPTH (S)
-                { start: 12, end: 14, label: 'ELV.625' },    // 3 columns
-                { start: 15, end: 19, label: 'ELV.600' },    // 5 columns
-                // READINGS (S)
-                { start: 20, end: 22, label: 'ELV.625' },    // 3 columns
-                { start: 23, end: 27, label: 'ELV.600' },    // 5 columns
-                // PERGERAKAN (CM)
-                { start: 28, end: 30, label: 'ELV.625' },    // 3 columns
-                { start: 31, end: 35, label: 'ELV.600' }     // 5 columns
-            ];
-            
-            elvSections.forEach(section => {
-                ws['!merges'].push({ 
-                    s: { r: 1, c: section.start }, 
-                    e: { r: 1, c: section.end } 
-                });
-            });
-            
-            // ===== PENGATURAN KOLOM ===== (TANPA KOLOM AKSI)
-            const colWidths = [
-                { wch: 8 },   // TAHUN
-                { wch: 10 },  // PERIODE
-                { wch: 12 },  // TANGGAL
-                { wch: 8 },   // DAM
-                // PEMBACAAN HDM - ELV 625 (3 kolom)
-                { wch: 12 }, { wch: 12 }, { wch: 12 },
-                // PEMBACAAN HDM - ELV 600 (5 kolom)
-                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                // DEPTH (S) - ELV 625 (3 kolom)
-                { wch: 12 }, { wch: 12 }, { wch: 12 },
-                // DEPTH (S) - ELV 600 (5 kolom)
-                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                // READINGS (S) - ELV 625 (3 kolom)
-                { wch: 12 }, { wch: 12 }, { wch: 12 },
-                // READINGS (S) - ELV 600 (5 kolom)
-                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                // PERGERAKAN (CM) - ELV 625 (3 kolom)
-                { wch: 14 }, { wch: 14 }, { wch: 14 },
-                // PERGERAKAN (CM) - ELV 600 (5 kolom)
-                { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }
-                // KOLOM AKSI DIHAPUS
-            ];
-            ws['!cols'] = colWidths;
-            
-            // ===== WARNA HEADER =====
-            // Definisikan range untuk styling
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            
-            // Warna untuk header rows (0, 1, 2) - TANPA AKSI
-            for (let R = 0; R < 3; R++) {
-                for (let C = range.s.c; C <= range.e.c; C++) {
-                    const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
-                    if (!ws[cell_ref]) continue;
+                wsData.push(header1);
+                
+                // Row 2: Sub Headers (TANPA AKSI)
+                const header2 = [
+                    '', '', '', '',
+                    // PEMBACAAN HDM
+                    ...Array(3).fill('ELV.625'),
+                    ...Array(5).fill('ELV.600'),
+                    // DEPTH (S)
+                    ...Array(3).fill('ELV.625'),
+                    ...Array(5).fill('ELV.600'),
+                    // READINGS (S)
+                    ...Array(3).fill('ELV.625'),
+                    ...Array(5).fill('ELV.600'),
+                    // PERGERAKAN (CM)
+                    ...Array(3).fill('ELV.625'),
+                    ...Array(5).fill('ELV.600')
+                    // AKSI DIHAPUS DARI EXPORT
+                ];
+                wsData.push(header2);
+                
+                // Row 3: Measurement Headers (TANPA AKSI)
+                const header3 = [
+                    'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
+                    // PEMBACAAN HDM - ELV 625
+                    'HV-1', 'HV-2', 'HV-3',
+                    // PEMBACAAN HDM - ELV 600
+                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
+                    // DEPTH (S) - ELV 625
+                    'HV-1', 'HV-2', 'HV-3',
+                    // DEPTH (S) - ELV 600
+                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
+                    // READINGS (S) - ELV 625
+                    'HV-1', 'HV-2', 'HV-3',
+                    // READINGS (S) - ELV 600
+                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
+                    // PERGERAKAN (CM) - ELV 625
+                    'HV-1', 'HV-2', 'HV-3',
+                    // PERGERAKAN (CM) - ELV 600
+                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5'
+                    // AKSI DIHAPUS DARI EXPORT
+                ];
+                wsData.push(header3);
+                
+                // ===== DATA ROWS =====
+                filteredData.forEach(item => {
+                    const p = item.pengukuran || {};
+                    const pembacaanElv600 = item.pembacaan_elv600 || {};
+                    const pembacaanElv625 = item.pembacaan_elv625 || {};
+                    const depthElv600 = item.depth_elv600 || {};
+                    const depthElv625 = item.depth_elv625 || {};
+                    const initialReadingElv600 = item.initial_reading_elv600 || {};
+                    const initialReadingElv625 = item.initial_reading_elv625 || {};
+                    const pergerakanElv600 = item.pergerakan_elv600 || {};
+                    const pergerakanElv625 = item.pergerakan_elv625 || {};
                     
-                    // Inisialisasi style jika belum ada
-                    if (!ws[cell_ref].s) {
-                        ws[cell_ref].s = {};
-                    }
+                    // Format tanggal untuk Excel (DD/MM/YYYY)
+                    const excelDate = p.tanggal ? formatDateForExport(p.tanggal) : '-';
                     
-                    // Background colors berdasarkan section
-                    let fillColor = '';
-                    
-                    // Row 1 - Main Sections
-                    if (R === 0) {
-                        if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
-                        else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
-                        else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
-                        else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
-                    }
-                    // Row 2 - ELV Sections
-                    else if (R === 1) {
-                        if ((C >= 4 && C <= 6) || (C >= 12 && C <= 14) || (C >= 20 && C <= 22) || (C >= 28 && C <= 30)) {
-                            fillColor = 'FF0DCAF0'; // Biru muda - ELV.625
-                        } else if ((C >= 7 && C <= 11) || (C >= 15 && C <= 19) || (C >= 23 && C <= 27) || (C >= 31 && C <= 35)) {
-                            fillColor = 'FF0DCAF0'; // Biru muda - ELV.600
-                        }
-                    }
-                    // Row 3 - Measurement Headers
-                    else if (R === 2) {
-                        if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
-                        else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
-                        else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
-                        else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
-                    }
-                    
-                    // Terapkan warna background
-                    if (fillColor) {
-                        ws[cell_ref].s.fill = {
-                            fgColor: { rgb: fillColor }
-                        };
-                        
-                        // Text color - putih untuk header gelap, hitam untuk kuning
-                        if (fillColor === 'FFFFC107') {
-                            ws[cell_ref].s.font = { color: { rgb: "FF000000" }, bold: true };
-                        } else {
-                            ws[cell_ref].s.font = { color: { rgb: "FFFFFFFF" }, bold: true };
+                    // Format nilai numerik - pastikan sebagai string dengan format yang benar
+                    const formatNumber = (value) => {
+                        if (value === null || value === undefined || value === '' || value === '-') {
+                            return '-';
                         }
                         
-                        // Border untuk semua header
-                        ws[cell_ref].s.border = {
-                            top: { style: 'thin', color: { rgb: "FF000000" } },
-                            left: { style: 'thin', color: { rgb: "FF000000" } },
-                            bottom: { style: 'thin', color: { rgb: "FF000000" } },
-                            right: { style: 'thin', color: { rgb: "FF000000" } }
-                        };
+                        // Konversi ke number dulu
+                        const numValue = typeof value === 'number' ? value : parseFloat(value);
                         
-                        // Alignment center
-                        ws[cell_ref].s.alignment = { 
-                            horizontal: 'center',
-                            vertical: 'center',
-                            wrapText: true
-                        };
-                    }
-                }
-            }
-            
-            // ===== STYLING DATA ROWS ===== (TANPA KOLOM AKSI)
-            for (let R = 3; R <= range.e.r; R++) {
-                for (let C = range.s.c; C <= range.e.c; C++) {
-                    const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
-                    if (!ws[cell_ref]) continue;
-                    
-                    // Inisialisasi style jika belum ada
-                    if (!ws[cell_ref].s) {
-                        ws[cell_ref].s = {};
-                    }
-                    
-                    // Border untuk semua cell data
-                    ws[cell_ref].s.border = {
-                        top: { style: 'thin', color: { rgb: "FFDEE2E6" } },
-                        left: { style: 'thin', color: { rgb: "FFDEE2E6" } },
-                        bottom: { style: 'thin', color: { rgb: "FFDEE2E6" } },
-                        right: { style: 'thin', color: { rgb: "FFDEE2E6" } }
+                        // Jika bukan number, return as is
+                        if (isNaN(numValue)) return value;
+                        
+                        // Format dengan 2 digit desimal dan konversi ke string
+                        return numValue.toFixed(2);
                     };
-                    
-                    // Alignment untuk data
-                    if (C <= 3) {
-                        // Kolom dasar (TAHUN, PERIODE, TANGGAL, DAM) - center
-                        ws[cell_ref].s.alignment = { 
-                            horizontal: 'center',
-                            vertical: 'center'
-                        };
-                    } else {
-                        // Semua kolom numerik - right align
-                        ws[cell_ref].s.alignment = { 
-                            horizontal: 'right',
-                            vertical: 'center'
-                        };
+
+                    const row = [
+                        // Basic Info
+                        p.tahun || '-',
+                        p.periode || '-',
+                        excelDate,
+                        formatNumber(p.dma),
                         
-                        // Format angka dengan 2 desimal
-                        const cellValue = ws[cell_ref].v;
-                        if (cellValue !== '-' && !isNaN(parseFloat(cellValue))) {
-                            ws[cell_ref].z = '0.00';
+                        // PEMBACAAN HDM - ELV 625
+                        formatNumber(pembacaanElv625.hv_1),
+                        formatNumber(pembacaanElv625.hv_2),
+                        formatNumber(pembacaanElv625.hv_3),
+                        
+                        // PEMBACAAN HDM - ELV 600
+                        formatNumber(pembacaanElv600.hv_1),
+                        formatNumber(pembacaanElv600.hv_2),
+                        formatNumber(pembacaanElv600.hv_3),
+                        formatNumber(pembacaanElv600.hv_4),
+                        formatNumber(pembacaanElv600.hv_5),
+                        
+                        // DEPTH (S) - ELV 625
+                        formatNumber(depthElv625.hv_1),
+                        formatNumber(depthElv625.hv_2),
+                        formatNumber(depthElv625.hv_3),
+                        
+                        // DEPTH (S) - ELV 600
+                        formatNumber(depthElv600.hv_1),
+                        formatNumber(depthElv600.hv_2),
+                        formatNumber(depthElv600.hv_3),
+                        formatNumber(depthElv600.hv_4),
+                        formatNumber(depthElv600.hv_5),
+                        
+                        // READINGS (S) - ELV 625
+                        formatNumber(initialReadingElv625.hv_1),
+                        formatNumber(initialReadingElv625.hv_2),
+                        formatNumber(initialReadingElv625.hv_3),
+                        
+                        // READINGS (S) - ELV 600
+                        formatNumber(initialReadingElv600.hv_1),
+                        formatNumber(initialReadingElv600.hv_2),
+                        formatNumber(initialReadingElv600.hv_3),
+                        formatNumber(initialReadingElv600.hv_4),
+                        formatNumber(initialReadingElv600.hv_5),
+                        
+                        // PERGERAKAN (CM) - ELV 625
+                        formatNumber(pergerakanElv625.hv_1),
+                        formatNumber(pergerakanElv625.hv_2),
+                        formatNumber(pergerakanElv625.hv_3),
+                        
+                        // PERGERAKAN (CM) - ELV 600
+                        formatNumber(pergerakanElv600.hv_1),
+                        formatNumber(pergerakanElv600.hv_2),
+                        formatNumber(pergerakanElv600.hv_3),
+                        formatNumber(pergerakanElv600.hv_4),
+                        formatNumber(pergerakanElv600.hv_5)
+                        
+                        // AKSI DIHAPUS DARI EXPORT
+                    ];
+                    wsData.push(row);
+                });
+                
+                // Buat worksheet
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                
+                // ===== STYLING DENGAN WARNA =====
+                if (!ws['!merges']) ws['!merges'] = [];
+                
+                // Merge untuk Header Row 1 (Main Sections) - TANPA AKSI
+                const mainSections = [
+                    { start: 4, end: 11, label: 'PEMBACAAN HDM' },    // 8 columns
+                    { start: 12, end: 19, label: 'DEPTH (S)' },       // 8 columns
+                    { start: 20, end: 27, label: 'READINGS (S)' },    // 8 columns
+                    { start: 28, end: 35, label: 'PERGERAKAN (CM)' }  // 8 columns
+                ];
+                
+                mainSections.forEach(section => {
+                    ws['!merges'].push({ 
+                        s: { r: 0, c: section.start }, 
+                        e: { r: 0, c: section.end } 
+                    });
+                });
+                
+                // Merge untuk Header Row 2 (ELV Sections) - TANPA AKSI
+                const elvSections = [
+                    // PEMBACAAN HDM
+                    { start: 4, end: 6, label: 'ELV.625' },      // 3 columns
+                    { start: 7, end: 11, label: 'ELV.600' },     // 5 columns
+                    // DEPTH (S)
+                    { start: 12, end: 14, label: 'ELV.625' },    // 3 columns
+                    { start: 15, end: 19, label: 'ELV.600' },    // 5 columns
+                    // READINGS (S)
+                    { start: 20, end: 22, label: 'ELV.625' },    // 3 columns
+                    { start: 23, end: 27, label: 'ELV.600' },    // 5 columns
+                    // PERGERAKAN (CM)
+                    { start: 28, end: 30, label: 'ELV.625' },    // 3 columns
+                    { start: 31, end: 35, label: 'ELV.600' }     // 5 columns
+                ];
+                
+                elvSections.forEach(section => {
+                    ws['!merges'].push({ 
+                        s: { r: 1, c: section.start }, 
+                        e: { r: 1, c: section.end } 
+                    });
+                });
+                
+                // ===== PENGATURAN KOLOM ===== (TANPA KOLOM AKSI)
+                const colWidths = [
+                    { wch: 8 },   // TAHUN
+                    { wch: 10 },  // PERIODE
+                    { wch: 12 },  // TANGGAL
+                    { wch: 8 },   // DAM
+                    // PEMBACAAN HDM - ELV 625 (3 kolom)
+                    { wch: 12 }, { wch: 12 }, { wch: 12 },
+                    // PEMBACAAN HDM - ELV 600 (5 kolom)
+                    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                    // DEPTH (S) - ELV 625 (3 kolom)
+                    { wch: 12 }, { wch: 12 }, { wch: 12 },
+                    // DEPTH (S) - ELV 600 (5 kolom)
+                    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                    // READINGS (S) - ELV 625 (3 kolom)
+                    { wch: 12 }, { wch: 12 }, { wch: 12 },
+                    // READINGS (S) - ELV 600 (5 kolom)
+                    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                    // PERGERAKAN (CM) - ELV 625 (3 kolom)
+                    { wch: 14 }, { wch: 14 }, { wch: 14 },
+                    // PERGERAKAN (CM) - ELV 600 (5 kolom)
+                    { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }
+                    // KOLOM AKSI DIHAPUS
+                ];
+                ws['!cols'] = colWidths;
+                
+                // ===== WARNA HEADER =====
+                // Definisikan range untuk styling
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                
+                // Warna untuk header rows (0, 1, 2) - TANPA AKSI
+                for (let R = 0; R < 3; R++) {
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
+                        if (!ws[cell_ref]) continue;
+                        
+                        // Inisialisasi style jika belum ada
+                        if (!ws[cell_ref].s) {
+                            ws[cell_ref].s = {};
+                        }
+                        
+                        // Background colors berdasarkan section
+                        let fillColor = '';
+                        
+                        // Row 1 - Main Sections
+                        if (R === 0) {
+                            if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
+                            else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
+                            else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
+                            else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
+                        }
+                        // Row 2 - ELV Sections
+                        else if (R === 1) {
+                            if ((C >= 4 && C <= 6) || (C >= 12 && C <= 14) || (C >= 20 && C <= 22) || (C >= 28 && C <= 30)) {
+                                fillColor = 'FF0DCAF0'; // Biru muda - ELV.625
+                            } else if ((C >= 7 && C <= 11) || (C >= 15 && C <= 19) || (C >= 23 && C <= 27) || (C >= 31 && C <= 35)) {
+                                fillColor = 'FF0DCAF0'; // Biru muda - ELV.600
+                            }
+                        }
+                        // Row 3 - Measurement Headers
+                        else if (R === 2) {
+                            if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
+                            else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
+                            else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
+                            else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
+                        }
+                        
+                        // Terapkan warna background
+                        if (fillColor) {
+                            ws[cell_ref].s.fill = {
+                                fgColor: { rgb: fillColor }
+                            };
+                            
+                            // Text color - putih untuk header gelap, hitam untuk kuning
+                            if (fillColor === 'FFFFC107') {
+                                ws[cell_ref].s.font = { color: { rgb: "FF000000" }, bold: true };
+                            } else {
+                                ws[cell_ref].s.font = { color: { rgb: "FFFFFFFF" }, bold: true };
+                            }
+                            
+                            // Border untuk semua header
+                            ws[cell_ref].s.border = {
+                                top: { style: 'thin', color: { rgb: "FF000000" } },
+                                left: { style: 'thin', color: { rgb: "FF000000" } },
+                                bottom: { style: 'thin', color: { rgb: "FF000000" } },
+                                right: { style: 'thin', color: { rgb: "FF000000" } }
+                            };
+                            
+                            // Alignment center
+                            ws[cell_ref].s.alignment = { 
+                                horizontal: 'center',
+                                vertical: 'center',
+                                wrapText: true
+                            };
                         }
                     }
                 }
+                
+                // ===== STYLING DATA ROWS ===== (TANPA KOLOM AKSI)
+                for (let R = 3; R <= range.e.r; R++) {
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
+                        if (!ws[cell_ref]) continue;
+                        
+                        // Inisialisasi style jika belum ada
+                        if (!ws[cell_ref].s) {
+                            ws[cell_ref].s = {};
+                        }
+                        
+                        // Border untuk semua cell data
+                        ws[cell_ref].s.border = {
+                            top: { style: 'thin', color: { rgb: "FFDEE2E6" } },
+                            left: { style: 'thin', color: { rgb: "FFDEE2E6" } },
+                            bottom: { style: 'thin', color: { rgb: "FFDEE2E6" } },
+                            right: { style: 'thin', color: { rgb: "FFDEE2E6" } }
+                        };
+                        
+                        // Alignment untuk data
+                        if (C <= 3) {
+                            // Kolom dasar (TAHUN, PERIODE, TANGGAL, DAM) - center
+                            ws[cell_ref].s.alignment = { 
+                                horizontal: 'center',
+                                vertical: 'center'
+                            };
+                        } else {
+                            // Semua kolom numerik - right align
+                            ws[cell_ref].s.alignment = { 
+                                horizontal: 'right',
+                                vertical: 'center'
+                            };
+                            
+                            // Format angka dengan 2 desimal
+                            const cellValue = ws[cell_ref].v;
+                            if (cellValue !== '-' && !isNaN(parseFloat(cellValue))) {
+                                ws[cell_ref].z = '0.00';
+                            }
+                        }
+                    }
+                }
+                
+                // Tambahkan worksheet ke workbook
+                XLSX.utils.book_append_sheet(wb, ws, "Data HDM");
+                
+                // Generate filename dengan timestamp
+                const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const filename = `HDM_Data_Export_${timestamp}.xlsx`;
+                
+                // Simpan file
+                XLSX.writeFile(wb, filename);
+                
+                // Show success message
+                setTimeout(() => {
+                    alert('Export berhasil! File Excel telah didownload.\n\nFile: ' + filename);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                alert('Terjadi kesalahan saat mengexport data: ' + error.message);
+            } finally {
+                // Restore button state
+                this.innerHTML = originalText;
+                this.disabled = false;
             }
-            
-            // Tambahkan worksheet ke workbook
-            XLSX.utils.book_append_sheet(wb, ws, "Data HDM");
-            
-            // Generate filename dengan timestamp
-            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            const filename = `HDM_Data_Export_${timestamp}.xlsx`;
-            
-            // Simpan file
-            XLSX.writeFile(wb, filename);
-            
-            // Show success message
-            setTimeout(() => {
-                alert('Export berhasil! File Excel telah didownload.\n\nFile: ' + filename);
-            }, 500);
-            
-        } catch (error) {
-            console.error('Error exporting to Excel:', error);
-            alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-        } finally {
-            // Restore button state
-            this.innerHTML = originalText;
-            this.disabled = false;
-        }
-    }, 1000);
-});
-    // Add Data button
-    document.getElementById('addData').addEventListener('click', function() {
-        window.location.href = '<?= base_url('horizontal-displacement/create') ?>';
+        }, 1000);
     });
+    
+    // Add Data button
+    const addDataBtn = document.getElementById('addData');
+    if (addDataBtn) {
+        addDataBtn.addEventListener('click', function() {
+            if (isAdmin) {
+                window.location.href = '<?= base_url('horizontal-displacement/create') ?>';
+            } else {
+                showAccessWarning('add');
+            }
+        });
+    }
 });
 
 // Fungsi untuk auto-refresh data (opsional)
@@ -1376,6 +1802,8 @@ document.addEventListener('DOMContentLoaded', function() {
     startPolling();
 });
 
+// Import SQL functionality (hanya untuk admin)
+<?php if ($isAdmin): ?>
 document.getElementById('btnImportSQL').addEventListener('click', function() {
     console.log('[IMPORT] Tombol Import diklik.');
 
@@ -1445,7 +1873,7 @@ fetch('<?= base_url('horizontal-displacement/importSQL') ?>', {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
     },
-    credentials: 'same-origin' // Tambahkan ini
+    credentials: 'same-origin'
 })
     .then(response => {
         clearInterval(progressInterval);
@@ -1566,6 +1994,7 @@ document.getElementById('sqlFile').addEventListener('change', function(e) {
         }
     }
 });
+<?php endif; ?>
 
 </script>
 </body>

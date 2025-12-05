@@ -428,25 +428,75 @@ function getStatusClass600($pergerakanValue, $depth) {
     
     switch($depth) {
         case 'H1':
-            if ($pergerakanValue >= -44.29) return 'status-aman';
-            if ($pergerakanValue <= -60.40) return 'status-bahaya';
-            return 'status-peringatan';
+            $aman = -44.29;
+            $peringatan = -51.11;
+            $bahaya = -60.40;
+            
+            // LOGIKA BARU:
+            // 1. Aman: Nilai belum menyentuh batas peringatan (> -51.11)
+            // 2. Peringatan: Nilai ≤ -51.11 DAN > -60.40
+            // 3. Bahaya: Nilai ≤ -60.40
+            
+            if ($pergerakanValue > $peringatan) {
+                return 'status-aman';  // Nilai > -51.11 → AMAN (HIJAU)
+            } elseif ($pergerakanValue <= $bahaya) {
+                return 'status-bahaya'; // Nilai ≤ -60.40 → BAHAYA (MERAH)
+            } else {
+                return 'status-peringatan'; // -51.11 ≥ nilai > -60.40 → PERINGATAN (KUNING)
+            }
+            
         case 'H2':
-            if ($pergerakanValue >= -39.75) return 'status-aman';
-            if ($pergerakanValue <= -54.20) return 'status-bahaya';
-            return 'status-peringatan';
+            $aman = -39.75;
+            $peringatan = -45.86;
+            $bahaya = -54.20;
+            
+            if ($pergerakanValue > $peringatan) {
+                return 'status-aman';  // Nilai > -45.86 → AMAN
+            } elseif ($pergerakanValue <= $bahaya) {
+                return 'status-bahaya'; // Nilai ≤ -54.20 → BAHAYA
+            } else {
+                return 'status-peringatan'; // -45.86 ≥ nilai > -54.20 → PERINGATAN
+            }
+            
         case 'H3':
-            if ($pergerakanValue >= -40.63) return 'status-aman';
-            if ($pergerakanValue <= -55.40) return 'status-bahaya';
-            return 'status-peringatan';
+            $aman = -40.63;
+            $peringatan = -46.88;
+            $bahaya = -55.40;
+            
+            if ($pergerakanValue > $peringatan) {
+                return 'status-aman';  // Nilai > -46.88 → AMAN
+            } elseif ($pergerakanValue <= $bahaya) {
+                return 'status-bahaya'; // Nilai ≤ -55.40 → BAHAYA
+            } else {
+                return 'status-peringatan'; // -46.88 ≥ nilai > -55.40 → PERINGATAN
+            }
+            
         case 'H4':
-            if ($pergerakanValue >= -24.86) return 'status-aman';
-            if ($pergerakanValue <= -33.90) return 'status-bahaya';
-            return 'status-peringatan';
+            $aman = -24.86;
+            $peringatan = -28.68;
+            $bahaya = -33.90;
+            
+            if ($pergerakanValue > $peringatan) {
+                return 'status-aman';  // Nilai > -28.68 → AMAN
+            } elseif ($pergerakanValue <= $bahaya) {
+                return 'status-bahaya'; // Nilai ≤ -33.90 → BAHAYA
+            } else {
+                return 'status-peringatan'; // -28.68 ≥ nilai > -33.90 → PERINGATAN
+            }
+            
         case 'H5':
-            if ($pergerakanValue >= -11.22) return 'status-aman';
-            if ($pergerakanValue <= -15.30) return 'status-bahaya';
-            return 'status-peringatan';
+            $aman = -11.22;
+            $peringatan = -12.95;
+            $bahaya = -15.30;
+            
+            if ($pergerakanValue > $peringatan) {
+                return 'status-aman';  // Nilai > -12.95 → AMAN
+            } elseif ($pergerakanValue <= $bahaya) {
+                return 'status-bahaya'; // Nilai ≤ -15.30 → BAHAYA
+            } else {
+                return 'status-peringatan'; // -12.95 ≥ nilai > -15.30 → PERINGATAN
+            }
+            
         default:
             return '';
     }
@@ -458,9 +508,14 @@ function getAmbangBatasClass($value, $aman, $peringatan, $bahaya) {
     
     $floatVal = floatval($value);
     
-    if ($floatVal >= $aman) return 'threshold-aman';
-    if ($floatVal <= $bahaya) return 'threshold-bahaya';
-    return 'threshold-peringatan';
+    // LOGIKA BARU: Sama seperti getStatusClass600
+    if ($floatVal > $peringatan) {
+        return 'threshold-aman';  // Nilai > batas peringatan → HIJAU
+    } elseif ($floatVal <= $bahaya) {
+        return 'threshold-bahaya'; // Nilai ≤ batas bahaya → MERAH
+    } else {
+        return 'threshold-peringatan'; // Batas peringatan ≥ nilai > batas bahaya → KUNING
+    }
 }
 
 function getAmbangBatas600($depth) {
