@@ -8,6 +8,7 @@ use App\Models\LeftPiez\IreadingB;
 use App\Models\LeftPiez\PerhitunganLeftPiezModel;
 use App\Models\LeftPiez\TPembacaanLeftPiezModel;
 use App\Models\LeftPiez\TPengukuranLeftpiezModel;
+use CodeIgniter\HTTP\ResponseInterface;
 
 class PiezometerController extends BaseController
 {
@@ -18,9 +19,44 @@ class PiezometerController extends BaseController
     protected $perhitunganModel;
     protected $pembacaanModel;
 
-    public function __construct()
+    // Helper untuk cek role admin
+    private function isAdmin()
     {
-        helper(['format', 'number']);
+        $session = session();
+        return $session->get('role') == 'admin';
+    }
+    
+    // Helper untuk redirect jika bukan admin
+    private function requireAdmin()
+    {
+        $session = session();
+        if (!$this->isAdmin()) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Akses ditolak. Hanya admin yang dapat melakukan tindakan ini.'
+                ]);
+            }
+            session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat melakukan tindakan ini.');
+            return redirect()->to('left-piez');
+        }
+        return true;
+    }
+
+    public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
+    {
+        parent::initController($request, $response, $logger);
+        
+        // Cek login di setiap aksi
+        $session = session();
+        if (!$session->get('isLoggedIn')) {
+            if ($this->request->isAJAX()) {
+                die(json_encode(['success' => false, 'message' => 'Silakan login terlebih dahulu']));
+            }
+            return redirect()->to('/auth/login');
+        }
+        
+        // Initialize models
         $this->metrikModel = new MetrikModel();
         $this->ireadingA = new IreadingA();
         $this->ireadingB = new IreadingB();
@@ -34,9 +70,26 @@ class PiezometerController extends BaseController
      */
     public function index()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+
         $data = [
-            'title' => 'Piezometer - Left Bank',
-            'pengukuran' => $this->getAllData()
+            'title' => 'Piezometer - Left Bank - PT Indonesia Power',
+            'pageTitle' => 'Data Piezometer Left Bank',
+            'breadcrumbs' => [
+                'Dashboard' => base_url(),
+                'Left Piezometer' => ''
+            ],
+            'pengukuran' => $this->getAllData(),
+            // Tambahkan data user untuk view
+            'username' => $session->get('username'),
+            'role' => $session->get('role'),
+            'isAdmin' => $this->isAdmin(),
+            'fullName' => $session->get('fullName')
         ];
 
         return view('left_piez/index', $data);
@@ -47,8 +100,31 @@ class PiezometerController extends BaseController
      */
     public function create()
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat menambah data.');
+            return redirect()->to('left-piez');
+        }
+
         $data = [
-            'title' => 'Tambah Data Piezometer - Left Bank'
+            'title' => 'Tambah Data Piezometer - Left Bank',
+            'pageTitle' => 'Tambah Data Piezometer Left Bank',
+            'breadcrumbs' => [
+                'Dashboard' => base_url(),
+                'Left Piezometer' => base_url('left-piez'),
+                'Tambah Data' => ''
+            ],
+            // Tambahkan data user untuk view
+            'username' => $session->get('username'),
+            'role' => $session->get('role'),
+            'isAdmin' => $this->isAdmin()
         ];
 
         return view('left_piez/create', $data);
@@ -61,9 +137,9 @@ class PiezometerController extends BaseController
     {
         // Ambil semua data dari tabel pengukuran sebagai base
         $pengukuranData = $this->pengukuranModel
-            ->orderBy('tahun', 'DESC')
-            ->orderBy('periode', 'DESC')
-            ->orderBy('tanggal', 'DESC')
+            ->orderBy('tahun', 'ASC')  // Ubah dari DESC ke ASC
+            ->orderBy('periode', 'ASC') // Ubah dari DESC ke ASC
+            ->orderBy('tanggal', 'ASC') // Ubah dari DESC ke ASC
             ->findAll();
             
         $result = [];
@@ -87,35 +163,29 @@ class PiezometerController extends BaseController
     /**
      * Mendapatkan data metrik (BACAAN PIEZOMETER METRIK) dari tabel b_piezo_metrik
      */
-    /**
- * Mendapatkan data metrik (BACAAN PIEZOMETER METRIK) dari tabel b_piezo_metrik
- */
-/**
- * Mendapatkan data metrik (BACAAN PIEZOMETER METRIK) dari tabel b_piezo_metrik
- */
-private function getMetrikData($idPengukuran)
-{
-    $data = $this->metrikModel->where('id_pengukuran', $idPengukuran)->first();
-    
-    if ($data) {
-        // Format yang sesuai untuk view (L_01, L_02, etc) dengan key HURUF BESAR
-        return [
-            'L_01' => isset($data['l_01']) ? $data['l_01'] : null,
-            'L_02' => isset($data['l_02']) ? $data['l_02'] : null,
-            'L_03' => isset($data['l_03']) ? $data['l_03'] : null,
-            'L_04' => isset($data['l_04']) ? $data['l_04'] : null,
-            'L_05' => isset($data['l_05']) ? $data['l_05'] : null,
-            'L_06' => isset($data['l_06']) ? $data['l_06'] : null,
-            'L_07' => isset($data['l_07']) ? $data['l_07'] : null,
-            'L_08' => isset($data['l_08']) ? $data['l_08'] : null,
-            'L_09' => isset($data['l_09']) ? $data['l_09'] : null,
-            'L_10' => isset($data['l_10']) ? $data['l_10'] : null,
-            'SPZ_02' => isset($data['spz_02']) ? $data['spz_02'] : null
-        ];
+    private function getMetrikData($idPengukuran)
+    {
+        $data = $this->metrikModel->where('id_pengukuran', $idPengukuran)->first();
+        
+        if ($data) {
+            // Format yang sesuai untuk view (L_01, L_02, etc) dengan key HURUF BESAR
+            return [
+                'L_01' => isset($data['l_01']) ? $data['l_01'] : null,
+                'L_02' => isset($data['l_02']) ? $data['l_02'] : null,
+                'L_03' => isset($data['l_03']) ? $data['l_03'] : null,
+                'L_04' => isset($data['l_04']) ? $data['l_04'] : null,
+                'L_05' => isset($data['l_05']) ? $data['l_05'] : null,
+                'L_06' => isset($data['l_06']) ? $data['l_06'] : null,
+                'L_07' => isset($data['l_07']) ? $data['l_07'] : null,
+                'L_08' => isset($data['l_08']) ? $data['l_08'] : null,
+                'L_09' => isset($data['l_09']) ? $data['l_09'] : null,
+                'L_10' => isset($data['l_10']) ? $data['l_10'] : null,
+                'SPZ_02' => isset($data['spz_02']) ? $data['spz_02'] : null
+            ];
+        }
+        
+        return [];
     }
-    
-    return [];
-}
 
     /**
      * Mendapatkan initial reading A dari tabel i_reading_a_all
@@ -275,14 +345,42 @@ private function getMetrikData($idPengukuran)
      */
     public function edit($id)
     {
-        // Ambil data berdasarkan ID pengukuran
-        $data = [
-            'title' => 'Edit Data Piezometer - Left Bank',
-            'id_pengukuran' => $id,
-            'data' => $this->getSingleData($id)
-        ];
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            session()->setFlashdata('error', 'Akses ditolak. Hanya admin yang dapat mengedit data.');
+            return redirect()->to('left-piez');
+        }
 
-        return view('left_piez/edit', $data);
+        try {
+            // Ambil data berdasarkan ID pengukuran
+            $data = [
+                'title' => 'Edit Data Piezometer - Left Bank',
+                'pageTitle' => 'Edit Data Piezometer Left Bank',
+                'breadcrumbs' => [
+                    'Dashboard' => base_url(),
+                    'Left Piezometer' => base_url('left-piez'),
+                    'Edit Data' => ''
+                ],
+                'id_pengukuran' => $id,
+                'data' => $this->getSingleData($id),
+                // Tambahkan data user untuk view
+                'username' => $session->get('username'),
+                'role' => $session->get('role'),
+                'isAdmin' => $this->isAdmin()
+            ];
+
+            return view('left_piez/edit', $data);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -307,30 +405,70 @@ private function getMetrikData($idPengukuran)
         ];
     }
 
-    // ... (method store, update, delete, checkDuplicate, importSql tetap sama seperti sebelumnya)
-    
-    // STORE METHOD - Menyimpan data piezometer baru
+    /**
+     * STORE METHOD - Menyimpan data piezometer baru
+     */
     public function store()
     {
-        if (!$this->request->is('post')) {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Method not allowed'
-            ])->setStatusCode(405);
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat menambah data.'
+            ])->setStatusCode(403);
         }
 
         try {
             $db = \Config\Database::connect();
             $db->transStart();
 
+            // Validasi input
+            $validation = \Config\Services::validation();
+            
+            $rules = [
+                'tahun' => 'required|numeric',
+                'periode' => 'required',
+                'tanggal' => 'required|valid_date'
+            ];
+
+            if (!$this->validate($rules)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'errors' => $validation->getErrors()
+                ]);
+            }
+
             // Data pengukuran utama
             $pengukuranData = [
                 'tahun' => $this->request->getPost('tahun'),
                 'periode' => $this->request->getPost('periode'),
                 'tanggal' => $this->request->getPost('tanggal'),
-                'dma' => $this->request->getPost('dma'),
-                'temp_id' => $this->request->getPost('temp_id')
+                'dma' => $this->request->getPost('dma') ?? null,
+                'temp_id' => $this->request->getPost('temp_id') ?? null
             ];
+
+            // Cek duplikat
+            $existing = $this->pengukuranModel->where('tahun', $pengukuranData['tahun'])
+                                             ->where('periode', $pengukuranData['periode'])
+                                             ->where('tanggal', $pengukuranData['tanggal'])
+                                             ->first();
+
+            if ($existing) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Data dengan tahun, periode, dan tanggal tersebut sudah ada'
+                ]);
+            }
 
             // Simpan data pengukuran utama
             $this->pengukuranModel->insert($pengukuranData);
@@ -513,24 +651,55 @@ private function getMetrikData($idPengukuran)
      */
     public function update($id)
     {
-        if (!$this->request->is('put') && !$this->request->is('post')) {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Method not allowed'
-            ])->setStatusCode(405);
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat memperbarui data.'
+            ])->setStatusCode(403);
+        }
+
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
         }
 
         try {
             $db = \Config\Database::connect();
             $db->transStart();
 
-            // Validasi data pengukuran utama
+            // Validasi input
+            $validation = \Config\Services::validation();
+            
+            $rules = [
+                'tahun' => 'required|numeric',
+                'periode' => 'required',
+                'tanggal' => 'required|valid_date'
+            ];
+
+            if (!$this->validate($rules)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'errors' => $validation->getErrors()
+                ]);
+            }
+
+            // Data pengukuran utama
             $pengukuranData = [
                 'tahun' => $this->request->getPost('tahun'),
                 'periode' => $this->request->getPost('periode'),
                 'tanggal' => $this->request->getPost('tanggal'),
-                'dma' => $this->request->getPost('dma'),
-                'temp_id' => $this->request->getPost('temp_id')
+                'dma' => $this->request->getPost('dma') ?? null,
+                'temp_id' => $this->request->getPost('temp_id') ?? null
             ];
 
             // Cek apakah data pengukuran ada
@@ -540,6 +709,21 @@ private function getMetrikData($idPengukuran)
                     'success' => false,
                     'message' => 'Data pengukuran tidak ditemukan'
                 ])->setStatusCode(404);
+            }
+
+            // Cek duplikat (kecuali dengan data yang sedang diupdate)
+            $existing = $this->pengukuranModel
+                ->where('tahun', $pengukuranData['tahun'])
+                ->where('periode', $pengukuranData['periode'])
+                ->where('tanggal', $pengukuranData['tanggal'])
+                ->where('id_pengukuran !=', $id)
+                ->first();
+
+            if ($existing) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Data dengan tahun, periode, dan tanggal tersebut sudah ada'
+                ]);
             }
 
             // Update data pengukuran utama
@@ -731,6 +915,28 @@ private function getMetrikData($idPengukuran)
      */
     public function delete($id)
     {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat menghapus data.'
+            ])->setStatusCode(403);
+        }
+
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(405)->setJSON(['success' => false, 'message' => 'Method not allowed']);
+        }
+
         try {
             $db = \Config\Database::connect();
             $db->transStart();
@@ -771,11 +977,14 @@ private function getMetrikData($idPengukuran)
      */
     public function checkDuplicate()
     {
-        if (!$this->request->is('post')) {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Method not allowed'
-            ])->setStatusCode(405);
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
         }
 
         try {
@@ -805,7 +1014,8 @@ private function getMetrikData($idPengukuran)
 
             return $this->response->setJSON([
                 'success' => true,
-                'isDuplicate' => $existing !== null
+                'isDuplicate' => $existing !== null,
+                'message' => $existing ? 'Data sudah ada' : 'Data belum ada'
             ]);
 
         } catch (\Exception $e) {
@@ -813,7 +1023,7 @@ private function getMetrikData($idPengukuran)
             
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengecek duplikat data'
+                'message' => 'Error: ' . $e->getMessage()
             ])->setStatusCode(500);
         }
     }
@@ -821,65 +1031,441 @@ private function getMetrikData($idPengukuran)
     /**
      * IMPORT SQL METHOD - Import data dari file SQL
      */
-    public function importSql()
+    public function importSQL()
     {
-        if (!$this->request->is('post')) {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Method not allowed'
-            ])->setStatusCode(405);
+                'message' => 'Silakan login terlebih dahulu'
+            ])->setStatusCode(401);
+        }
+        
+        // Cek role admin
+        if (!$this->isAdmin()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya admin yang dapat mengimport data SQL.'
+            ])->setStatusCode(403);
+        }
+
+        log_message('info', '[IMPORT PIEZOMETER SQL] === START IMPORT PROCESS ===');
+        log_message('info', '[IMPORT PIEZOMETER SQL] Request Method: ' . $this->request->getMethod());
+        log_message('info', '[IMPORT PIEZOMETER SQL] Is AJAX: ' . ($this->request->isAJAX() ? 'YES' : 'NO'));
+
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(405)->setJSON([
+                'success' => false, 
+                'message' => 'Hanya AJAX request yang diizinkan.'
+            ]);
         }
 
         try {
+            if (empty($_FILES)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Tidak ada file yang diupload.'
+                ]);
+            }
+
             $sqlFile = $this->request->getFile('sql_file');
-            
             if (!$sqlFile || !$sqlFile->isValid()) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'File SQL tidak valid'
+                    'message' => 'File upload gagal: ' . ($sqlFile ? $sqlFile->getErrorString() : 'File tidak ditemukan')
                 ]);
             }
 
-            if ($sqlFile->getExtension() !== 'sql') {
+            // Validasi file
+            $originalName = $sqlFile->getClientName();
+            if (!str_ends_with(strtolower($originalName), '.sql')) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'File harus berformat .sql'
-                ]);
-            }
-
-            if ($sqlFile->getSize() > 50 * 1024 * 1024) { // 50MB
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Ukuran file maksimal 50MB'
+                    'message' => 'File harus berekstensi .sql'
                 ]);
             }
 
             // Baca file SQL
             $sqlContent = file_get_contents($sqlFile->getTempName());
-            
-            // Eksekusi SQL
+            if (empty($sqlContent)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'File SQL kosong'
+                ]);
+            }
+
+            log_message('info', '[IMPORT PIEZOMETER SQL] Original SQL content length: ' . strlen($sqlContent));
+
+            // ===== KONVERSI SQLITE → MYSQL =====
+            $mysqlContent = $this->convertSQLiteToMySQL($sqlContent);
+            log_message('info', '[IMPORT PIEZOMETER SQL] Converted to MySQL syntax');
+
+            $queries = $this->splitSQLQueries($mysqlContent);
+            log_message('info', "[IMPORT PIEZOMETER SQL] Total queries after conversion: " . count($queries));
+
+            if (empty($queries)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Tidak ada query SQL valid setelah konversi.'
+                ]);
+            }
+
+            // Eksekusi queries
             $db = \Config\Database::connect();
-            $queries = explode(';', $sqlContent);
-            
-            foreach ($queries as $query) {
-                $query = trim($query);
-                if (!empty($query)) {
-                    $db->query($query);
+            $stats = [
+                'total' => count($queries), 
+                'success' => 0, 
+                'failed' => 0, 
+                'affected_rows' => 0,
+                'errors' => [],
+                'tables' => []
+            ];
+
+            $db->transStart();
+            $db->query('SET FOREIGN_KEY_CHECKS=0');
+
+            foreach ($queries as $index => $query) {
+                $trimmedQuery = trim($query);
+                if (empty($trimmedQuery)) continue;
+
+                // Skip commands yang tidak perlu
+                if (preg_match('/^(SET|LOCK|UNLOCK|USE|DELIMITER)/i', $trimmedQuery)) {
+                    continue;
+                }
+
+                try {
+                    $result = $db->query($trimmedQuery);
+                    if ($result !== false) {
+                        $stats['success']++;
+                        if (preg_match('/^(INSERT|UPDATE|DELETE|REPLACE)/i', $trimmedQuery)) {
+                            $stats['affected_rows'] += $db->affectedRows();
+                        }
+                        
+                        // Track table imports
+                        if (preg_match('/INSERT\s+INTO\s+`?(\w+)`?/i', $trimmedQuery, $matches)) {
+                            $tableName = $matches[1];
+                            if (!isset($stats['tables'][$tableName])) {
+                                $stats['tables'][$tableName] = 0;
+                            }
+                            $stats['tables'][$tableName]++;
+                        }
+                        
+                        log_message('debug', "[IMPORT PIEZOMETER SQL] ✅ Query #" . ($index + 1) . " success");
+                    } else {
+                        $stats['failed']++;
+                        $error = $db->error();
+                        $stats['errors'][] = [
+                            'query' => $index + 1,
+                            'error' => $error['message'] ?? 'Unknown error',
+                            'sql' => substr($trimmedQuery, 0, 100) . '...'
+                        ];
+                        log_message('error', "[IMPORT PIEZOMETER SQL] ❌ Query #" . ($index + 1) . " failed: " . ($error['message'] ?? 'Unknown'));
+                    }
+                } catch (\Exception $e) {
+                    $stats['failed']++;
+                    $stats['errors'][] = [
+                        'query' => $index + 1,
+                        'error' => $e->getMessage(),
+                        'sql' => substr($trimmedQuery, 0, 100) . '...'
+                    ];
+                    log_message('error', "[IMPORT PIEZOMETER SQL] ❌ Query #" . ($index + 1) . " exception: " . $e->getMessage());
                 }
             }
 
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Data SQL berhasil diimpor'
-            ]);
+            $db->transComplete();
+            $db->query('SET FOREIGN_KEY_CHECKS=1');
+
+            $success = $stats['failed'] === 0;
+            
+            log_message('info', "[IMPORT PIEZOMETER SQL] Import completed. Success: {$stats['success']}, Failed: {$stats['failed']}");
+
+            $response = [
+                'success' => $success,
+                'message' => "Import selesai. Total: {$stats['total']}, Berhasil: {$stats['success']}, Gagal: {$stats['failed']}, Affected Rows: {$stats['affected_rows']}",
+                'stats' => $stats
+            ];
+
+            if (!$success && !empty($stats['errors'])) {
+                $response['error_display'] = "Beberapa query gagal:\n" . 
+                    implode("\n", array_map(function($error) {
+                        return "Query #{$error['query']}: {$error['error']}";
+                    }, $stats['errors']));
+            }
+
+            return $this->response->setJSON($response);
 
         } catch (\Exception $e) {
-            log_message('error', 'Error importing SQL: ' . $e->getMessage());
-            
+            log_message('error', '[IMPORT PIEZOMETER SQL] System Error: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengimpor data: ' . $e->getMessage()
-            ])->setStatusCode(500);
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ]);
         }
+    }
+
+    /**
+     * Konversi SQLite syntax ke MySQL syntax
+     */
+    private function convertSQLiteToMySQL($sqlContent)
+    {
+        // 1. Hapus komentar
+        $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
+        
+        // 2. Konversi INSERT OR REPLACE → REPLACE INTO (MySQL equivalent)
+        $sqlContent = preg_replace('/INSERT OR REPLACE INTO/i', 'REPLACE INTO', $sqlContent);
+        
+        // 3. Konversi datetime('now') → NOW() (MySQL equivalent)
+        $sqlContent = preg_replace("/datetime\('now'\)/i", 'NOW()', $sqlContent);
+        
+        // 4. Konversi table names untuk piezometer
+        $tableMappings = [
+            't_pengukuran_leftpiez' => 't_pengukuran_leftpiez',
+            't_pembacaan_left_piez' => 't_pembacaan_left_piez',
+            'b_piezo_metrik' => 'b_piezo_metrik',
+            'i_reading_a_all' => 'i_reading_a_all',
+            'i_reading_b_all' => 'i_reading_b_all',
+            'perhitungan_left_piez' => 'perhitungan_left_piez'
+        ];
+        
+        foreach ($tableMappings as $sqliteTable => $mysqlTable) {
+            if ($sqliteTable !== $mysqlTable) {
+                $sqlContent = str_ireplace($sqliteTable, $mysqlTable, $sqlContent);
+            }
+        }
+        
+        // 5. Hapus AUTOINCREMENT jika ada (MySQL menggunakan AUTO_INCREMENT)
+        $sqlContent = preg_replace('/AUTOINCREMENT/i', 'AUTO_INCREMENT', $sqlContent);
+        
+        log_message('info', '[IMPORT PIEZOMETER SQL] SQLite to MySQL conversion completed');
+        
+        return $sqlContent;
+    }
+
+    /**
+     * Split SQL queries
+     */
+    private function splitSQLQueries($sqlContent)
+    {
+        // Normalize line endings
+        $sqlContent = str_replace(["\r\n", "\r"], "\n", $sqlContent);
+        
+        // Remove comments
+        $sqlContent = preg_replace('/--.*$/m', '', $sqlContent);
+        $sqlContent = preg_replace('/#.*$/m', '', $sqlContent);
+        $sqlContent = preg_replace('/\/\*.*?\*\//s', '', $sqlContent);
+        
+        // Split by semicolon
+        $tempQueries = [];
+        $currentQuery = '';
+        $inString = false;
+        $stringChar = '';
+        
+        for ($i = 0; $i < strlen($sqlContent); $i++) {
+            $char = $sqlContent[$i];
+            
+            if (($char === "'" || $char === '"') && !$inString) {
+                $inString = true;
+                $stringChar = $char;
+            } elseif ($char === $stringChar && $inString) {
+                $inString = false;
+                $stringChar = '';
+            }
+            
+            if ($char === ';' && !$inString) {
+                $tempQueries[] = trim($currentQuery);
+                $currentQuery = '';
+            } else {
+                $currentQuery .= $char;
+            }
+        }
+        
+        // Add last query
+        if (!empty(trim($currentQuery))) {
+            $tempQueries[] = trim($currentQuery);
+        }
+        
+        // Clean queries
+        $queries = [];
+        foreach ($tempQueries as $query) {
+            $trimmedQuery = trim($query);
+            if (!empty($trimmedQuery) && strlen($trimmedQuery) > 10) {
+                $queries[] = $trimmedQuery;
+            }
+        }
+        
+        return $queries;
+    }
+
+    /**
+     * Export Excel
+     */
+    public function exportExcel()
+    {
+        $session = session();
+        
+        // Cek login
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/auth/login');
+        }
+
+        try {
+            $pengukuran = $this->getAllData();
+
+            // Load library PhpSpreadsheet
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set title
+            $sheet->setTitle('Data Piezometer Left Bank');
+            
+            // Header Excel
+            $headers = $this->getExcelHeaders();
+            
+            // Set header row
+            $col = 'A';
+            foreach ($headers as $header) {
+                $sheet->setCellValue($col . '1', $header);
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+                $col++;
+            }
+            
+            // Set data rows
+            $row = 2;
+            foreach ($pengukuran as $item) {
+                $p = $item['pengukuran'];
+                $metrik = $item['metrik'];
+                $initialA = $item['initial_a'];
+                $initialB = $item['initial_b'];
+                $perhitungan = $item['perhitungan'];
+                $pembacaan = $item['pembacaan'];
+                
+                // Daftar titik
+                $titikList = ['L_01', 'L_02', 'L_03', 'L_04', 'L_05', 'L_06', 'L_07', 'L_08', 'L_09', 'L_10', 'SPZ_02'];
+                
+                $dataRow = [
+                    // Data dasar
+                    $p['tahun'] ?? '-',
+                    $p['periode'] ?? '-',
+                    $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-',
+                    $p['dma'] ?? '-',
+                    $p['temp_id'] ?? '-',
+                ];
+                
+                // Data pembacaan (feet & inch)
+                foreach ($titikList as $titik) {
+                    $bacaanData = $pembacaan[$titik] ?? [];
+                    $dataRow[] = $bacaanData['feet'] ?? '-';
+                    $dataRow[] = $bacaanData['inch'] ?? '-';
+                }
+                
+                // Data konversi
+                $dataRow[] = 0.3048; // Feet → M
+                $dataRow[] = 0.0254; // Inch → M
+                
+                // Data metrik (meter)
+                foreach ($titikList as $titik) {
+                    $dataRow[] = $metrik[$titik] ?? '-';
+                }
+                
+                // Data perhitungan untuk setiap titik
+                $tipeListDB = ['L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'L07', 'L08', 'L09', 'L10', 'SPZ02'];
+                foreach ($tipeListDB as $tipe) {
+                    $perhitunganData = $perhitungan[$tipe] ?? [];
+                    $dataRow[] = $perhitunganData['t_psmetrik'] ?? '-';
+                }
+                
+                // Data initial A
+                foreach ($titikList as $titik) {
+                    $initialAData = $initialA[$titik] ?? [];
+                    $dataRow[] = $initialAData['Elv_Piez'] ?? '-';
+                }
+                
+                // Data initial B
+                foreach ($titikList as $titik) {
+                    $initialBData = $initialB[$titik] ?? [];
+                    $dataRow[] = $initialBData['Elv_Piez'] ?? '-';
+                }
+                
+                // Write row to sheet
+                $col = 'A';
+                foreach ($dataRow as $value) {
+                    $sheet->setCellValue($col . $row, $value);
+                    $col++;
+                }
+                $row++;
+            }
+            
+            // Auto size columns
+            $lastColumn = $sheet->getHighestColumn();
+            for ($col = 'A'; $col <= $lastColumn; $col++) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Create writer
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            
+            // Set headers untuk download
+            $filename = 'data_piezometer_left_bank_' . date('Ymd_His') . '.xlsx';
+            
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            
+            // Output file
+            $writer->save('php://output');
+            exit();
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error exporting Excel: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get Excel headers
+     */
+    private function getExcelHeaders()
+    {
+        $headers = [
+            'Tahun', 'Periode', 'Tanggal', 'DMA', 'CH Bulanan'
+        ];
+        
+        // Headers untuk pembacaan (feet & inch)
+        $titikList = ['L-01', 'L-02', 'L-03', 'L-04', 'L-05', 'L-06', 'L-07', 'L-08', 'L-09', 'L-10', 'SPZ-02'];
+        foreach ($titikList as $titik) {
+            $headers[] = $titik . ' Feet';
+            $headers[] = $titik . ' Inch';
+        }
+        
+        // Headers konversi
+        $headers[] = 'Feet → M';
+        $headers[] = 'Inch → M';
+        
+        // Headers metrik (meter)
+        foreach ($titikList as $titik) {
+            $headers[] = $titik . ' Meter';
+        }
+        
+        // Headers perhitungan
+        foreach ($titikList as $titik) {
+            $headers[] = $titik . ' T_PSMetrik';
+        }
+        
+        // Headers initial A
+        foreach ($titikList as $titik) {
+            $headers[] = $titik . ' Initial A';
+        }
+        
+        // Headers initial B
+        foreach ($titikList as $titik) {
+            $headers[] = $titik . ' Initial B';
+        }
+        
+        return $headers;
     }
 }
