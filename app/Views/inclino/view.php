@@ -25,7 +25,6 @@
         .bg-reading { background-color: #e8f4fd !important; }
         .bg-calculation { background-color: #f0f9eb !important; }
         .bg-result { background-color: #e6f7ff !important; }
-        .bg-action { background-color: #f8f9fa !important; }
         .bg-metrik { background-color: #fff2cc !important; }
         .bg-initial { background-color: #e6ffed !important; }
         .bg-info-column { background-color: #e7f1ff !important; }
@@ -62,7 +61,7 @@
 
         .table {
             margin-bottom: 0;
-            min-width: 1600px;
+            min-width: 1500px;
         }
 
         .table th {
@@ -114,15 +113,6 @@
         }
 
         /* STICKY COLUMNS */
-        .sticky-col-1 { 
-            position: sticky; 
-            left: 0; 
-            z-index: 90;
-            background-color: #f8f9fa;
-            border-right: 2px solid #dee2e6 !important;
-            min-width: 80px;
-        }
-        
         .sticky-col-depth {
             position: sticky; 
             left: 0; 
@@ -131,16 +121,6 @@
             border-right: 2px solid #dee2e6 !important;
             min-width: 80px;
             font-weight: 600;
-        }
-        
-        .sticky-action { 
-            position: sticky; 
-            right: 0; 
-            z-index: 95;
-            background-color: #f8f9fa;
-            border-left: 2px solid #dee2e6 !important;
-            min-width: 90px;
-            text-align: center;
         }
 
         /* BUTTON STYLES */
@@ -177,6 +157,21 @@
             background-color: #c82333;
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        }
+        
+        /* Button disabled untuk non-admin */
+        .btn-disabled {
+            background-color: #e9ecef !important;
+            color: #6c757d !important;
+            border: 1px solid #dee2e6 !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .btn-disabled:hover {
+            background-color: #e9ecef !important;
+            transform: translateY(0);
+            box-shadow: none;
         }
 
         /* FILTER SECTION */
@@ -377,17 +372,117 @@
             background-color: #f5f5f5;
         }
 
-        /* ACTION COLUMN */
-        .action-column {
+        /* MODAL AKSES */
+        .modal-access .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        .modal-access .modal-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #2c3e50;
+            border-bottom: 1px solid #dee2e6;
+            padding: 20px 30px;
             position: relative;
         }
         
-        .action-buttons {
+        .modal-access .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db 0%, #2c3e50 100%);
+        }
+        
+        .modal-access .modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .modal-access .access-icon-container {
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .access-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            border-radius: 50%;
             display: flex;
-            gap: 0.25rem;
-            justify-content: center;
             align-items: center;
-            height: 100%;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        
+        .modal-access .access-icon i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        .modal-access .access-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .modal-access .access-message {
+            color: #5d6d7e;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .user-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .modal-access .access-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid #3498db;
+        }
+        
+        .modal-access .access-note {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .modal-access .btn-understand {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        
+        .modal-access .btn-understand:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
         }
 
         /* RESPONSIVE ADJUSTMENTS */
@@ -472,6 +567,22 @@
     </style>
 </head>
 <body>
+<?php
+// ============ CEK LOGIN ============
+$session = session();
+$isLoggedIn = $session->get('isLoggedIn');
+$role = $session->get('role');
+$isAdmin = $role == 'admin';
+$username = $session->get('username');
+$fullName = $session->get('fullName');
+
+// Redirect jika belum login
+if (!$isLoggedIn) {
+    header('Location: ' . base_url('/login'));
+    exit();
+}
+?>
+
 <?= $this->include('layouts/header'); ?>
 
 <div class="container-fluid py-4">
@@ -486,17 +597,38 @@
             <a href="<?= base_url('/') ?>" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Kembali ke Dashboard
             </a>
-            <a href="<?= base_url('inclino/create') ?>" class="btn btn-outline-success">
-                <i class="fas fa-plus me-1"></i> Add Data
-            </a>
+            
+            <?php if ($isAdmin): ?>
+                <a href="<?= base_url('inclino/create') ?>" class="btn btn-outline-success">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </a>
+            <?php else: ?>
+                <button type="button" class="btn btn-outline-success btn-disabled" 
+                        onclick="showAccessWarning('add')"
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="top" 
+                        title="Klik untuk melihat informasi hak akses">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </button>
+            <?php endif; ?>
             
             <button type="button" class="btn btn-outline-info" id="exportExcel">
                 <i class="fas fa-file-excel me-1"></i> Export Excel
             </button>
             
-            <button type="button" class="btn btn-outline-primary" id="showCsvModalBtn">
-                <i class="fas fa-file-csv me-1"></i> Import CSV
-            </button>
+            <?php if ($isAdmin): ?>
+                <button type="button" class="btn btn-outline-primary" id="showCsvModalBtn">
+                    <i class="fas fa-file-csv me-1"></i> Import CSV
+                </button>
+            <?php else: ?>
+                <button type="button" class="btn btn-outline-primary btn-disabled"
+                       onclick="showAccessWarning('import')"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="top"
+                       title="Klik untuk melihat informasi hak akses">
+                    <i class="fas fa-file-csv me-1"></i> Import CSV
+                </button>
+            <?php endif; ?>
         </div>
 
         <div class="table-controls">
@@ -506,6 +638,61 @@
                 <button class="btn btn-outline-secondary" type="button" id="clearSearch">
                     <i class="fas fa-times"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Peringatan Hak Akses -->
+    <div class="modal fade modal-access" id="accessWarningModal" tabindex="-1" aria-labelledby="accessWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accessWarningModalLabel">
+                        <i class="fas fa-shield-alt me-2"></i>Pengaturan Akses InclinoMeter
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="access-icon-container">
+                        <div class="access-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                    
+                    <h3 class="access-title" id="warningTitle">
+                        <!-- Judul akan diisi oleh JavaScript -->
+                    </h3>
+                    
+                    <p class="access-message" id="warningMessage">
+                        <!-- Pesan akan diisi oleh JavaScript -->
+                    </p>
+                    
+                    <div class="user-role-badge">
+                        <i class="fas fa-user-tag"></i>
+                        <span>Level Akses: <strong><?= $isAdmin ? 'Administrator' : 'Pengguna Biasa' ?></strong></span>
+                    </div>
+                    
+                    <div class="access-details">
+                        <h6>Hak Akses yang Tersedia:</h6>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Melihat dan menelusuri data InclinoMeter</li>
+                            <li><i class="fas fa-check"></i> Mencari dan memfilter informasi</li>
+                            <li><i class="fas fa-check"></i> Mengekspor data ke format Excel</li>
+                            <li><i class="fas fa-check"></i> Mengakses semua lokasi InclinoMeter</li>
+                            <li><i class="fas fa-check"></i> Melihat metadata dan informasi teknis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="access-note">
+                        <i class="fas fa-info-circle"></i>
+                        Untuk meminta akses tambahan, silakan hubungi Administrator sistem.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
+                        <i class="fas fa-check me-1"></i> Mengerti
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -710,33 +897,8 @@
     <span id="scrollText">Scroll untuk melihat lebih banyak data</span>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                    Konfirmasi Hapus Data
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Apakah Anda yakin ingin menghapus data InclinoMeter ini?</p>
-                <p class="text-muted small">Data yang dihapus tidak dapat dikembalikan.</p>
-                <input type="hidden" id="deleteIdPengukuran">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">
-                    <i class="fas fa-trash me-1"></i> Hapus
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Upload CSV -->
+<!-- Modal Upload CSV (Hanya untuk Admin) -->
+<?php if ($isAdmin): ?>
 <div class="modal fade" id="uploadCsvModal" tabindex="-1" aria-labelledby="uploadCsvModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -808,6 +970,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?= $this->include('layouts/footer'); ?>
 
@@ -816,16 +979,69 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-// Inisialisasi halaman
-document.addEventListener('DOMContentLoaded', function () {
-    // Inisialisasi modal
-    const csvModal = new bootstrap.Modal(document.getElementById('uploadCsvModal'));
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+// ============ VARIABEL GLOBAL ============
+let isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
+let tableData = null;
+let currentData = [];
+
+// Variabel global untuk modal hak akses
+const accessWarningModal = new bootstrap.Modal(document.getElementById('accessWarningModal'));
+const warningTitle = document.getElementById('warningTitle');
+const warningMessage = document.getElementById('warningMessage');
+
+// ============ FUNGSI HAK AKSES ============
+function showAccessWarning(actionType, borehole = null, date = null, depth = null) {
+    let title = '';
+    let message = '';
     
+    switch(actionType) {
+        case 'add':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penambahan data InclinoMeter tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'edit':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur pengeditan data InclinoMeter (Lokasi: ${borehole || '-'}, Tanggal: ${date || '-'}, Depth: ${depth || '-'}) tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'delete':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penghapusan data InclinoMeter (Lokasi: ${borehole || '-'}, Tanggal: ${date || '-'}, Depth: ${depth || '-'}) tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'import':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur import CSV InclinoMeter tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        default:
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur ini tidak dapat diakses dengan level pengguna saat ini.`;
+    }
+    
+    // Update judul dan pesan
+    warningTitle.textContent = title;
+    warningMessage.innerHTML = message;
+    
+    // Tampilkan modal
+    accessWarningModal.show();
+}
+
+// ============ INISIALISASI HALAMAN ============
+document.addEventListener('DOMContentLoaded', function () {
     // Event listener untuk button Import CSV
-    document.getElementById('showCsvModalBtn').addEventListener('click', function() {
-        csvModal.show();
-    });
+    const showCsvModalBtn = document.getElementById('showCsvModalBtn');
+    if (showCsvModalBtn) {
+        showCsvModalBtn.addEventListener('click', function() {
+            <?php if ($isAdmin): ?>
+                const csvModal = new bootstrap.Modal(document.getElementById('uploadCsvModal'));
+                csvModal.show();
+            <?php else: ?>
+                showAccessWarning('import');
+            <?php endif; ?>
+        });
+    }
 
     // Export Excel
     document.getElementById('exportExcel').addEventListener('click', function() {
@@ -865,31 +1081,34 @@ document.addEventListener('DOMContentLoaded', function () {
     // Search on input
     searchInput.addEventListener('input', debounce(filterTableData, 300));
 
+    <?php if ($isAdmin): ?>
     // CSV File Preview
-    document.getElementById('csvFile').addEventListener('change', previewCSV);
+    const csvFileInput = document.getElementById('csvFile');
+    if (csvFileInput) {
+        csvFileInput.addEventListener('change', previewCSV);
+    }
 
-    // PERBAIKAN PENTING: Handle form submission untuk CSV upload
-    document.getElementById('uploadCsvForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        uploadCSV();
-    });
+    // Handle form submission untuk CSV upload
+    const uploadCsvForm = document.getElementById('uploadCsvForm');
+    if (uploadCsvForm) {
+        uploadCsvForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            uploadCSV();
+        });
+    }
 
     // Modal cleanup
-    document.getElementById('uploadCsvModal').addEventListener('hidden.bs.modal', resetCSVForm);
+    const uploadCsvModal = document.getElementById('uploadCsvModal');
+    if (uploadCsvModal) {
+        uploadCsvModal.addEventListener('hidden.bs.modal', resetCSVForm);
+    }
+    <?php endif; ?>
 
     // Scroll indicator functionality
     window.addEventListener('scroll', updateScrollIndicator);
-    
-    // Inisialisasi tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
 });
 
-// Variable untuk menyimpan data
-let tableData = null;
-let currentData = [];
+// ============ FUNGSI-FUNGSI UTAMA ============
 
 // Load months berdasarkan tahun yang dipilih
 async function loadMonths(year) {
@@ -949,7 +1168,7 @@ async function loadDataByFilter() {
             month: bulan || '',
             day: '',
             borehole: lokasi || '',
-            sort: 'desc' // Ubah dari 'asc' menjadi 'desc'
+            sort: 'desc'
         });
         
         const response = await fetch(`<?= base_url('inclino/getDataByFilter') ?>?${params}`);
@@ -965,7 +1184,7 @@ async function loadDataByFilter() {
                 currentData.sort((a, b) => {
                     const depthA = parseFloat(a.depth || a.kedalaman || 0);
                     const depthB = parseFloat(b.depth || b.kedalaman || 0);
-                    return depthB - depthA; // DESCENDING: b - a
+                    return depthB - depthA;
                 });
             }
             
@@ -997,7 +1216,7 @@ async function loadDataByFilter() {
     }
 }
 
-// Render tabel dengan data - DIPERBAIKI DENGAN MAPPING YANG BENAR
+// Render tabel dengan data - TANPA KOLOM AKSI
 function renderTable(data) {
     const tableHeader = document.getElementById('tableHeader');
     const tableBody = document.getElementById('tableBody');
@@ -1006,14 +1225,13 @@ function renderTable(data) {
     tableHeader.innerHTML = '';
     tableBody.innerHTML = '';
     
-    // Render header sesuai dengan struktur gambar
+    // Render header sesuai dengan struktur gambar - TANPA KOLOM AKSI
     // Baris 1: Depth dan dua set Reading Date
     const row1 = document.createElement('tr');
     row1.innerHTML = `
         <th class="reading-date-header sticky-col-depth" rowspan="4">Depth<br>(m)</th>
         <th class="reading-date-header" colspan="6" style="min-width: 600px;">READING DATE 1</th>
         <th class="reading-date-header" colspan="6" style="min-width: 600px;">READING DATE 2</th>
-        <th class="reading-date-header sticky-action" rowspan="4">Aksi</th>
     `;
     tableHeader.appendChild(row1);
     
@@ -1072,7 +1290,7 @@ function renderTable(data) {
     `;
     tableHeader.appendChild(row4);
     
-    // Render data rows sesuai dengan data dari gambar
+    // Render data rows sesuai dengan data dari gambar - TANPA KOLOM AKSI
     if (data && data.length > 0) {
         // Data sudah di-sort DESCENDING (dari -0.5 ke -80)
         data.forEach((row, index) => {
@@ -1136,28 +1354,13 @@ function renderTable(data) {
             const td13 = createNumberCell(row.displace_profile_b || '0.000000', true);
             tr.appendChild(td13);
             
-            // Kolom Aksi
-            const tdAction = document.createElement('td');
-            tdAction.className = 'sticky-action';
-            tdAction.innerHTML = `
-                <div class="action-buttons">
-                    <button class="btn btn-edit btn-action" title="Edit" onclick="editData('${row.id_pengukuran || row.id || index}')" data-bs-toggle="tooltip">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-delete btn-action" title="Hapus" onclick="deleteData('${row.id_pengukuran || row.id || index}')" data-bs-toggle="tooltip">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            tr.appendChild(tdAction);
-            
             tableBody.appendChild(tr);
         });
     } else {
         // Jika tidak ada data, tampilkan pesan
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 14;
+        td.colSpan = 13; // Diubah dari 14 menjadi 13 (tanpa kolom aksi)
         td.textContent = 'Tidak ada data yang ditampilkan';
         td.className = 'text-center py-3 text-muted';
         tr.appendChild(td);
@@ -1166,12 +1369,6 @@ function renderTable(data) {
     
     // Update scroll indicator
     setTimeout(updateScrollIndicator, 100);
-    
-    // Initialize tooltips untuk row baru
-    const tooltipTriggerList = [].slice.call(tableBody.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
 }
 
 // Helper function untuk membuat cell number - MENGAMBIL NILAI PERSIS TANPA PEMBULATAN
@@ -1385,6 +1582,7 @@ function updateScrollIndicator() {
     }
 }
 
+<?php if ($isAdmin): ?>
 // Preview CSV file
 function previewCSV(e) {
     const file = e.target.files[0];
@@ -1532,6 +1730,7 @@ function resetCSVForm() {
     document.getElementById('uploadProgress').style.display = 'none';
     document.getElementById('csvPreview').innerHTML = '<p class="text-muted mb-0">Pilih file CSV untuk melihat preview data</p>';
 }
+<?php endif; ?>
 
 // Export to Excel
 function exportToExcel() {
@@ -1549,53 +1748,6 @@ function exportToExcel() {
         console.error('Export error:', error);
         showAlert('danger', 'Gagal mengexport data');
     }
-}
-
-// Fungsi edit data
-function editData(id) {
-    // Redirect ke halaman edit
-    window.location.href = `<?= base_url('inclino/edit/') ?>${id}`;
-}
-
-// Fungsi delete data
-function deleteData(id) {
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    document.getElementById('deleteIdPengukuran').value = id;
-    
-    // Tampilkan konfirmasi delete
-    deleteModal.show();
-    
-    // Handle confirm delete
-    document.getElementById('confirmDelete').onclick = async function() {
-        const deleteId = document.getElementById('deleteIdPengukuran').value;
-        
-        try {
-            const response = await fetch(`<?= base_url('inclino/delete/') ?>${deleteId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    <?= csrf_token() ?>: '<?= csrf_hash() ?>'
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                showAlert('success', result.message || 'Data berhasil dihapus');
-                deleteModal.hide();
-                // Reload data setelah delete
-                loadDataByFilter();
-            } else {
-                showAlert('danger', result.message || 'Gagal menghapus data');
-            }
-        } catch (error) {
-            console.error('Delete error:', error);
-            showAlert('danger', 'Terjadi kesalahan saat menghapus data');
-        }
-    };
 }
 </script>
 </body>
