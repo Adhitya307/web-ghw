@@ -172,8 +172,39 @@
             transform: translateY(-1px);
         }
         
+        /* Button disabled untuk non-admin */
+        .btn-disabled {
+            color: #6c757d;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: not-allowed;
+        }
+        
+        .btn-disabled:hover {
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+            transform: translateY(0);
+        }
+        
         .data-table {
             min-width: 2000px;
+        }
+        
+        /* User Info Styling */
+        .user-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #0d6efd;
+            margin-bottom: 1rem;
+        }
+        
+        .badge-admin {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .badge-user {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
         }
         
         /* Filter Section */
@@ -280,12 +311,163 @@
         .table tbody tr:hover {
             background-color: #e9ecef;
         }
+        
+        /* Modal Akses - MODERN & FORMAL */
+        .modal-access .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        .modal-access .modal-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #2c3e50;
+            border-bottom: 1px solid #dee2e6;
+            padding: 20px 30px;
+            position: relative;
+        }
+        
+        .modal-access .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db 0%, #2c3e50 100%);
+        }
+        
+        .modal-access .modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .modal-access .access-icon-container {
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .access-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        
+        .modal-access .access-icon i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        .modal-access .access-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .modal-access .access-message {
+            color: #5d6d7e;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        
+        .modal-access .user-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .modal-access .access-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid #3498db;
+        }
+        
+        .modal-access .access-note {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .modal-access .btn-understand {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        
+        .modal-access .btn-understand:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
     </style>
 </head>
 <body>
+<?php
+// Cek session dan role
+$session = session();
+$isLoggedIn = $session->get('isLoggedIn');
+$role = $session->get('role');
+$isAdmin = $role == 'admin';
+$username = $session->get('username');
+$fullName = $session->get('fullName');
+
+// Redirect jika belum login
+if (!$isLoggedIn) {
+    header('Location: ' . base_url('/login'));
+    exit();
+}
+?>
+
 <?= $this->include('layouts/header'); ?>
 
 <div class="container-fluid py-4">
+    <!-- User Info -->
+    <div class="user-info mb-3 p-3 rounded">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-user-circle me-2"></i>
+                <strong><?= esc($fullName ?? $username) ?></strong>
+                <span class="badge <?= $isAdmin ? 'badge-admin' : 'badge-user' ?> ms-2">
+                    <?= $isAdmin ? 'Administrator' : 'User' ?>
+                </span>
+                <small class="text-muted d-block mt-1">
+                    <i class="fas fa-id-card me-1"></i>Username: <?= esc($username) ?>
+                </small>
+            </div>
+            <div>
+                <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    <?= date('d F Y H:i:s') ?>
+                </small>
+            </div>
+        </div>
+    </div>
+
     <!-- Table Header Section -->
     <div class="table-header">
         <h2 class="table-title">
@@ -298,16 +480,35 @@
                 <i class="fas fa-table"></i> Left Bank
             </a>
             <a href="<?= base_url('piezometer/right') ?>" class="btn btn-primary btn-piez">Right Bank</a>
-            <a href="<?= base_url('right-piez/create') ?>" class="btn btn-outline-success">
-                <i class="fas fa-plus me-1"></i> Add Data
-            </a>
+            
+            <?php if ($isAdmin): ?>
+                <a href="<?= base_url('right-piez/create') ?>" class="btn btn-outline-success">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </a>
+                
+                <button type="button" class="btn btn-outline-warning" onclick="showImportModal()">
+                    <i class="fas fa-database me-1"></i> Import SQL
+                </button>
+            <?php else: ?>
+                <button type="button" class="btn btn-outline-success btn-disabled" 
+                        onclick="showAccessWarning('add')"
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="top" 
+                        title="Klik untuk melihat informasi hak akses">
+                    <i class="fas fa-plus me-1"></i> Add Data
+                </button>
+                
+                <button type="button" class="btn btn-outline-warning btn-disabled"
+                       onclick="showAccessWarning('import')"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="top"
+                       title="Klik untuk melihat informasi hak akses">
+                    <i class="fas fa-database me-1"></i> Import SQL
+                </button>
+            <?php endif; ?>
             
             <button type="button" class="btn btn-outline-info" id="exportExcel">
                 <i class="fas fa-file-excel me-1"></i> Export Excel
-            </button>
-            
-            <button type="button" class="btn btn-outline-warning" onclick="showImportModal()">
-                <i class="fas fa-database me-1"></i> Import SQL
             </button>
         </div>
 
@@ -315,6 +516,61 @@
             <div class="input-group" style="max-width: 300px;">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                 <input type="text" class="form-control" placeholder="Cari data..." id="searchInput">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Peringatan Hak Akses -->
+    <div class="modal fade modal-access" id="accessWarningModal" tabindex="-1" aria-labelledby="accessWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accessWarningModalLabel">
+                        <i class="fas fa-shield-alt me-2"></i>Pengaturan Akses Piezometer
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="access-icon-container">
+                        <div class="access-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                    
+                    <h3 class="access-title" id="warningTitle">
+                        <!-- Judul akan diisi oleh JavaScript -->
+                    </h3>
+                    
+                    <p class="access-message" id="warningMessage">
+                        <!-- Pesan akan diisi oleh JavaScript -->
+                    </p>
+                    
+                    <div class="user-role-badge">
+                        <i class="fas fa-user-tag"></i>
+                        <span>Level Akses: <strong><?= $isAdmin ? 'Administrator' : 'Pengguna Biasa' ?></strong></span>
+                    </div>
+                    
+                    <div class="access-details">
+                        <h6>Hak Akses yang Tersedia:</h6>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Melihat dan menelusuri data Piezometer</li>
+                            <li><i class="fas fa-check"></i> Mencari dan memfilter informasi</li>
+                            <li><i class="fas fa-check"></i> Mengekspor data ke format Excel</li>
+                            <li><i class="fas fa-check"></i> Mengakses semua titik (R-01 s/d PZ-04)</li>
+                            <li><i class="fas fa-check"></i> Melihat data Right Bank</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="access-note">
+                        <i class="fas fa-info-circle"></i>
+                        Untuk meminta akses tambahan, silakan hubungi Administrator sistem.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
+                        <i class="fas fa-check me-1"></i> Mengerti
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -581,26 +837,59 @@
                         <td colspan="105" class="text-center py-4">
                             <i class="fas fa-database fa-2x text-muted mb-3"></i>
                             <p class="text-muted">Tidak ada data Piezometer yang tersedia</p>
-                            <a href="<?= base_url('right-piez/create') ?>" class="btn btn-primary mt-2">
-                                <i class="fas fa-plus me-1"></i> Tambah Data Pertama
-                            </a>
+                            <?php if ($isAdmin): ?>
+                                <a href="<?= base_url('right-piez/create') ?>" class="btn btn-primary mt-2">
+                                    <i class="fas fa-plus me-1"></i> Tambah Data Pertama
+                                </a>
+                            <?php else: ?>
+                                <button type="button" class="btn btn-primary mt-2 btn-disabled" onclick="showAccessWarning('add')">
+                                    <i class="fas fa-plus me-1"></i> Tambah Data Pertama
+                                </button>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php else: ?>
                     <?php 
                     $titikList = ['R-01', 'R-02', 'R-03', 'R-04', 'R-05', 'R-06', 'R-07', 'R-08', 'R-09', 'R-10', 'R-11', 'R-12', 'IPZ-01', 'PZ-04'];
+                    
+                    // Urutkan data berdasarkan tahun dan tanggal
+                    usort($pengukuran, function($a, $b) {
+                        $tahunA = $a['pengukuran']['tahun'] ?? 0;
+                        $tahunB = $b['pengukuran']['tahun'] ?? 0;
+                        
+                        if ($tahunA != $tahunB) {
+                            return $tahunB - $tahunA; // Urutkan tahun descending
+                        }
+                        
+                        $dateA = strtotime($a['pengukuran']['tanggal'] ?? '1970-01-01');
+                        $dateB = strtotime($b['pengukuran']['tanggal'] ?? '1970-01-01');
+                        
+                        return $dateB - $dateA; // Urutkan tanggal descending
+                    });
+                    
+                    $lastYear = null;
                     ?>
                     
                     <?php foreach($pengukuran as $item): 
                         $p = $item['pengukuran'];
+                        $currentYear = $p['tahun'] ?? null;
+                        $showYear = $currentYear !== $lastYear;
+                        $lastYear = $currentYear;
+                        
                         $metrik = $item['metrik'] ?? [];
                         $initial = $item['initial'] ?? [];
                         $perhitungan = $item['perhitungan'] ?? [];
                         $pembacaan = $item['pembacaan'] ?? [];
                     ?>
-                    <tr data-pid="<?= $p['id_pengukuran'] ?>">
+                    <tr data-pid="<?= $p['id_pengukuran'] ?>" data-tahun="<?= esc($p['tahun'] ?? '') ?>" data-periode="<?= esc($p['periode'] ?? '') ?>" data-tma="<?= esc($p['tma'] ?? '') ?>">
                         <!-- Basic Information - WARNA BIRU MUDA -->
-                        <td class="sticky bg-info-column"><?= esc($p['tahun'] ?? '-') ?></td>
+                        <td class="sticky bg-info-column year-cell">
+                            <?php if ($showYear): ?>
+                                <strong><?= esc($p['tahun'] ?? '-') ?></strong>
+                            <?php else: ?>
+                                <!-- Kosongkan jika tahun sama dengan sebelumnya -->
+                            <?php endif; ?>
+                        </td>
                         <td class="sticky-2 bg-info-column"><?= esc($p['periode'] ?? '-') ?></td>
                         <td class="sticky-3 bg-info-column"><?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?></td>
                         <td class="sticky-4 bg-info-column"><?= formatNumberAsIs($p['tma']) ?></td>
@@ -639,14 +928,27 @@
                         <!-- ACTION BUTTONS - WARNA ABU-ABU MUDA -->
                         <td class="action-cell bg-action">
                             <div class="d-flex justify-content-center align-items-center">
-                                <a href="<?= base_url('right-piez/edit/' . $p['id_pengukuran']) ?>" 
-                                   class="btn-action btn-edit" title="Edit Data">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </a>
-                                <button type="button" class="btn-action btn-delete delete-data" 
-                                        data-id="<?= $p['id_pengukuran'] ?>" title="Hapus Data">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <?php if ($isAdmin): ?>
+                                    <a href="<?= base_url('right-piez/edit/' . $p['id_pengukuran']) ?>" 
+                                       class="btn-action btn-edit" title="Edit Data">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                    <button type="button" class="btn-action btn-delete delete-data" 
+                                            data-id="<?= $p['id_pengukuran'] ?>" title="Hapus Data">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <button type="button" class="btn-action btn-disabled" 
+                                            onclick="showAccessWarning('edit', '<?= $p['tahun'] ?? '' ?>', '<?= $p['periode'] ?? '' ?>', '<?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?>')"
+                                            title="Klik untuk melihat informasi hak akses">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <button type="button" class="btn-action btn-disabled"
+                                           onclick="showAccessWarning('delete', '<?= $p['tahun'] ?? '' ?>', '<?= $p['periode'] ?? '' ?>', '<?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?>')"
+                                           title="Klik untuk melihat informasi hak akses">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -663,7 +965,8 @@
     <span id="scrollText">Scroll untuk melihat lebih banyak data</span>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete Confirmation Modal (Hanya untuk Admin) -->
+<?php if ($isAdmin): ?>
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -687,8 +990,10 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<!-- Modal Import SQL -->
+<!-- Modal Import SQL (Hanya untuk Admin) -->
+<?php if ($isAdmin): ?>
 <div class="modal fade" id="importSqlModal" tabindex="-1" aria-labelledby="importSqlModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -754,6 +1059,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?= $this->include('layouts/footer'); ?>
 
@@ -762,6 +1068,57 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
+// Variabel global
+let isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
+let deleteId = null;
+let lastYear = null;
+
+// Variabel global untuk modal hak akses
+const accessWarningModal = new bootstrap.Modal(document.getElementById('accessWarningModal'));
+const warningTitle = document.getElementById('warningTitle');
+const warningMessage = document.getElementById('warningMessage');
+
+// ============ FUNGSI HAK AKSES ============
+function showAccessWarning(actionType, tahun = null, periode = null, tanggal = null) {
+    let title = '';
+    let message = '';
+    
+    switch(actionType) {
+        case 'add':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penambahan data Piezometer tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'edit':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur pengeditan data Piezometer (Tahun: ${tahun || '-'}, Periode: ${periode || '-'}, Tanggal: ${tanggal || '-'}) tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'delete':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur penghapusan data Piezometer (Tahun: ${tahun || '-'}, Periode: ${periode || '-'}, Tanggal: ${tanggal || '-'}) tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        case 'import':
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur import database Piezometer tidak dapat diakses dengan level pengguna saat ini.`;
+            break;
+            
+        default:
+            title = 'Akses Tidak Tersedia';
+            message = `Fitur ini tidak dapat diakses dengan level pengguna saat ini.`;
+    }
+    
+    // Update judul dan pesan
+    warningTitle.textContent = title;
+    warningMessage.innerHTML = message;
+    
+    // Tampilkan modal
+    accessWarningModal.show();
+}
+
+// ============ FUNGSI UTAMA ============
+
 // PERBAIKAN: Fungsi untuk mengatur ulang tinggi header secara dinamis
 function recalculateHeaderHeights() {
     const thead = document.querySelector('.table thead');
@@ -792,6 +1149,63 @@ function ensureActionColumnVisible() {
         }, 100);
     }
 }
+
+// Fungsi untuk filter tabel
+function filterTable() {
+    const tahunValue = document.getElementById('tahunFilter').value.toLowerCase();
+    const periodeValue = document.getElementById('periodeFilter').value.toLowerCase();
+    const tmaValue = document.getElementById('tmaFilter').value.toLowerCase();
+    const titikValue = document.getElementById('titikFilter').value.toLowerCase();
+    const searchValue = document.getElementById('searchInput').value.toLowerCase();
+
+    const rows = document.querySelectorAll('#dataTableBody tr[data-pid]');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const tahun = row.getAttribute('data-tahun')?.toLowerCase() || '';
+        const periode = row.getAttribute('data-periode')?.toLowerCase() || '';
+        const tma = row.getAttribute('data-tma')?.toLowerCase() || '';
+        const rowText = row.textContent.toLowerCase();
+
+        const tahunMatch = !tahunValue || tahun === tahunValue;
+        const periodeMatch = !periodeValue || periode === periodeValue;
+        const tmaMatch = !tmaValue || tma === tmaValue;
+        const titikMatch = !titikValue || rowText.includes(titikValue);
+        const searchMatch = !searchValue || rowText.includes(searchValue);
+
+        const isVisible = tahunMatch && periodeMatch && tmaMatch && titikMatch && searchMatch;
+        
+        if (isVisible) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update tampilan tahun yang duplikat
+    updateYearDisplay();
+}
+
+// Fungsi untuk update tampilan tahun (menyembunyikan duplikat)
+function updateYearDisplay() {
+    const yearCells = document.querySelectorAll('#dataTableBody .year-cell');
+    let lastVisibleYear = null;
+    
+    yearCells.forEach(cell => {
+        const row = cell.closest('tr');
+        if (row.style.display !== 'none') {
+            const yearContent = cell.textContent.trim();
+            if (yearContent && yearContent === lastVisibleYear) {
+                cell.innerHTML = ''; // Kosongkan jika tahun sama dengan sebelumnya
+            } else {
+                lastVisibleYear = yearContent;
+            }
+        }
+    });
+}
+
+// ============ EVENT HANDLERS ============
 
 document.addEventListener('DOMContentLoaded', function () {
     // Jalankan fungsi recalculate header heights
@@ -843,8 +1257,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 1000);
     });
 
-    // Delete Data
-    let deleteId = null;
+    // Delete Data (hanya untuk admin)
+    <?php if ($isAdmin): ?>
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
     
     document.querySelectorAll('.delete-data').forEach(btn => {
@@ -894,6 +1308,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+    <?php endif; ?>
 
     // Fungsi untuk menampilkan toast notification
     function showToast(type, message) {
@@ -928,33 +1343,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const titikFilter = document.getElementById('titikFilter');
     const searchInput = document.getElementById('searchInput');
     const resetFilter = document.getElementById('resetFilter');
-
-    function filterTable() {
-        const tahunValue = tahunFilter.value.toLowerCase();
-        const periodeValue = periodeFilter.value.toLowerCase();
-        const tmaValue = tmaFilter.value.toLowerCase();
-        const titikValue = titikFilter.value.toLowerCase();
-        const searchValue = searchInput.value.toLowerCase();
-
-        const rows = document.querySelectorAll('#dataTableBody tr');
-        
-        rows.forEach(row => {
-            if (row.querySelector('.text-center')) return;
-            
-            const tahun = row.cells[0].textContent.toLowerCase();
-            const periode = row.cells[1].textContent.toLowerCase();
-            const tma = row.cells[3].textContent.toLowerCase();
-            const rowText = row.textContent.toLowerCase();
-
-            const tahunMatch = !tahunValue || tahun === tahunValue;
-            const periodeMatch = !periodeValue || periode === periodeValue;
-            const tmaMatch = !tmaValue || tma === tmaValue;
-            const titikMatch = !titikValue || rowText.includes(titikValue);
-            const searchMatch = !searchValue || rowText.includes(searchValue);
-
-            row.style.display = tahunMatch && periodeMatch && tmaMatch && titikMatch && searchMatch ? '' : 'none';
-        });
-    }
 
     tahunFilter.addEventListener('change', filterTable);
     periodeFilter.addEventListener('change', filterTable);
@@ -993,7 +1381,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2000);
     });
 
-    // Import SQL Functionality
+    // Import SQL Functionality (hanya untuk admin)
+    <?php if ($isAdmin): ?>
     document.getElementById('btnImportSQL').addEventListener('click', function() {
         const sqlFileInput = document.getElementById('sqlFile');
         const importProgress = document.getElementById('importProgress');
@@ -1089,7 +1478,11 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('importProgress').style.display = 'none';
         document.getElementById('importStatus').style.display = 'none';
     });
+    <?php endif; ?>
 
+    // Inisialisasi filter pertama kali
+    filterTable();
+    
     setTimeout(() => {
         const tableContainer = document.getElementById('tableContainer');
         if (tableContainer) {
@@ -1099,8 +1492,12 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function showImportModal() {
+    <?php if ($isAdmin): ?>
     const modal = new bootstrap.Modal(document.getElementById('importSqlModal'));
     modal.show();
+    <?php else: ?>
+    showAccessWarning('import');
+    <?php endif; ?>
 }
 </script>
 
