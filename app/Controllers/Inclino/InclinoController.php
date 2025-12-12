@@ -82,6 +82,204 @@ class InclinoController extends BaseController
     }
     
     /**
+     * Export to Excel - AJAX
+     */
+    public function exportToExcel()
+    {
+        $year = $this->request->getGet('year');
+        $month = $this->request->getGet('month');
+        $day = $this->request->getGet('day');
+        $borehole = $this->request->getGet('borehole');
+        
+        try {
+            // Get filtered data
+            $data = $this->getFilteredData($year, $month, $day, $borehole);
+            
+            if (empty($data['data'])) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Tidak ada data untuk diexport'
+                ]);
+            }
+            
+            // Generate filename based on filter
+            $filename = 'InclinoMeter_Data';
+            if (!empty($borehole)) {
+                $filename .= '_' . str_replace(' ', '_', $borehole);
+            }
+            if (!empty($year)) {
+                $filename .= '_' . $year;
+            }
+            if (!empty($month)) {
+                $filename .= '_' . str_pad($month, 2, '0', STR_PAD_LEFT);
+            }
+            if (!empty($day)) {
+                $filename .= '_' . str_pad($day, 2, '0', STR_PAD_LEFT);
+            }
+            $filename .= '_' . date('Ymd_His') . '.xlsx';
+            
+            // Create PHPExcel instance
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set title
+            $sheet->setCellValue('A1', 'INCLINOMETER MONITORING DATA - PT INDONESIA POWER');
+            $sheet->mergeCells('A1:R1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
+            
+            // Set metadata
+            $row = 3;
+            if (!empty($data['metadata'])) {
+                $sheet->setCellValue('A' . $row, 'Borehole: ' . $data['metadata']['borehole_name']);
+                $sheet->setCellValue('F' . $row, 'Date: ' . $data['metadata']['reading_date']);
+                $sheet->setCellValue('A' . ($row + 1), 'Probe Serial: ' . $data['metadata']['probe_serial']);
+                $sheet->setCellValue('F' . ($row + 1), 'Reel Serial: ' . $data['metadata']['reel_serial']);
+                $sheet->setCellValue('A' . ($row + 2), 'Operator: ' . $data['metadata']['operator']);
+                $sheet->setCellValue('F' . ($row + 2), 'Total Records: ' . $data['metadata']['total_records']);
+                $row += 4;
+            }
+            
+            // Set headers
+            $headers = ['No', 'Depth (m)', 'Face A+ (m)', 'Face A- (m)', 'Rata-rata Face A (m)', 
+                       'Base Reading A (m)', 'Selisih A-AR (m)', 'Mean Cum Dev A (mm)', 'Displace Profil A (mm)',
+                       'Face B+ (m)', 'Face B- (m)', 'Rata-rata Face B (m)', 
+                       'Base Reading B (m)', 'Selisih B-BR (m)', 'Mean Cum Dev B (mm)', 'Displace Profil B (mm)',
+                       'Profil A (mm)', 'Profil B (mm)'];
+            
+            $col = 'A';
+            foreach ($headers as $header) {
+                $sheet->setCellValue($col . $row, $header);
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+                $col++;
+            }
+            
+            // Style headers
+            $headerRange = 'A' . $row . ':' . chr(ord($col) - 1) . $row;
+            $sheet->getStyle($headerRange)->getFont()->setBold(true);
+            $sheet->getStyle($headerRange)->getFill()
+                  ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                  ->getStartColor()->setARGB('FFE0E0E0');
+            $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center');
+            
+            $row++;
+            
+            // Add data
+            foreach ($data['data'] as $index => $item) {
+                $sheet->setCellValue('A' . $row, $item['no']);
+                $sheet->setCellValue('B' . $row, $item['depth']);
+                $sheet->setCellValue('C' . $row, $item['face_a_plus']);
+                $sheet->setCellValue('D' . $row, $item['face_a_minus']);
+                $sheet->setCellValue('E' . $row, $item['face_a_avg']);
+                $sheet->setCellValue('F' . $row, $item['basereading_a']);
+                $sheet->setCellValue('G' . $row, $item['diff_a']);
+                $sheet->setCellValue('H' . $row, $item['mean_cum_deviation_a']);
+                $sheet->setCellValue('I' . $row, $item['displace_profile_a']);
+                $sheet->setCellValue('J' . $row, $item['face_b_plus']);
+                $sheet->setCellValue('K' . $row, $item['face_b_minus']);
+                $sheet->setCellValue('L' . $row, $item['face_b_avg']);
+                $sheet->setCellValue('M' . $row, $item['basereading_b']);
+                $sheet->setCellValue('N' . $row, $item['diff_b']);
+                $sheet->setCellValue('O' . $row, $item['mean_cum_deviation_b']);
+                $sheet->setCellValue('P' . $row, $item['displace_profile_b']);
+                $sheet->setCellValue('Q' . $row, $item['profil_a']);
+                $sheet->setCellValue('R' . $row, $item['profil_b']);
+                $row++;
+            }
+            
+            // Add borders
+            $dataRange = 'A' . ($row - count($data['data'])) . ':R' . ($row - 1);
+            $styleArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['argb' => 'FF000000'],
+                    ],
+                ],
+            ];
+            $sheet->getStyle($dataRange)->applyFromArray($styleArray);
+            
+            // Save to file
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $filepath = WRITEPATH . 'exports/' . $filename;
+            
+            // Ensure directory exists
+            if (!is_dir(WRITEPATH . 'exports')) {
+                mkdir(WRITEPATH . 'exports', 0755, true);
+            }
+            
+            $writer->save($filepath);
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'filename' => $filename,
+                'url' => base_url('writable/exports/' . $filename)
+            ]);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'exportToExcel Error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal mengexport data: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * View Profil A - AJAX
+     */
+    public function viewProfilA()
+    {
+        $year = $this->request->getGet('year');
+        $month = $this->request->getGet('month');
+        $day = $this->request->getGet('day');
+        $borehole = $this->request->getGet('borehole');
+        
+        try {
+            $data = $this->getProfilAData($year, $month, $day, $borehole);
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data' => $data
+            ]);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'viewProfilA Error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data Profil A: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * View Profil B - AJAX
+     */
+    public function viewProfilB()
+    {
+        $year = $this->request->getGet('year');
+        $month = $this->request->getGet('month');
+        $day = $this->request->getGet('day');
+        $borehole = $this->request->getGet('borehole');
+        
+        try {
+            $data = $this->getProfilBData($year, $month, $day, $borehole);
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data' => $data
+            ]);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'viewProfilB Error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data Profil B: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
      * Get months for selected year - AJAX
      */
     public function getMonthsByYear()
@@ -258,97 +456,249 @@ class InclinoController extends BaseController
     /**
      * Get filtered data
      */
-    /**
- * Get filtered data
- */
-/**
- * Get filtered data
- */
-private function getFilteredData($year, $month, $day, $borehole)
-{
-    try {
-        $builder = $this->pembacaanModel->db->table('inclinometer_readings ir');
+    private function getFilteredData($year, $month, $day, $borehole)
+    {
+        try {
+            $builder = $this->pembacaanModel->db->table('inclinometer_readings ir');
+            
+            $builder->select("
+                ir.id_pengukuran,
+                ir.depth,
+                ir.face_a_plus,
+                ir.face_a_minus,
+                ir.face_b_plus,
+                ir.face_b_minus,
+                ir.reading_date,
+                ir.borehole_name,
+                ir.probe_serial,
+                ir.reel_serial,
+                ir.operator,
+                ia.face_a as mean_deviation_a,
+                ia.face_b as mean_deviation_b,
+                ia.mean_cum_deviation_a,
+                ia.mean_cum_deviation_b,
+                ia.basereading_a,
+                ia.basereading_b,
+                ia.displace_profile_a,
+                ia.displace_profile_b,
+                pa.nilai_profil_a,
+                pb.nilai_profil_b
+            ")
+            ->join('initial_reading ia', 'ir.id_pengukuran = ia.id_pengukuran AND ir.depth = ia.depth', 'left')
+            ->join('profil_a pa', 'ir.id_pengukuran = pa.id_pengukuran AND ir.depth = pa.depth', 'left')
+            ->join('profil_b pb', 'ir.id_pengukuran = pb.id_pengukuran AND ir.depth = pb.depth', 'left');
         
-        // PERBAIKAN: Tulis query dengan format yang benar
-        $builder->select("
-            ir.id_pengukuran,
-            ir.depth,
-            ir.face_a_plus,
-            ir.face_a_minus,
-            ir.face_b_plus,
-            ir.face_b_minus,
-            ir.reading_date,
-            ir.borehole_name,
-            ir.probe_serial,
-            ir.reel_serial,
-            ir.operator,
-            ia.face_a as mean_deviation_a,
-            ia.face_b as mean_deviation_b,
-            ia.mean_cum_deviation_a,
-            ia.mean_cum_deviation_b,
-            ia.basereading_a,
-            ia.basereading_b,
-            ia.displace_profile_a,
-            ia.displace_profile_b,
-            pa.nilai_profil_a,
-            pb.nilai_profil_b
-        ")
-        ->join('initial_reading ia', 'ir.id_pengukuran = ia.id_pengukuran AND ir.depth = ia.depth', 'left')
-        ->join('profil_a pa', 'ir.id_pengukuran = pa.id_pengukuran AND ir.depth = pa.depth', 'left')
-        ->join('profil_b pb', 'ir.id_pengukuran = pb.id_pengukuran AND ir.depth = pb.depth', 'left');
-        
-        // Atau gunakan cara alternatif yang lebih aman:
-        // $builder->select('ir.id_pengukuran, ir.depth, ir.face_a_plus, ir.face_a_minus, ir.face_b_plus, ir.face_b_minus, ir.reading_date, ir.borehole_name, ir.probe_serial, ir.reel_serial, ir.operator, ia.face_a as mean_deviation_a, ia.face_b as mean_deviation_b, ia.mean_cum_deviation_a, ia.mean_cum_deviation_b, ia.basereading_a, ia.basereading_b, ia.displace_profile_a, ia.displace_profile_b, pa.nilai_profil_a, pb.nilai_profil_b');
-        
-        // Apply filters
-        if (!empty($year)) {
-            $builder->where('YEAR(ir.reading_date)', $year);
-        }
-        
-        if (!empty($month)) {
-            $builder->where('MONTH(ir.reading_date)', $month);
-        }
-        
-        if (!empty($day)) {
-            $builder->where('DAY(ir.reading_date)', $day);
-        }
-        
-        if (!empty($borehole)) {
-            $builder->where('ir.borehole_name', $borehole);
-        }
-        
-        $builder->orderBy('ir.depth', 'ASC');
-        
-        $rawData = $builder->get()->getResultArray();
-        
-        // Debug: Log query untuk melihat error
-        log_message('debug', 'SQL Query: ' . $this->pembacaanModel->db->getLastQuery());
-        
-        if (empty($rawData)) {
+            // Apply filters
+            if (!empty($year)) {
+                $builder->where('YEAR(ir.reading_date)', $year);
+            }
+            
+            if (!empty($month)) {
+                $builder->where('MONTH(ir.reading_date)', $month);
+            }
+            
+            if (!empty($day)) {
+                $builder->where('DAY(ir.reading_date)', $day);
+            }
+            
+            if (!empty($borehole)) {
+                $builder->where('ir.borehole_name', $borehole);
+            }
+            
+            $builder->orderBy('ir.depth', 'ASC');
+            
+            $rawData = $builder->get()->getResultArray();
+            
+            if (empty($rawData)) {
+                return [
+                    'header' => [],
+                    'data' => [],
+                    'metadata' => []
+                ];
+            }
+            
+            // Process data for table
+            $processedData = $this->processTableData($rawData);
+            
             return [
-                'header' => [],
-                'data' => [],
-                'metadata' => []
+                'header' => $this->getTableHeader(),
+                'data' => $processedData,
+                'metadata' => $this->getMetadata($rawData)
             ];
+            
+        } catch (\Exception $e) {
+            log_message('error', 'getFilteredData Error: ' . $e->getMessage());
+            log_message('error', 'SQL Error: ' . $this->pembacaanModel->db->error());
+            throw $e;
         }
-        
-        // Process data for table
-        $processedData = $this->processTableData($rawData);
-        
-        return [
-            'header' => $this->getTableHeader(),
-            'data' => $processedData,
-            'metadata' => $this->getMetadata($rawData)
-        ];
-        
-    } catch (\Exception $e) {
-        log_message('error', 'getFilteredData Error: ' . $e->getMessage());
-        log_message('error', 'SQL Error: ' . $this->pembacaanModel->db->error());
-        throw $e;
     }
-}
+    
     /**
-     * Get table header structure
+     * Get Profil A Data
+     */
+    private function getProfilAData($year, $month, $day, $borehole)
+    {
+        try {
+            $builder = $this->pembacaanModel->db->table('inclinometer_readings ir')
+                ->select("
+                    ir.id_pengukuran,
+                    ir.depth,
+                    ir.reading_date,
+                    ir.borehole_name,
+                    pa.nilai_profil_a,
+                    ia.mean_cum_deviation_a,
+                    ia.displace_profile_a
+                ")
+                ->join('profil_a pa', 'ir.id_pengukuran = pa.id_pengukuran AND ir.depth = pa.depth', 'left')
+                ->join('initial_reading ia', 'ir.id_pengukuran = ia.id_pengukuran AND ir.depth = ia.depth', 'left')
+                ->orderBy('ir.depth', 'ASC');
+            
+            if (!empty($year)) {
+                $builder->where('YEAR(ir.reading_date)', $year);
+            }
+            
+            if (!empty($month)) {
+                $builder->where('MONTH(ir.reading_date)', $month);
+            }
+            
+            if (!empty($day)) {
+                $builder->where('DAY(ir.reading_date)', $day);
+            }
+            
+            if (!empty($borehole)) {
+                $builder->where('ir.borehole_name', $borehole);
+            }
+            
+            $data = $builder->get()->getResultArray();
+            
+            // Format data for display
+            $formattedData = [];
+            foreach ($data as $index => $row) {
+                $formattedData[] = [
+                    'no' => $index + 1,
+                    'depth' => number_format($row['depth'], 1),
+                    'nilai_profil_a' => isset($row['nilai_profil_a']) ? number_format($row['nilai_profil_a'], 6) : '0.000000',
+                    'mean_cum_deviation_a' => isset($row['mean_cum_deviation_a']) ? number_format($row['mean_cum_deviation_a'], 6) : '0.000000',
+                    'displace_profile_a' => isset($row['displace_profile_a']) ? number_format($row['displace_profile_a'], 6) : '0.000000'
+                ];
+            }
+            
+            // Get metadata
+            $metadata = null;
+            if (!empty($data)) {
+                $firstRow = $data[0];
+                $readingDate = isset($firstRow['reading_date']) ? date('d-m-Y', strtotime($firstRow['reading_date'])) : 'Unknown';
+                
+                $metadata = [
+                    'borehole_name' => $firstRow['borehole_name'] ?? 'Unknown',
+                    'reading_date' => $readingDate,
+                    'total_records' => count($data),
+                    'min_depth' => min(array_column($data, 'depth')),
+                    'max_depth' => max(array_column($data, 'depth'))
+                ];
+            }
+            
+            return [
+                'data' => $formattedData,
+                'metadata' => $metadata,
+                'headers' => [
+                    ['text' => 'No', 'class' => 'bg-info-column'],
+                    ['text' => 'Depth (m)', 'class' => 'bg-info-column'],
+                    ['text' => 'Profil A (mm)', 'class' => 'bg-reading'],
+                    ['text' => 'Mean Cum Dev A (mm)', 'class' => 'bg-calculation'],
+                    ['text' => 'Displace Profil A (mm)', 'class' => 'bg-result']
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+    
+    /**
+     * Get Profil B Data
+     */
+    private function getProfilBData($year, $month, $day, $borehole)
+    {
+        try {
+            $builder = $this->pembacaanModel->db->table('inclinometer_readings ir')
+                ->select("
+                    ir.id_pengukuran,
+                    ir.depth,
+                    ir.reading_date,
+                    ir.borehole_name,
+                    pb.nilai_profil_b,
+                    ia.mean_cum_deviation_b,
+                    ia.displace_profile_b
+                ")
+                ->join('profil_b pb', 'ir.id_pengukuran = pb.id_pengukuran AND ir.depth = pb.depth', 'left')
+                ->join('initial_reading ia', 'ir.id_pengukuran = ia.id_pengukuran AND ir.depth = ia.depth', 'left')
+                ->orderBy('ir.depth', 'ASC');
+            
+            if (!empty($year)) {
+                $builder->where('YEAR(ir.reading_date)', $year);
+            }
+            
+            if (!empty($month)) {
+                $builder->where('MONTH(ir.reading_date)', $month);
+            }
+            
+            if (!empty($day)) {
+                $builder->where('DAY(ir.reading_date)', $day);
+            }
+            
+            if (!empty($borehole)) {
+                $builder->where('ir.borehole_name', $borehole);
+            }
+            
+            $data = $builder->get()->getResultArray();
+            
+            // Format data for display
+            $formattedData = [];
+            foreach ($data as $index => $row) {
+                $formattedData[] = [
+                    'no' => $index + 1,
+                    'depth' => number_format($row['depth'], 1),
+                    'nilai_profil_b' => isset($row['nilai_profil_b']) ? number_format($row['nilai_profil_b'], 6) : '0.000000',
+                    'mean_cum_deviation_b' => isset($row['mean_cum_deviation_b']) ? number_format($row['mean_cum_deviation_b'], 6) : '0.000000',
+                    'displace_profile_b' => isset($row['displace_profile_b']) ? number_format($row['displace_profile_b'], 6) : '0.000000'
+                ];
+            }
+            
+            // Get metadata
+            $metadata = null;
+            if (!empty($data)) {
+                $firstRow = $data[0];
+                $readingDate = isset($firstRow['reading_date']) ? date('d-m-Y', strtotime($firstRow['reading_date'])) : 'Unknown';
+                
+                $metadata = [
+                    'borehole_name' => $firstRow['borehole_name'] ?? 'Unknown',
+                    'reading_date' => $readingDate,
+                    'total_records' => count($data),
+                    'min_depth' => min(array_column($data, 'depth')),
+                    'max_depth' => max(array_column($data, 'depth'))
+                ];
+            }
+            
+            return [
+                'data' => $formattedData,
+                'metadata' => $metadata,
+                'headers' => [
+                    ['text' => 'No', 'class' => 'bg-info-column'],
+                    ['text' => 'Depth (m)', 'class' => 'bg-info-column'],
+                    ['text' => 'Profil B (mm)', 'class' => 'bg-reading'],
+                    ['text' => 'Mean Cum Dev B (mm)', 'class' => 'bg-calculation'],
+                    ['text' => 'Displace Profil B (mm)', 'class' => 'bg-result']
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+    
+    /**
+     * Get table header structure for main table
      */
     private function getTableHeader()
     {
@@ -417,56 +767,49 @@ private function getFilteredData($year, $month, $day, $borehole)
     /**
      * Process data for table display
      */
-    /**
- * Process data for table display - PERBAIKAN: Gunakan data dari database
- */
-private function processTableData($rawData)
-{
-    $processedData = [];
-    $counter = 1;
-    
-    foreach ($rawData as $row) {
-        // Ambil data dari database, bukan hitung ulang
-        $face_a_avg = isset($row['mean_deviation_a']) ? $row['mean_deviation_a'] : (($row['face_a_plus'] + $row['face_a_minus']) / 2);
-        $face_b_avg = isset($row['mean_deviation_b']) ? $row['mean_deviation_b'] : (($row['face_b_plus'] + $row['face_b_minus']) / 2);
+    private function processTableData($rawData)
+    {
+        $processedData = [];
+        $counter = 1;
         
-        // Ambil basereading dari database jika ada, jika tidak gunakan default
-        $baseReadingA = isset($row['basereading_a']) ? $row['basereading_a'] : $this->getBaseReadingA($row['depth']);
-        $baseReadingB = isset($row['basereading_b']) ? $row['basereading_b'] : $this->getBaseReadingB($row['depth']);
+        foreach ($rawData as $row) {
+            $face_a_avg = isset($row['mean_deviation_a']) ? $row['mean_deviation_a'] : (($row['face_a_plus'] + $row['face_a_minus']) / 2);
+            $face_b_avg = isset($row['mean_deviation_b']) ? $row['mean_deviation_b'] : (($row['face_b_plus'] + $row['face_b_minus']) / 2);
+            
+            $baseReadingA = isset($row['basereading_a']) ? $row['basereading_a'] : $this->getBaseReadingA($row['depth']);
+            $baseReadingB = isset($row['basereading_b']) ? $row['basereading_b'] : $this->getBaseReadingB($row['depth']);
+            
+            $diff_a = $face_a_avg - $baseReadingA;
+            $diff_b = $face_b_avg - $baseReadingB;
+            
+            $mean_cum_dev_a = isset($row['mean_cum_deviation_a']) ? $row['mean_cum_deviation_a'] : ((500 * $diff_a) / 0.5);
+            $mean_cum_dev_b = isset($row['mean_cum_deviation_b']) ? $row['mean_cum_deviation_b'] : ((500 * $diff_b) / 0.5);
+            
+            $processedData[] = [
+                'no' => $counter++,
+                'depth' => number_format($row['depth'], 1),
+                'face_a_plus' => number_format($row['face_a_plus'], 6),
+                'face_a_minus' => number_format($row['face_a_minus'], 6),
+                'face_a_avg' => number_format($face_a_avg, 6),
+                'basereading_a' => number_format($baseReadingA, 6),
+                'diff_a' => number_format($diff_a, 6),
+                'mean_cum_deviation_a' => number_format($mean_cum_dev_a, 6),
+                'displace_profile_a' => isset($row['displace_profile_a']) ? number_format($row['displace_profile_a'], 6) : '0.000000',
+                'face_b_plus' => number_format($row['face_b_plus'], 6),
+                'face_b_minus' => number_format($row['face_b_minus'], 6),
+                'face_b_avg' => number_format($face_b_avg, 6),
+                'basereading_b' => number_format($baseReadingB, 6),
+                'diff_b' => number_format($diff_b, 6),
+                'mean_cum_deviation_b' => number_format($mean_cum_dev_b, 6),
+                'displace_profile_b' => isset($row['displace_profile_b']) ? number_format($row['displace_profile_b'], 6) : '0.000000',
+                'profil_a' => isset($row['nilai_profil_a']) ? number_format($row['nilai_profil_a'], 6) : '0.000000',
+                'profil_b' => isset($row['nilai_profil_b']) ? number_format($row['nilai_profil_b'], 6) : '0.000000',
+                'id_pengukuran' => $row['id_pengukuran']
+            ];
+        }
         
-        // Hitung differences jika diperlukan
-        $diff_a = $face_a_avg - $baseReadingA;
-        $diff_b = $face_b_avg - $baseReadingB;
-        
-        // Gunakan mean_cum_deviation dari database jika ada
-        $mean_cum_dev_a = isset($row['mean_cum_deviation_a']) ? $row['mean_cum_deviation_a'] : ((500 * $diff_a) / 0.5);
-        $mean_cum_dev_b = isset($row['mean_cum_deviation_b']) ? $row['mean_cum_deviation_b'] : ((500 * $diff_b) / 0.5);
-        
-        $processedData[] = [
-            'no' => $counter++,
-            'depth' => number_format($row['depth'], 1),
-            'face_a_plus' => number_format($row['face_a_plus'], 6),
-            'face_a_minus' => number_format($row['face_a_minus'], 6),
-            'face_a_avg' => number_format($face_a_avg, 6),
-            'basereading_a' => number_format($baseReadingA, 6),
-            'diff_a' => number_format($diff_a, 6),
-            'mean_cum_deviation_a' => number_format($mean_cum_dev_a, 6),
-            'displace_profile_a' => isset($row['displace_profile_a']) ? number_format($row['displace_profile_a'], 6) : '0.000000',
-            'face_b_plus' => number_format($row['face_b_plus'], 6),
-            'face_b_minus' => number_format($row['face_b_minus'], 6),
-            'face_b_avg' => number_format($face_b_avg, 6),
-            'basereading_b' => number_format($baseReadingB, 6),
-            'diff_b' => number_format($diff_b, 6),
-            'mean_cum_deviation_b' => number_format($mean_cum_dev_b, 6),
-            'displace_profile_b' => isset($row['displace_profile_b']) ? number_format($row['displace_profile_b'], 6) : '0.000000',
-            'profil_a' => isset($row['nilai_profil_a']) ? number_format($row['nilai_profil_a'], 6) : '0.000000',
-            'profil_b' => isset($row['nilai_profil_b']) ? number_format($row['nilai_profil_b'], 6) : '0.000000',
-            'id_pengukuran' => $row['id_pengukuran']
-        ];
+        return $processedData;
     }
-    
-    return $processedData;
-}
     
     /**
      * Get base reading A
@@ -511,7 +854,6 @@ private function processTableData($rawData)
         
         $firstRow = $rawData[0];
         
-        // Format date
         $readingDate = isset($firstRow['reading_date']) ? date('d-m-Y', strtotime($firstRow['reading_date'])) : 'Unknown';
         
         return [

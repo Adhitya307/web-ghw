@@ -592,30 +592,28 @@ if (!$isLoggedIn) {
             <i class="fas fa-compass me-2 text-info"></i>InclinoMeter - Monitoring
         </h2>
 
-        <!-- Button Group -->
+        <!-- Button Group (DIMODIFIKASI: Tombol Add Data dihapus, ditambah Profil A & B) -->
         <div class="d-flex flex-wrap gap-2 mb-3">
             <a href="<?= base_url('/') ?>" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Kembali ke Dashboard
             </a>
             
-            <?php if ($isAdmin): ?>
-                <a href="<?= base_url('inclino/create') ?>" class="btn btn-outline-success">
-                    <i class="fas fa-plus me-1"></i> Add Data
-                </a>
-            <?php else: ?>
-                <button type="button" class="btn btn-outline-success btn-disabled" 
-                        onclick="showAccessWarning('add')"
-                        data-bs-toggle="tooltip" 
-                        data-bs-placement="top" 
-                        title="Klik untuk melihat informasi hak akses">
-                    <i class="fas fa-plus me-1"></i> Add Data
-                </button>
-            <?php endif; ?>
-            
-            <button type="button" class="btn btn-outline-info" id="exportExcel">
-                <i class="fas fa-file-excel me-1"></i> Export Excel
+            <!-- TOMBOL PROFIL A -->
+            <button type="button" class="btn btn-info" id="btnProfilA">
+                <i class="fas fa-chart-line me-1"></i> Profil A
             </button>
             
+            <!-- TOMBOL PROFIL B -->
+            <button type="button" class="btn btn-success" id="btnProfilB">
+                <i class="fas fa-chart-bar me-1"></i> Profil B
+            </button>
+            
+            <!-- TOMBOL EXPORT DATA -->
+            <button type="button" class="btn btn-warning" id="exportExcel">
+                <i class="fas fa-file-excel me-1"></i> Export Data
+            </button>
+            
+            <!-- TOMBOL IMPORT CSV (Hanya untuk Admin) -->
             <?php if ($isAdmin): ?>
                 <button type="button" class="btn btn-outline-primary" id="showCsvModalBtn">
                     <i class="fas fa-file-csv me-1"></i> Import CSV
@@ -638,6 +636,62 @@ if (!$isLoggedIn) {
                 <button class="btn btn-outline-secondary" type="button" id="clearSearch">
                     <i class="fas fa-times"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk Profil A -->
+    <div class="modal fade" id="modalProfilA" tabindex="-1" aria-labelledby="modalProfilALabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalProfilALabel">
+                        <i class="fas fa-chart-line me-2"></i>Data Profil A
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="profilAContent">
+                        <div class="text-center py-4">
+                            <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                            <p>Memuat data Profil A...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-info" id="exportProfilA">
+                        <i class="fas fa-file-excel me-1"></i> Export Profil A
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk Profil B -->
+    <div class="modal fade" id="modalProfilB" tabindex="-1" aria-labelledby="modalProfilBLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalProfilBLabel">
+                        <i class="fas fa-chart-bar me-2"></i>Data Profil B
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="profilBContent">
+                        <div class="text-center py-4">
+                            <i class="fas fa-spinner fa-spin fa-2x text-success mb-3"></i>
+                            <p>Memuat data Profil B...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-success" id="exportProfilB">
+                        <i class="fas fa-file-excel me-1"></i> Export Profil B
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -707,7 +761,7 @@ if (!$isLoggedIn) {
             <div class="filter-item">
                 <label for="tahunFilter" class="form-label">Tahun</label>
                 <select id="tahunFilter" class="form-select shadow-soft">
-                    <option value="">Semua Tahun</option>
+                    <option value="">Pilih Tahun</option>
                     <?php 
                     if (isset($years) && !empty($years)): 
                         foreach ($years as $year): ?>
@@ -719,7 +773,7 @@ if (!$isLoggedIn) {
                 </select>
             </div>
 
-            <!-- Bulan -->
+            <!-- Bulan (HANYA TAMPILAN - akan diupdate otomatis) -->
             <div class="filter-item">
                 <label for="bulanFilter" class="form-label">Bulan</label>
                 <select id="bulanFilter" class="form-select shadow-soft" disabled>
@@ -727,23 +781,11 @@ if (!$isLoggedIn) {
                 </select>
             </div>
 
-            <!-- Lokasi Filter -->
+            <!-- Tanggal (HANYA TAMPILAN - akan diupdate otomatis) -->
             <div class="filter-item">
-                <label for="lokasiFilter" class="form-label">Lokasi</label>
-                <select id="lokasiFilter" class="form-select shadow-soft">
-                    <option value="">Semua Lokasi</option>
-                    <?php 
-                    if (isset($boreholes) && !empty($boreholes)): 
-                        foreach ($boreholes as $borehole): 
-                            $boreholeName = is_array($borehole) ? ($borehole['borehole_name'] ?? $borehole) : $borehole;
-                    ?>
-                    <option value="<?= htmlspecialchars($boreholeName) ?>">
-                        <?= htmlspecialchars($boreholeName) ?>
-                    </option>
-                        <?php endforeach; 
-                    else: ?>
-                    <option value="">-- Data Lokasi Kosong --</option>
-                    <?php endif; ?>
+                <label for="tanggalFilter" class="form-label">Tanggal</label>
+                <select id="tanggalFilter" class="form-select shadow-soft" disabled>
+                    <option value="">Pilih Bulan Terlebih Dahulu</option>
                 </select>
             </div>
 
@@ -983,9 +1025,13 @@ if (!$isLoggedIn) {
 let isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
 let tableData = null;
 let currentData = [];
+let profilAData = null;
+let profilBData = null;
 
-// Variabel global untuk modal hak akses
+// Variabel untuk modal
 const accessWarningModal = new bootstrap.Modal(document.getElementById('accessWarningModal'));
+const modalProfilA = new bootstrap.Modal(document.getElementById('modalProfilA'));
+const modalProfilB = new bootstrap.Modal(document.getElementById('modalProfilB'));
 const warningTitle = document.getElementById('warningTitle');
 const warningMessage = document.getElementById('warningMessage');
 
@@ -1048,10 +1094,30 @@ document.addEventListener('DOMContentLoaded', function () {
         exportToExcel();
     });
 
+    // Tombol Profil A
+    document.getElementById('btnProfilA').addEventListener('click', function() {
+        loadProfilAData();
+    });
+
+    // Tombol Profil B
+    document.getElementById('btnProfilB').addEventListener('click', function() {
+        loadProfilBData();
+    });
+
+    // Export Profil A
+    document.getElementById('exportProfilA').addEventListener('click', function() {
+        exportProfilToExcel('A');
+    });
+
+    // Export Profil B
+    document.getElementById('exportProfilB').addEventListener('click', function() {
+        exportProfilToExcel('B');
+    });
+
     // Filter Functionality
     const tahunFilter = document.getElementById('tahunFilter');
     const bulanFilter = document.getElementById('bulanFilter');
-    const lokasiFilter = document.getElementById('lokasiFilter');
+    const tanggalFilter = document.getElementById('tanggalFilter');
     const searchInput = document.getElementById('searchInput');
     const clearSearch = document.getElementById('clearSearch');
     const applyFilter = document.getElementById('applyFilter');
@@ -1060,7 +1126,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Event listeners untuk filter
     tahunFilter.addEventListener('change', function() {
-        loadMonths(this.value);
+        if (this.value) {
+            loadMonthsByYear(this.value);
+        } else {
+            resetMonthDayFilters();
+        }
+    });
+    
+    bulanFilter.addEventListener('change', function() {
+        if (this.value && tahunFilter.value) {
+            loadDaysByMonth(tahunFilter.value, this.value);
+        } else {
+            resetDayFilter();
+        }
     });
     
     // Apply filter
@@ -1108,54 +1186,470 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('scroll', updateScrollIndicator);
 });
 
-// ============ FUNGSI-FUNGSI UTAMA ============
+// ============ FUNGSI LOAD DATA PROFIL ============
 
-// Load months berdasarkan tahun yang dipilih
-async function loadMonths(year) {
-    const bulanFilter = document.getElementById('bulanFilter');
+// Load data Profil A
+async function loadProfilAData() {
+    const tahun = document.getElementById('tahunFilter').value;
+    const bulan = document.getElementById('bulanFilter').value;
+    const tanggal = document.getElementById('tanggalFilter').value;
     
-    if (!year) {
-        bulanFilter.innerHTML = '<option value="">Pilih Tahun Terlebih Dahulu</option>';
-        bulanFilter.disabled = true;
+    // Validasi filter
+    if (!tahun) {
+        showAlert('warning', 'Pilih tahun terlebih dahulu untuk melihat Profil A');
         return;
     }
     
-    const borehole = document.getElementById('lokasiFilter').value;
+    // Tampilkan modal
+    modalProfilA.show();
     
     try {
-        const response = await fetch(`<?= base_url('inclino/getMonthsByYear') ?>?year=${year}&borehole=${borehole}`);
+        // Parse tanggal jika dipilih
+        let day = '', month = '';
+        if (tanggal && tanggal !== "Semua Tanggal") {
+            const parts = tanggal.split('-');
+            if (parts.length === 3) {
+                day = parts[0];
+                month = parts[1];
+            }
+        } else if (bulan && bulan !== "Semua Bulan") {
+            month = bulan;
+        }
+        
+        const params = new URLSearchParams({
+            year: tahun || '',
+            month: month || '',
+            day: day || '',
+            borehole: '' // Bisa ditambahkan jika ada filter lokasi
+        });
+        
+        const response = await fetch(`<?= base_url('inclino/viewProfilA') ?>?${params}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            profilAData = result.data;
+            renderProfilAData(profilAData);
+        } else {
+            document.getElementById('profilAContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${result.message || 'Gagal memuat data Profil A'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading Profil A:', error);
+        document.getElementById('profilAContent').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Terjadi kesalahan saat memuat data Profil A
+            </div>
+        `;
+    }
+}
+
+// Load data Profil B
+async function loadProfilBData() {
+    const tahun = document.getElementById('tahunFilter').value;
+    const bulan = document.getElementById('bulanFilter').value;
+    const tanggal = document.getElementById('tanggalFilter').value;
+    
+    // Validasi filter
+    if (!tahun) {
+        showAlert('warning', 'Pilih tahun terlebih dahulu untuk melihat Profil B');
+        return;
+    }
+    
+    // Tampilkan modal
+    modalProfilB.show();
+    
+    try {
+        // Parse tanggal jika dipilih
+        let day = '', month = '';
+        if (tanggal && tanggal !== "Semua Tanggal") {
+            const parts = tanggal.split('-');
+            if (parts.length === 3) {
+                day = parts[0];
+                month = parts[1];
+            }
+        } else if (bulan && bulan !== "Semua Bulan") {
+            month = bulan;
+        }
+        
+        const params = new URLSearchParams({
+            year: tahun || '',
+            month: month || '',
+            day: day || '',
+            borehole: '' // Bisa ditambahkan jika ada filter lokasi
+        });
+        
+        const response = await fetch(`<?= base_url('inclino/viewProfilB') ?>?${params}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            profilBData = result.data;
+            renderProfilBData(profilBData);
+        } else {
+            document.getElementById('profilBContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${result.message || 'Gagal memuat data Profil B'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading Profil B:', error);
+        document.getElementById('profilBContent').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Terjadi kesalahan saat memuat data Profil B
+            </div>
+        `;
+    }
+}
+
+// Render data Profil A ke modal
+function renderProfilAData(data) {
+    const container = document.getElementById('profilAContent');
+    
+    if (!data || !data.data || data.data.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Tidak ada data Profil A untuk filter yang dipilih
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="mb-4">
+            <h5 class="fw-bold text-info">
+                <i class="fas fa-chart-line me-2"></i>Data Profil A
+            </h5>
+            ${data.metadata ? `
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body p-3">
+                            <small class="text-muted d-block">Lokasi</small>
+                            <span class="fw-bold">${data.metadata.borehole_name || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body p-3">
+                            <small class="text-muted d-block">Tanggal</small>
+                            <span class="fw-bold">${data.metadata.reading_date || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body p-3">
+                            <small class="text-muted d-block">Total Data</small>
+                            <span class="fw-bold">${data.metadata.total_records || '0'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-info">
+                    <tr>
+                        <th>No</th>
+                        <th>Depth (m)</th>
+                        <th>Profil A (mm)</th>
+                        <th>Mean Cum Dev A (mm)</th>
+                        <th>Displace Profil A (mm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.data.forEach((row, index) => {
+        html += `
+            <tr>
+                <td class="text-center">${index + 1}</td>
+                <td class="text-center fw-bold">${row.depth}</td>
+                <td class="text-end">${row.nilai_profil_a}</td>
+                <td class="text-end">${row.mean_cum_deviation_a}</td>
+                <td class="text-end">${row.displace_profile_a}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Render data Profil B ke modal
+function renderProfilBData(data) {
+    const container = document.getElementById('profilBContent');
+    
+    if (!data || !data.data || data.data.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Tidak ada data Profil B untuk filter yang dipilih
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="mb-4">
+            <h5 class="fw-bold text-success">
+                <i class="fas fa-chart-bar me-2"></i>Data Profil B
+            </h5>
+            ${data.metadata ? `
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body p-3">
+                            <small class="text-muted d-block">Lokasi</small>
+                            <span class="fw-bold">${data.metadata.borehole_name || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body p-3">
+                            <small class="text-muted d-block">Tanggal</small>
+                            <span class="fw-bold">${data.metadata.reading_date || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body p-3">
+                            <small class="text-muted d-block">Total Data</small>
+                            <span class="fw-bold">${data.metadata.total_records || '0'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-success">
+                    <tr>
+                        <th>No</th>
+                        <th>Depth (m)</th>
+                        <th>Profil B (mm)</th>
+                        <th>Mean Cum Dev B (mm)</th>
+                        <th>Displace Profil B (mm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.data.forEach((row, index) => {
+        html += `
+            <tr>
+                <td class="text-center">${index + 1}</td>
+                <td class="text-center fw-bold">${row.depth}</td>
+                <td class="text-end">${row.nilai_profil_b}</td>
+                <td class="text-end">${row.mean_cum_deviation_b}</td>
+                <td class="text-end">${row.displace_profile_b}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Export Profil ke Excel
+function exportProfilToExcel(profilType) {
+    let data, filename, sheetName;
+    
+    if (profilType === 'A' && profilAData && profilAData.data) {
+        data = profilAData.data;
+        filename = `Profil_A_${new Date().toISOString().slice(0,10)}.xlsx`;
+        sheetName = "Profil A";
+    } else if (profilType === 'B' && profilBData && profilBData.data) {
+        data = profilBData.data;
+        filename = `Profil_B_${new Date().toISOString().slice(0,10)}.xlsx`;
+        sheetName = "Profil B";
+    } else {
+        showAlert('warning', `Tidak ada data Profil ${profilType} untuk diexport`);
+        return;
+    }
+    
+    try {
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Prepare data array
+        const exportData = [
+            [`PROFIL ${profilType} DATA - PT INDONESIA POWER`],
+            [],
+            ['No', 'Depth (m)', `Profil ${profilType} (mm)`, 'Mean Cum Dev (mm)', 'Displace Profil (mm)']
+        ];
+        
+        // Add data rows
+        data.forEach((row, index) => {
+            exportData.push([
+                index + 1,
+                row.depth,
+                row[profilType === 'A' ? 'nilai_profil_a' : 'nilai_profil_b'],
+                row[profilType === 'A' ? 'mean_cum_deviation_a' : 'mean_cum_deviation_b'],
+                row[profilType === 'A' ? 'displace_profile_a' : 'displace_profile_b']
+            ]);
+        });
+        
+        // Convert to worksheet
+        const ws = XLSX.utils.aoa_to_sheet(exportData);
+        
+        // Add to workbook and save
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, filename);
+        
+        showAlert('success', `Data Profil ${profilType} berhasil diexport`);
+    } catch (error) {
+        console.error('Export error:', error);
+        showAlert('danger', 'Gagal mengexport data');
+    }
+}
+
+// ============ FUNGSI UTAMA LAINNYA ============
+// ... (kode lainnya tetap sama, tidak berubah)
+// [Semua fungsi lainnya seperti loadMonthsByYear, loadDaysByMonth, renderTable, dll tetap sama]
+// =============================================
+
+// Load bulan berdasarkan tahun yang dipilih
+async function loadMonthsByYear(year) {
+    const bulanFilter = document.getElementById('bulanFilter');
+    const tanggalFilter = document.getElementById('tanggalFilter');
+    
+    try {
+        const response = await fetch(`<?= base_url('inclino/getMonthsByYear') ?>?year=${year}`);
         const result = await response.json();
         
         if (result.status === 'success') {
             bulanFilter.innerHTML = '<option value="">Semua Bulan</option>';
             
             if (result.months && result.months.length > 0) {
-                result.months.forEach(month => {
-                    bulanFilter.innerHTML += `<option value="${month.value}">${month.name}</option>`;
+                result.months.forEach(monthObj => {
+                    bulanFilter.innerHTML += `
+                        <option value="${monthObj.value}">
+                            ${monthObj.name}
+                        </option>
+                    `;
                 });
                 bulanFilter.disabled = false;
+                
+                // Reset tanggal filter
+                resetDayFilter();
             } else {
-                bulanFilter.innerHTML += '<option value="">-- Data Bulan Kosong --</option>';
+                bulanFilter.innerHTML = '<option value="">-- Data Bulan Kosong --</option>';
                 bulanFilter.disabled = false;
+                resetDayFilter();
             }
         } else {
             showAlert('warning', 'Gagal memuat data bulan');
+            resetMonthDayFilters();
         }
     } catch (error) {
         console.error('Error loading months:', error);
         showAlert('danger', 'Terjadi kesalahan saat memuat data bulan');
+        resetMonthDayFilters();
     }
 }
 
-// Load data berdasarkan filter dengan sorting DESC (dari -0.5 ke bawah)
+// Load hari berdasarkan tahun dan bulan yang dipilih
+async function loadDaysByMonth(year, month) {
+    const tanggalFilter = document.getElementById('tanggalFilter');
+    
+    try {
+        const response = await fetch(`<?= base_url('inclino/getDaysByMonth') ?>?year=${year}&month=${month}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            tanggalFilter.innerHTML = '<option value="">Semua Tanggal</option>';
+            
+            if (result.days && result.days.length > 0) {
+                result.days.forEach(day => {
+                    const dayStr = String(day).padStart(2, '0');
+                    const monthStr = String(month).padStart(2, '0');
+                    const displayDate = `${dayStr}-${monthStr}-${year}`;
+                    
+                    tanggalFilter.innerHTML += `
+                        <option value="${displayDate}">
+                            ${dayStr} ${getMonthName(month)} ${year}
+                        </option>
+                    `;
+                });
+                tanggalFilter.disabled = false;
+            } else {
+                tanggalFilter.innerHTML = '<option value="">-- Data Tanggal Kosong --</option>';
+                tanggalFilter.disabled = false;
+            }
+        } else {
+            showAlert('warning', 'Gagal memuat data tanggal');
+            resetDayFilter();
+        }
+    } catch (error) {
+        console.error('Error loading days:', error);
+        showAlert('danger', 'Terjadi kesalahan saat memuat data tanggal');
+        resetDayFilter();
+    }
+}
+
+// Helper function untuk mendapatkan nama bulan
+function getMonthName(month) {
+    const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return monthNames[parseInt(month) - 1] || '';
+}
+
+// Reset bulan dan hari filter
+function resetMonthDayFilters() {
+    const bulanFilter = document.getElementById('bulanFilter');
+    const tanggalFilter = document.getElementById('tanggalFilter');
+    
+    bulanFilter.innerHTML = '<option value="">Pilih Tahun Terlebih Dahulu</option>';
+    bulanFilter.disabled = true;
+    
+    tanggalFilter.innerHTML = '<option value="">Pilih Bulan Terlebih Dahulu</option>';
+    tanggalFilter.disabled = true;
+}
+
+// Reset hari filter
+function resetDayFilter() {
+    const tanggalFilter = document.getElementById('tanggalFilter');
+    tanggalFilter.innerHTML = '<option value="">Pilih Bulan Terlebih Dahulu</option>';
+    tanggalFilter.disabled = true;
+}
+
+// Load data berdasarkan filter
 async function loadDataByFilter() {
     const tahun = document.getElementById('tahunFilter').value;
     const bulan = document.getElementById('bulanFilter').value;
-    const lokasi = document.getElementById('lokasiFilter').value;
+    const tanggal = document.getElementById('tanggalFilter').value;
     
     // Validasi minimal filter
-    if (!tahun && !lokasi) {
-        showAlert('warning', 'Pilih minimal satu filter (tahun atau lokasi)');
+    if (!tahun) {
+        showAlert('warning', 'Pilih tahun terlebih dahulu');
         return;
     }
     
@@ -1163,12 +1657,23 @@ async function loadDataByFilter() {
     showLoading(true);
     
     try {
+        // Parse tanggal jika dipilih
+        let day = '', month = '';
+        if (tanggal && tanggal !== "Semua Tanggal") {
+            const parts = tanggal.split('-');
+            if (parts.length === 3) {
+                day = parts[0];
+                month = parts[1];
+            }
+        } else if (bulan && bulan !== "Semua Bulan") {
+            month = bulan;
+        }
+        
         const params = new URLSearchParams({
             year: tahun || '',
-            month: bulan || '',
-            day: '',
-            borehole: lokasi || '',
-            sort: 'desc'
+            month: month || '',
+            day: day || '',
+            borehole: '' // Bisa ditambahkan jika ada filter lokasi
         });
         
         const response = await fetch(`<?= base_url('inclino/getDataByFilter') ?>?${params}`);
@@ -1179,12 +1684,12 @@ async function loadDataByFilter() {
             tableData = result.data;
             currentData = tableData.data || [];
             
-            // Sort data berdasarkan depth secara DESCENDING (dari -0.5 ke -80)
+            // Sort data berdasarkan depth secara DESCENDING
             if (currentData.length > 0) {
                 currentData.sort((a, b) => {
                     const depthA = parseFloat(a.depth || a.kedalaman || 0);
                     const depthB = parseFloat(b.depth || b.kedalaman || 0);
-                    return depthB - depthA;
+                    return depthB - depthA; // DESCENDING
                 });
             }
             
@@ -1298,7 +1803,6 @@ function renderTable(data) {
             
             // Kolom Depth (1) - sticky
             const tdDepth = document.createElement('td');
-            // Format depth sesuai contoh dari gambar (misal: -0.5, -79.5, dll)
             const depthValue = row.depth !== undefined ? row.depth : (row.kedalaman || '');
             tdDepth.textContent = depthValue;
             tdDepth.className = 'depth-cell sticky-col-depth';
@@ -1360,7 +1864,7 @@ function renderTable(data) {
         // Jika tidak ada data, tampilkan pesan
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 13; // Diubah dari 14 menjadi 13 (tanpa kolom aksi)
+        td.colSpan = 13;
         td.textContent = 'Tidak ada data yang ditampilkan';
         td.className = 'text-center py-3 text-muted';
         tr.appendChild(td);
@@ -1458,7 +1962,8 @@ function resetFilters() {
     document.getElementById('tahunFilter').value = '';
     document.getElementById('bulanFilter').innerHTML = '<option value="">Pilih Tahun Terlebih Dahulu</option>';
     document.getElementById('bulanFilter').disabled = true;
-    document.getElementById('lokasiFilter').value = '';
+    document.getElementById('tanggalFilter').innerHTML = '<option value="">Pilih Bulan Terlebih Dahulu</option>';
+    document.getElementById('tanggalFilter').disabled = true;
     document.getElementById('searchInput').value = '';
     
     // Reset tampilan
@@ -1470,6 +1975,8 @@ function resetFilters() {
     
     tableData = null;
     currentData = [];
+    profilAData = null;
+    profilBData = null;
 }
 
 // Filter data berdasarkan search input dengan tetap menjaga sorting DESC
@@ -1669,7 +2176,7 @@ async function uploadCSV() {
         const response = await fetch('<?= base_url("inclino/import/uploadCSV") ?>', {
             method: 'POST',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest' // PERBAIKAN: Tambah header untuk AJAX
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: formData
         });
