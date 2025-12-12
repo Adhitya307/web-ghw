@@ -208,3 +208,14 @@
 
     // --- API ROUTES (tanpa auth atau dengan auth khusus) ---
     $routes->get('api/rembesan', 'Api\Rembesan::index');
+
+    // Profil A Routes
+$routes->get('inclino/profilea', 'Inclino\ProfileAController::index');
+$routes->get('inclino/profilea/view', 'Inclino\ProfileAController::view');
+$routes->get('inclino/profilea/getDataByYear', 'Inclino\ProfileAController::getDataByYear');
+$routes->get('inclino/profilea/exportToExcel', 'Inclino\ProfileAController::exportToExcel');
+
+// Untuk Profile B
+$routes->get('inclino/profileb', 'Inclino\ProfileBController::view');
+$routes->get('inclino/profileb/getDataByYear', 'Inclino\ProfileBController::getDataByYear');
+$routes->get('inclino/profileb/exportToExcel', 'Inclino\ProfileBController::exportToExcel');

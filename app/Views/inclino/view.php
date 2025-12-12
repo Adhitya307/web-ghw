@@ -598,15 +598,15 @@ if (!$isLoggedIn) {
                 <i class="fas fa-arrow-left me-1"></i> Kembali ke Dashboard
             </a>
             
-            <!-- TOMBOL PROFIL A -->
-            <button type="button" class="btn btn-info" id="btnProfilA">
+            <!-- TOMBOL PROFIL A - DIUBAH KE LINK -->
+            <a href="<?= site_url('inclino/profilea/view') ?>" class="btn btn-info" id="btnProfilA">
                 <i class="fas fa-chart-line me-1"></i> Profil A
-            </button>
+            </a>
             
-            <!-- TOMBOL PROFIL B -->
-            <button type="button" class="btn btn-success" id="btnProfilB">
+           <!-- TOMBOL PROFIL B - DIUBAH KE LINK -->
+            <a href="<?= site_url('inclino/profileb') ?>" class="btn btn-success" id="btnProfilB">
                 <i class="fas fa-chart-bar me-1"></i> Profil B
-            </button>
+            </a>
             
             <!-- TOMBOL EXPORT DATA -->
             <button type="button" class="btn btn-warning" id="exportExcel">
@@ -1094,14 +1094,16 @@ document.addEventListener('DOMContentLoaded', function () {
         exportToExcel();
     });
 
-    // Tombol Profil A
+    // Tombol Profil A - LANGSUNG REDIRECT KE VIEW PROFIL A
     document.getElementById('btnProfilA').addEventListener('click', function() {
-        loadProfilAData();
+        // Tidak ada alert, langsung redirect
+        window.location.href = '<?= site_url("inclino/profilea/view") ?>';
     });
 
-    // Tombol Profil B
+    // Tombol Profil B - TIDAK ADA ALERT
     document.getElementById('btnProfilB').addEventListener('click', function() {
-        loadProfilBData();
+        // Tidak ada alert, langsung redirect
+        window.location.href = '<?= site_url("inclino/profileb/view") ?>';
     });
 
     // Export Profil A
@@ -1188,17 +1190,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // ============ FUNGSI LOAD DATA PROFIL ============
 
-// Load data Profil A
+// Load data Profil A - MODAL
 async function loadProfilAData() {
     const tahun = document.getElementById('tahunFilter').value;
     const bulan = document.getElementById('bulanFilter').value;
     const tanggal = document.getElementById('tanggalFilter').value;
-    
-    // Validasi filter
-    if (!tahun) {
-        showAlert('warning', 'Pilih tahun terlebih dahulu untuk melihat Profil A');
-        return;
-    }
     
     // Tampilkan modal
     modalProfilA.show();
@@ -1248,17 +1244,11 @@ async function loadProfilAData() {
     }
 }
 
-// Load data Profil B
+// Load data Profil B - MODAL
 async function loadProfilBData() {
     const tahun = document.getElementById('tahunFilter').value;
     const bulan = document.getElementById('bulanFilter').value;
     const tanggal = document.getElementById('tanggalFilter').value;
-    
-    // Validasi filter
-    if (!tahun) {
-        showAlert('warning', 'Pilih tahun terlebih dahulu untuk melihat Profil B');
-        return;
-    }
     
     // Tampilkan modal
     modalProfilB.show();
@@ -1530,9 +1520,6 @@ function exportProfilToExcel(profilType) {
 }
 
 // ============ FUNGSI UTAMA LAINNYA ============
-// ... (kode lainnya tetap sama, tidak berubah)
-// [Semua fungsi lainnya seperti loadMonthsByYear, loadDaysByMonth, renderTable, dll tetap sama]
-// =============================================
 
 // Load bulan berdasarkan tahun yang dipilih
 async function loadMonthsByYear(year) {
