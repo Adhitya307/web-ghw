@@ -226,14 +226,14 @@ class ExportExcelController extends BaseController
             // Format tanggal
             $displayDate = $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-';
             
-            // Format nilai numerik
+            // Format nilai numerik dengan 2 digit di belakang koma
             $formatNumber = function($value) {
                 if ($value === null || $value === '' || $value === '-') {
                     return '-';
                 }
                 
                 if (is_numeric($value)) {
-                    return number_format((float)$value, 2);
+                    return number_format((float)$value, 2, '.', '');
                 }
                 
                 return $value;
@@ -333,6 +333,20 @@ class ExportExcelController extends BaseController
         
         // ===== STYLING KOLOM =====
         $this->applyColumnStyling($sheet, $row);
+        
+        // ===== FORMAT ANGKA 2 DESIMAL =====
+        if ($row > 7) {
+            // Format semua kolom numerik (D sampai AJ) dengan 2 desimal
+            $numericRange = 'D7:AJ' . ($row - 1);
+            $sheet->getStyle($numericRange)
+                ->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+            
+            // Atur alignment untuk kolom numerik
+            $sheet->getStyle('D7:AJ' . ($row - 1))
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        }
         
         // ===== FREEZE PANES =====
         // Freeze kolom A-D (Tahun, Periode, Tanggal, DAM) dan baris 1-6 (header)
@@ -439,13 +453,13 @@ class ExportExcelController extends BaseController
                 $pergerakan_ambang_hv4 = $ambangH4['pergerakan'] ?? ($pergerakan_hv4 * 10);
                 $pergerakan_ambang_hv5 = $ambangH5['pergerakan'] ?? ($pergerakan_hv5 * 10);
                 
-                // Format nilai
+                // Format nilai dengan 2 digit di belakang koma
                 $formatNumber = function($value, $decimals = 2) {
                     if ($value === null || $value === '' || $value === '-') {
                         return '-';
                     }
                     if (is_numeric($value)) {
-                        return number_format((float)$value, $decimals);
+                        return number_format((float)$value, $decimals, '.', '');
                     }
                     return $value;
                 };
@@ -453,7 +467,7 @@ class ExportExcelController extends BaseController
                 // Helper function untuk menentukan warna status seperti di view
                 $getStatusColor = function($pergerakanValue, $depthType) {
                     if ($pergerakanValue === null || $pergerakanValue === '' || $pergerakanValue === '-') {
-                        return ''; // Warna default
+                        return 'FFFFFFFF'; // Warna default
                     }
                     
                     $pergerakanValue = floatval($pergerakanValue);
@@ -557,43 +571,43 @@ class ExportExcelController extends BaseController
                 
                 // HV1 Data
                 $sheet->setCellValue('D' . $row, $formatNumber($pembacaan['hv_1'] ?? '-'));
-                $sheet->setCellValue('E' . $row, $formatNumber($pergerakan_ambang_hv1, 2));
+                $sheet->setCellValue('E' . $row, $formatNumber($pergerakan_ambang_hv1));
                 $sheet->setCellValue('F' . $row, $formatNumber($ambangH1['aman'] ?? $defaultAmbangH1['aman']));
                 $sheet->setCellValue('G' . $row, $formatNumber($ambangH1['peringatan'] ?? $defaultAmbangH1['peringatan']));
                 $sheet->setCellValue('H' . $row, $formatNumber($ambangH1['bahaya'] ?? $defaultAmbangH1['bahaya']));
-                $sheet->setCellValue('I' . $row, $formatNumber($pergerakan_ambang_hv1, 2));
+                $sheet->setCellValue('I' . $row, $formatNumber($pergerakan_ambang_hv1));
                 
                 // HV2 Data
                 $sheet->setCellValue('J' . $row, $formatNumber($pembacaan['hv_2'] ?? '-'));
-                $sheet->setCellValue('K' . $row, $formatNumber($pergerakan_ambang_hv2, 2));
+                $sheet->setCellValue('K' . $row, $formatNumber($pergerakan_ambang_hv2));
                 $sheet->setCellValue('L' . $row, $formatNumber($ambangH2['aman'] ?? $defaultAmbangH2['aman']));
                 $sheet->setCellValue('M' . $row, $formatNumber($ambangH2['peringatan'] ?? $defaultAmbangH2['peringatan']));
                 $sheet->setCellValue('N' . $row, $formatNumber($ambangH2['bahaya'] ?? $defaultAmbangH2['bahaya']));
-                $sheet->setCellValue('O' . $row, $formatNumber($pergerakan_ambang_hv2, 2));
+                $sheet->setCellValue('O' . $row, $formatNumber($pergerakan_ambang_hv2));
                 
                 // HV3 Data
                 $sheet->setCellValue('P' . $row, $formatNumber($pembacaan['hv_3'] ?? '-'));
-                $sheet->setCellValue('Q' . $row, $formatNumber($pergerakan_ambang_hv3, 2));
+                $sheet->setCellValue('Q' . $row, $formatNumber($pergerakan_ambang_hv3));
                 $sheet->setCellValue('R' . $row, $formatNumber($ambangH3['aman'] ?? $defaultAmbangH3['aman']));
                 $sheet->setCellValue('S' . $row, $formatNumber($ambangH3['peringatan'] ?? $defaultAmbangH3['peringatan']));
                 $sheet->setCellValue('T' . $row, $formatNumber($ambangH3['bahaya'] ?? $defaultAmbangH3['bahaya']));
-                $sheet->setCellValue('U' . $row, $formatNumber($pergerakan_ambang_hv3, 2));
+                $sheet->setCellValue('U' . $row, $formatNumber($pergerakan_ambang_hv3));
                 
                 // HV4 Data
                 $sheet->setCellValue('V' . $row, $formatNumber($pembacaan['hv_4'] ?? '-'));
-                $sheet->setCellValue('W' . $row, $formatNumber($pergerakan_ambang_hv4, 2));
+                $sheet->setCellValue('W' . $row, $formatNumber($pergerakan_ambang_hv4));
                 $sheet->setCellValue('X' . $row, $formatNumber($ambangH4['aman'] ?? $defaultAmbangH4['aman']));
                 $sheet->setCellValue('Y' . $row, $formatNumber($ambangH4['peringatan'] ?? $defaultAmbangH4['peringatan']));
                 $sheet->setCellValue('Z' . $row, $formatNumber($ambangH4['bahaya'] ?? $defaultAmbangH4['bahaya']));
-                $sheet->setCellValue('AA' . $row, $formatNumber($pergerakan_ambang_hv4, 2));
+                $sheet->setCellValue('AA' . $row, $formatNumber($pergerakan_ambang_hv4));
                 
                 // HV5 Data
                 $sheet->setCellValue('AB' . $row, $formatNumber($pembacaan['hv_5'] ?? '-'));
-                $sheet->setCellValue('AC' . $row, $formatNumber($pergerakan_ambang_hv5, 2));
+                $sheet->setCellValue('AC' . $row, $formatNumber($pergerakan_ambang_hv5));
                 $sheet->setCellValue('AD' . $row, $formatNumber($ambangH5['aman'] ?? $defaultAmbangH5['aman']));
                 $sheet->setCellValue('AE' . $row, $formatNumber($ambangH5['peringatan'] ?? $defaultAmbangH5['peringatan']));
                 $sheet->setCellValue('AF' . $row, $formatNumber($ambangH5['bahaya'] ?? $defaultAmbangH5['bahaya']));
-                $sheet->setCellValue('AG' . $row, $formatNumber($pergerakan_ambang_hv5, 2));
+                $sheet->setCellValue('AG' . $row, $formatNumber($pergerakan_ambang_hv5));
                 
                 // MA.Waduk
                 $sheet->setCellValue('AH' . $row, $formatNumber($p['dma'] ?? '-'));
@@ -683,6 +697,25 @@ class ExportExcelController extends BaseController
         
         // ===== STYLING KOLOM =====
         $this->applyHdm600ColumnStyling($sheet);
+        
+        // ===== FORMAT ANGKA 2 DESIMAL =====
+        if ($row > 7) {
+            // Format semua kolom numerik (D sampai AH) dengan 2 desimal
+            $numericRange = 'D7:AH' . ($row - 1);
+            $sheet->getStyle($numericRange)
+                ->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+            
+            // Atur alignment untuk kolom numerik
+            $sheet->getStyle('D7:AH' . ($row - 1))
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            
+            // Kolom A-C tetap center
+            $sheet->getStyle('A7:C' . ($row - 1))
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
         
         // ===== FREEZE PANES =====
         $sheet->freezePane('D7'); // Freeze kolom A-C dan baris 1-6
@@ -782,13 +815,13 @@ class ExportExcelController extends BaseController
                 $pergerakan_ambang_hv2 = $ambangH2['pergerakan'] ?? ($pergerakan_hv2 * 10);
                 $pergerakan_ambang_hv3 = $ambangH3['pergerakan'] ?? ($pergerakan_hv3 * 10);
                 
-                // Format nilai
+                // Format nilai dengan 2 digit di belakang koma
                 $formatNumber = function($value, $decimals = 2) {
                     if ($value === null || $value === '' || $value === '-') {
                         return '-';
                     }
                     if (is_numeric($value)) {
-                        return number_format((float)$value, $decimals);
+                        return number_format((float)$value, $decimals, '.', '');
                     }
                     return $value;
                 };
@@ -796,7 +829,7 @@ class ExportExcelController extends BaseController
                 // Helper function untuk menentukan warna status seperti di view
                 $getStatusColor = function($pergerakanValue, $depthType) {
                     if ($pergerakanValue === null || $pergerakanValue === '' || $pergerakanValue === '-') {
-                        return ''; // Warna default
+                        return 'FFFFFFFF'; // Warna default
                     }
                     
                     $pergerakanValue = floatval($pergerakanValue);
@@ -872,27 +905,27 @@ class ExportExcelController extends BaseController
                 
                 // HV1 Data
                 $sheet->setCellValue('D' . $row, $formatNumber($pembacaan['hv_1'] ?? '-'));
-                $sheet->setCellValue('E' . $row, $formatNumber($pergerakan_ambang_hv1, 2));
+                $sheet->setCellValue('E' . $row, $formatNumber($pergerakan_ambang_hv1));
                 $sheet->setCellValue('F' . $row, $formatNumber($ambangH1['aman'] ?? $defaultAmbangH1['aman']));
                 $sheet->setCellValue('G' . $row, $formatNumber($ambangH1['peringatan'] ?? $defaultAmbangH1['peringatan']));
                 $sheet->setCellValue('H' . $row, $formatNumber($ambangH1['bahaya'] ?? $defaultAmbangH1['bahaya']));
-                $sheet->setCellValue('I' . $row, $formatNumber($pergerakan_ambang_hv1, 2));
+                $sheet->setCellValue('I' . $row, $formatNumber($pergerakan_ambang_hv1));
                 
                 // HV2 Data
                 $sheet->setCellValue('J' . $row, $formatNumber($pembacaan['hv_2'] ?? '-'));
-                $sheet->setCellValue('K' . $row, $formatNumber($pergerakan_ambang_hv2, 2));
+                $sheet->setCellValue('K' . $row, $formatNumber($pergerakan_ambang_hv2));
                 $sheet->setCellValue('L' . $row, $formatNumber($ambangH2['aman'] ?? $defaultAmbangH2['aman']));
                 $sheet->setCellValue('M' . $row, $formatNumber($ambangH2['peringatan'] ?? $defaultAmbangH2['peringatan']));
                 $sheet->setCellValue('N' . $row, $formatNumber($ambangH2['bahaya'] ?? $defaultAmbangH2['bahaya']));
-                $sheet->setCellValue('O' . $row, $formatNumber($pergerakan_ambang_hv2, 2));
+                $sheet->setCellValue('O' . $row, $formatNumber($pergerakan_ambang_hv2));
                 
                 // HV3 Data
                 $sheet->setCellValue('P' . $row, $formatNumber($pembacaan['hv_3'] ?? '-'));
-                $sheet->setCellValue('Q' . $row, $formatNumber($pergerakan_ambang_hv3, 2));
+                $sheet->setCellValue('Q' . $row, $formatNumber($pergerakan_ambang_hv3));
                 $sheet->setCellValue('R' . $row, $formatNumber($ambangH3['aman'] ?? $defaultAmbangH3['aman']));
                 $sheet->setCellValue('S' . $row, $formatNumber($ambangH3['peringatan'] ?? $defaultAmbangH3['peringatan']));
                 $sheet->setCellValue('T' . $row, $formatNumber($ambangH3['bahaya'] ?? $defaultAmbangH3['bahaya']));
-                $sheet->setCellValue('U' . $row, $formatNumber($pergerakan_ambang_hv3, 2));
+                $sheet->setCellValue('U' . $row, $formatNumber($pergerakan_ambang_hv3));
                 
                 // MA.Waduk
                 $sheet->setCellValue('V' . $row, $formatNumber($p['dma'] ?? '-'));
@@ -964,6 +997,25 @@ class ExportExcelController extends BaseController
         
         // ===== STYLING KOLOM =====
         $this->applyHdm625ColumnStyling($sheet);
+        
+        // ===== FORMAT ANGKA 2 DESIMAL =====
+        if ($row > 7) {
+            // Format semua kolom numerik (D sampai V) dengan 2 desimal
+            $numericRange = 'D7:V' . ($row - 1);
+            $sheet->getStyle($numericRange)
+                ->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+            
+            // Atur alignment untuk kolom numerik
+            $sheet->getStyle('D7:V' . ($row - 1))
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            
+            // Kolom A-C tetap center
+            $sheet->getStyle('A7:C' . ($row - 1))
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
         
         // ===== FREEZE PANES =====
         $sheet->freezePane('D7'); // Freeze kolom A-C dan baris 1-6
@@ -1373,8 +1425,6 @@ class ExportExcelController extends BaseController
         }
     }
     
-    // ===== METODE-METODE BANTUAN LAINNYA (SAMA DENGAN SEBELUMNYA) =====
-    
     /**
      * Create HDM table headers (3 baris) untuk sheet konsolidasi
      */
@@ -1720,26 +1770,6 @@ class ExportExcelController extends BaseController
         
         foreach ($columnWidths as $column => $width) {
             $sheet->getColumnDimension($column)->setWidth($width);
-        }
-        
-        // Format angka untuk kolom numerik
-        if ($lastRow > 7) {
-            try {
-                $sheet->getStyle('E7:AJ' . ($lastRow - 1))
-                    ->getNumberFormat()
-                    ->setFormatCode('0.00');
-                    
-                $sheet->getStyle('A7:D' . ($lastRow - 1))
-                    ->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    
-                $sheet->getStyle('E7:AJ' . ($lastRow - 1))
-                    ->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    
-            } catch (\Exception $e) {
-                log_message('error', 'Error applying column styling: ' . $e->getMessage());
-            }
         }
     }
     
