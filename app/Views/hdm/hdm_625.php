@@ -9,10 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Export Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    
     <style>
         :root {
             --color-aman: #d4edda;
@@ -265,10 +261,6 @@
             <a href="<?= base_url('horizontal-displacement') ?>" class="btn btn-outline-primary">
                 <i class="fas fa-table"></i> Tabel Data HDM
             </a>
-            
-            <button type="button" class="btn btn-outline-success" id="exportExcel">
-                <i class="fas fa-file-excel me-1"></i> Export Excel
-            </button>
         </div>
 
         <div class="table-controls">
@@ -681,47 +673,6 @@ $(document).ready(function() {
             scrollIndicator.fadeOut();
         }
     });
-
-    // Export to Excel
-    $('#exportExcel').on('click', function() {
-        exportToExcel();
-    });
-
-    function exportToExcel() {
-        try {
-            const originalText = $('#exportExcel').html();
-            $('#exportExcel').html('<i class="fas fa-spinner fa-spin me-1"></i>Exporting...');
-            $('#exportExcel').prop('disabled', true);
-
-            $.ajax({
-                url: '<?= base_url("hdm/hdm625/exportExcel") ?>',
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        const wb = XLSX.utils.book_new();
-                        const ws = XLSX.utils.json_to_sheet(response.data);
-                        XLSX.utils.book_append_sheet(wb, ws, 'HDM_625_Data');
-                        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                        saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'HDM_625_Data.xlsx');
-                    } else {
-                        alert('Error: ' + response.error);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('Error exporting data: ' + error);
-                },
-                complete: function() {
-                    $('#exportExcel').html(originalText);
-                    $('#exportExcel').prop('disabled', false);
-                }
-            });
-        } catch (error) {
-            alert('Error: ' + error.message);
-            $('#exportExcel').html(originalText);
-            $('#exportExcel').prop('disabled', false);
-        }
-    }
 
     // Initialize
     applyFilters();
