@@ -558,9 +558,7 @@ $fullName = $session->get('fullName');
                 </button>
             <?php endif; ?>
             
-            <button type="button" class="btn btn-outline-info" id="exportExcel">
-                <i class="fas fa-file-excel me-1"></i> Export Excel
-            </button>
+            <!-- Tombol Export Excel dihapus -->
         </div>
 
         <div class="table-controls">
@@ -670,7 +668,6 @@ $fullName = $session->get('fullName');
                         <ul>
                             <li><i class="fas fa-check"></i> Melihat dan menelusuri data BTM</li>
                             <li><i class="fas fa-check"></i> Mencari dan memfilter informasi</li>
-                            <li><i class="fas fa-check"></i> Mengekspor data ke format Excel</li>
                             <li><i class="fas fa-check"></i> Mengakses semua BT (1-8)</li>
                             <li><i class="fas fa-check"></i> Melihat grafik scatter data</li>
                         </ul>
@@ -708,7 +705,7 @@ $fullName = $session->get('fullName');
                                 $uniqueYears[] = $year;
                             }
                         }
-                        rsort($uniqueYears);
+                        sort($uniqueYears); // Urut dari terkecil
                         foreach ($uniqueYears as $year):
                     ?>
                         <option value="<?= esc($year) ?>"><?= esc($year) ?></option>
@@ -757,7 +754,7 @@ $fullName = $session->get('fullName');
 
     <!-- Main Table -->
     <div class="table-responsive" id="tableContainer">
-        <table class="data-table table table-bordered table-hover" id="exportTable">
+        <table class="data-table table table-bordered table-hover">
             <thead>
                 <!-- Row 1: Main Header -->
                 <tr>
@@ -857,10 +854,8 @@ $fullName = $session->get('fullName');
 
 <?= $this->include('layouts/footer'); ?>
 
-<!-- Bootstrap & Libraries -->
+<!-- Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 <script>
 // Data dan state management
@@ -877,6 +872,62 @@ const warningMessage = document.getElementById('warningMessage');
 
 // Variabel untuk filter
 let tahunFilter, periodeFilter, searchInput, resetFilter;
+
+// ============ FUNGSI FORMAT TANGGAL ============
+function formatDate(dateString) {
+    if (!dateString || dateString === '-' || dateString === '0000-00-00') {
+        return '-';
+    }
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return '-';
+        }
+        
+        // Format: day/month/year (tanpa leading zero untuk day dan month)
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}`;
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return '-';
+    }
+}
+
+// ============ FUNGSI UNTUK MENGURUTKAN DATA BERDASARKAN TANGGAL ============
+function sortDataByDate(data) {
+    return data.slice().sort((a, b) => {
+        const dateA = a['pengukuran']['tanggal'] ? new Date(a['pengukuran']['tanggal']) : new Date(0);
+        const dateB = b['pengukuran']['tanggal'] ? new Date(b['pengukuran']['tanggal']) : new Date(0);
+        
+        // Urutkan dari tanggal terkecil (terlama) ke terbesar (terbaru)
+        return dateA - dateB;
+    });
+}
+
+// ============ FUNGSI UNTUK MENGELOMPOKKAN DAN MENGURUTKAN DATA ============
+function prepareDataForDisplay() {
+    // Urutkan data berdasarkan tanggal dari yang terkecil
+    const sortedData = sortDataByDate(allData);
+    
+    // Kelompokkan data berdasarkan tahun
+    const groupedByYear = {};
+    sortedData.forEach((item, index) => {
+        const year = item['pengukuran']['tahun'] || '-';
+        if (!groupedByYear[year]) {
+            groupedByYear[year] = [];
+        }
+        groupedByYear[year].push({ item, index });
+    });
+    
+    // Urutkan tahun secara ascending (dari terkecil ke terbesar)
+    const sortedYears = Object.keys(groupedByYear).sort((a, b) => a - b);
+    
+    return { sortedYears, groupedByYear };
+}
 
 // ============ FUNGSI HAK AKSES ============
 function showAccessWarning(actionType, tahun = null, periode = null, tanggal = null) {
@@ -1078,7 +1129,7 @@ function renderTableData() {
     if (allData.length === 0) {
         tbody.innerHTML = `
             <tr class="no-data">
-                <td colspan="${isAdmin ? 22 : 21}" class="text-center py-4">
+                <td colspan="${isAdmin ? 21 : 20}" class="text-center py-4">
                     <i class="fas fa-database fa-2x text-muted mb-3"></i>
                     <p class="text-muted">Tidak ada data BTM yang tersedia</p>
                     ${isAdmin ? `
@@ -1092,20 +1143,13 @@ function renderTableData() {
         return;
     }
     
+    // Siapkan data untuk ditampilkan (urut dari tahun terkecil)
+    const { sortedYears, groupedByYear } = prepareDataForDisplay();
+    
     let html = '';
     
-    // Kelompokkan data berdasarkan tahun
-    const groupedByYear = {};
-    allData.forEach((item, index) => {
-        const year = item['pengukuran']['tahun'] || '-';
-        if (!groupedByYear[year]) {
-            groupedByYear[year] = [];
-        }
-        groupedByYear[year].push({ item, index });
-    });
-    
     // Render data dengan rowspan untuk tahun yang sama
-    Object.keys(groupedByYear).forEach(year => {
+    sortedYears.forEach(year => {
         const yearData = groupedByYear[year];
         const rowspan = yearData.length;
         
@@ -1141,8 +1185,8 @@ function renderTableData() {
             const sin_C_rad_display = sin_C_rad_calculated ?? btPerhitungan['sin_C_rad'] ?? null;
             const sin_C_deg_display = sin_C_deg_calculated ?? btPerhitungan['sin_C_deg'] ?? null;
             
-            // Format date
-            const displayDate = p['tanggal'] ? new Date(p['tanggal']).toLocaleDateString('id-ID') : '-';
+            // Format date dengan format day/month/year
+            const displayDate = formatDate(p['tanggal']);
             
             html += `
                 <tr data-pid="${p['id_pengukuran']}" data-year="${year}" data-periode="${p['periode'] || ''}">
@@ -1311,41 +1355,8 @@ function attachEventListeners() {
     });
 }
 
-// ============ EXPORT EXCEL FUNCTIONALITY ============
-function setupExportExcel() {
-    document.getElementById('exportExcel').addEventListener('click', function() {
-        const originalText = this.innerHTML;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
-        this.disabled = true;
-
-        setTimeout(() => {
-            try {
-                const table = document.getElementById('exportTable');
-                const wb = XLSX.utils.table_to_book(table, {sheet: `Data ${currentBt.toUpperCase()}`});
-                
-                const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const filename = `BTM_${currentBt.toUpperCase()}_Export_${timestamp}.xlsx`;
-                
-                XLSX.writeFile(wb, filename);
-                
-                setTimeout(() => {
-                    alert('Export berhasil! File: ' + filename);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error exporting to Excel:', error);
-                alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-            } finally {
-                this.innerHTML = originalText;
-                this.disabled = false;
-            }
-        }, 1000);
-    });
-}
-
 // ============ SCROLL INDICATOR ============
 function setupScrollIndicator() {
-    const scrollIndicator = document.getElementById('scrollIndicator');
     const tableContainer = document.getElementById('tableContainer');
     
     let scrollTimeout;
@@ -1354,18 +1365,7 @@ function setupScrollIndicator() {
             const { scrollLeft, scrollWidth, clientWidth } = this;
             const showHorizontal = scrollLeft > 0 || scrollLeft + clientWidth < scrollWidth;
             
-            if (showHorizontal && scrollIndicator) {
-                scrollIndicator.style.display = 'block';
-            } else if (scrollIndicator) {
-                scrollIndicator.style.display = 'none';
-            }
-
             clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                if (scrollIndicator) {
-                    scrollIndicator.style.display = 'none';
-                }
-            }, 2000);
         });
     }
 }
@@ -1383,9 +1383,6 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Setup filter
     initializeFilter();
-    
-    // Setup export Excel
-    setupExportExcel();
     
     // Setup scroll indicator
     setupScrollIndicator();
@@ -1496,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <small>Total Query: <strong>${s.total}</strong></small><br>
                                     <small>Berhasil: <strong class="text-success">${s.success}</strong></small>
                                 </div>
-                                <div class="col-6">
+                                <col-6>
                                     <small>Gagal: <strong class="text-danger">${s.failed}</strong></small><br>
                                     <small>Affected Rows: <strong>${s.affected_rows || 0}</strong></small>
                                 </div>

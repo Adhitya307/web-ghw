@@ -841,7 +841,7 @@ $fullName = $session->get('fullName');
 <?php if ($isAdmin): ?>
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div classmodal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="deleteModalLabel">
                     <i class="fas fa-exclamation-triangle text-warning me-2"></i>
@@ -1116,6 +1116,19 @@ function renderTableData() {
     // Render data dengan rowspan untuk tahun yang sama
     Object.keys(groupedByYear).forEach(year => {
         const yearData = groupedByYear[year];
+        
+        // URUTKAN DATA BERDASARKAN TANGGAL DARI TERKECIL KE TERBESAR
+        yearData.sort((a, b) => {
+            const dateA = a.item['pengukuran']['tanggal'] ? new Date(a.item['pengukuran']['tanggal']) : null;
+            const dateB = b.item['pengukuran']['tanggal'] ? new Date(b.item['pengukuran']['tanggal']) : null;
+            
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            
+            return dateA - dateB; // Urutkan dari terkecil ke terbesar
+        });
+        
         const rowspan = yearData.length;
         
         yearData.forEach((data, indexInYear) => {
