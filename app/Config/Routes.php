@@ -60,6 +60,9 @@
         $routes->get('analisaLookBurt', 'AnalisaLookBurt::index');
         $routes->post('analisaLookBurt/save', 'AnalisaLookBurt::save');
         
+        // Tambahkan route untuk export Excel rapih
+        $routes->get('export/excel-rapih', 'ExportExcelController::exportExcelRapih');
+        
         // --- HDM Routes ---
         $routes->get('horizontal-displacement', '\App\Controllers\HDM\HDMController::index');
         $routes->get('horizontal-displacement/data', '\App\Controllers\HDM\HDMController::getData');

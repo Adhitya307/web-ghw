@@ -341,6 +341,30 @@ $fullName = $session->get('fullName');
                 <i class="fas fa-chart-line"></i> Analisa Look Burt
             </a>
 
+            <!-- Button untuk export Excel rapih -->
+<button type="button" class="btn btn-success" onclick="exportToExcelRapih()">
+    <i class="fas fa-file-excel me-1"></i> Export Excel (Format Rapih)
+</button>
+
+<script>
+function exportToExcelRapih() {
+    // Tampilkan loading
+    const btn = event.target;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+    btn.disabled = true;
+    
+    // Download file
+    window.location.href = '<?= base_url("export/excel-rapih") ?>';
+    
+    // Reset button setelah 3 detik
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }, 3000);
+}
+</script>
+
             <?php if ($isAdmin): ?>
                 <!-- Tombol untuk Admin -->
                 <a href="<?= base_url('data/create') ?>" class="btn btn-outline-primary">
@@ -1547,6 +1571,89 @@ function startPolling() {
 document.addEventListener('DOMContentLoaded', function() {
     startPolling();
 });
+// Fungsi untuk export Excel rapih
+function exportToExcelRapih() {
+    // Tampilkan loading
+    const exportBtn = event.target;
+    const originalText = exportBtn.innerHTML;
+    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+    exportBtn.disabled = true;
+    
+    // Buat URL untuk export
+    const exportUrl = '<?= base_url("export/excel-rapih") ?>';
+    
+    // Download file
+    const link = document.createElement('a');
+    link.href = exportUrl;
+    link.target = '_blank';
+    link.click();
+    
+    // Reset button setelah 3 detik
+    setTimeout(() => {
+        exportBtn.innerHTML = originalText;
+        exportBtn.disabled = false;
+    }, 3000);
+}
+
+// Atau gunakan AJAX jika perlu dengan loading lebih jelas:
+function exportToExcelRapihAJAX() {
+    // Tampilkan modal loading
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    // Buat AJAX request
+    fetch('<?= base_url("export/excel-rapih") ?>', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Network response was not ok');
+    })
+    .then(blob => {
+        // Buat URL untuk download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `Data_Rembesan_Bendungan_${new Date().toISOString().slice(0,10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        // Sembunyikan loading modal
+        loadingModal.hide();
+        
+        // Tampilkan notifikasi sukses
+        showNotification('✅ Excel berhasil diekspor!', 'success');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        loadingModal.hide();
+        showNotification('❌ Gagal mengekspor Excel', 'danger');
+    });
+}
+
+// Fungsi untuk menampilkan notifikasi
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto hide setelah 3 detik
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
 </script>
 </body>
 </html>
