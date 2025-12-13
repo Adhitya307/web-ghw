@@ -343,7 +343,7 @@ $fullName = $session->get('fullName');
 
             <!-- Button untuk export Excel rapih -->
 <button type="button" class="btn btn-success" onclick="exportToExcelRapih()">
-    <i class="fas fa-file-excel me-1"></i> Export Excel (Format Rapih)
+    <i class="fas fa-file-excel me-1"></i> Export Excel
 </button>
 
 <script>

@@ -813,68 +813,10 @@ $fullName = $session->get('fullName');
 <?= $this->include('hdm/modal_hapus') ?>
 <?php endif; ?>
 
-<!-- Modal Peringatan Hak Akses -->
-<div class="modal fade modal-access" id="accessWarningModal" tabindex="-1" aria-labelledby="accessWarningModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="accessWarningModalLabel">
-                    <i class="fas fa-shield-alt me-2"></i>Pengaturan Akses
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="access-icon-container">
-                    <div class="access-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                </div>
-                
-                <h3 class="access-title" id="warningTitle">
-                    <!-- Judul akan diisi oleh JavaScript -->
-                </h3>
-                
-                <p class="access-message" id="warningMessage">
-                    <!-- Pesan akan diisi oleh JavaScript -->
-                </p>
-                
-                <div class="user-role-badge">
-                    <i class="fas fa-user-tag"></i>
-                    <span>Level Akses: <strong><?= $isAdmin ? 'Administrator' : 'Pengguna Biasa' ?></strong></span>
-                </div>
-                
-                <div class="access-details">
-                    <h6>Hak Akses yang Tersedia:</h6>
-                    <ul>
-                        <li><i class="fas fa-check"></i> Melihat dan menelusuri data HDM</li>
-                        <li><i class="fas fa-check"></i> Mencari dan memfilter informasi</li>
-                        <li><i class="fas fa-check"></i> Mengekspor data ke format Excel</li>
-                        <li><i class="fas fa-check"></i> Mengakses data lengkap HDM</li>
-                    </ul>
-                </div>
-                
-                <div class="access-note">
-                    <i class="fas fa-info-circle"></i>
-                    Untuk meminta akses tambahan, silakan hubungi Administrator sistem.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
-                    <i class="fas fa-check me-1"></i> Mengerti
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <?= $this->include('layouts/footer'); ?>
 
 <!-- Bootstrap & Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 // Data dan state management
@@ -896,44 +838,6 @@ function sortDataByDate(data) {
         const dateB = new Date(b.pengukuran?.tanggal || 0);
         return dateA - dateB; // Urutkan dari tanggal terlama ke terbaru
     });
-}
-
-// Fungsi untuk memformat tanggal dengan benar
-function formatDateForExport(dateString) {
-    if (!dateString || dateString === '-') return '-';
-    
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString;
-        
-        // Format: DD/MM/YYYY untuk Excel (mencegah issue ###)
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear();
-        
-        return `${day}/${month}/${year}`;
-    } catch (e) {
-        console.error('Error formatting date:', e);
-        return dateString;
-    }
-}
-
-// Fungsi untuk memformat nilai numerik
-function formatNumericValue(value) {
-    if (value === null || value === undefined || value === '' || value === '-') {
-        return '-';
-    }
-    
-    // Jika sudah number, return as is
-    if (typeof value === 'number') return value;
-    
-    // Jika string, coba parse sebagai float
-    if (typeof value === 'string') {
-        const num = parseFloat(value);
-        return isNaN(num) ? value : num;
-    }
-    
-    return value;
 }
 
 // ============ FUNGSI HAK AKSES ============
@@ -1326,44 +1230,6 @@ function renderTableBody(data) {
         filterData();
     });
     
-    // ============ SCROLL INDICATOR ============
-    const scrollIndicator = document.getElementById('scrollIndicator');
-    const tableContainer = document.getElementById('tableContainer');
-    
-    tableContainer.addEventListener('scroll', function() {
-        const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = this;
-        
-        const showHorizontal = scrollLeft > 0 || scrollLeft + clientWidth < scrollWidth;
-        const showVertical = scrollTop > 0 || scrollTop + clientHeight < scrollHeight;
-        
-        if (showHorizontal || showVertical) {
-            let text = 'Scroll ';
-            if (showHorizontal && showVertical) {
-                text += 'horizontal & vertikal';
-            } else if (showHorizontal) {
-                text += 'horizontal';
-            } else {
-                text += 'vertikal';
-            }
-            text += ' untuk melihat lebih banyak data';
-            
-            document.getElementById('scrollText').textContent = text;
-            scrollIndicator.style.display = 'block';
-        } else {
-            scrollIndicator.style.display = 'none';
-        }
-    });
-    
-    // Hide scroll indicator when not scrolling
-    let scrollTimeout;
-    tableContainer.addEventListener('scroll', function() {
-        scrollIndicator.style.display = 'block';
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            scrollIndicator.style.display = 'none';
-        }, 2000);
-    });
-    
     // ============ EVENT LISTENERS ATTACHMENT ============
     function attachEventListeners() {
         // Edit Data
@@ -1396,378 +1262,49 @@ function renderTableBody(data) {
         });
     }
     
-    // ============ EXPORT EXCEL FUNCTIONALITY ============
+    // ============ EXPORT EXCEL FUNCTIONALITY (SERVER-SIDE) ============
     document.getElementById('exportExcel').addEventListener('click', function() {
         // Show loading
         const originalText = this.innerHTML;
+        const originalState = this.disabled;
         this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
         this.disabled = true;
 
-        setTimeout(() => {
-            try {
-                // Buat workbook baru
-                const wb = XLSX.utils.book_new();
-                
-                // Data untuk worksheet
-                const wsData = [];
-                
-                // ===== HEADER ROWS =====
-                // Row 1: Main Headers (TANPA AKSI)
-                const header1 = [
-                    'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
-                    // PEMBACAAN HDM - ELV 625 & ELV 600
-                    ...Array(8).fill('PEMBACAAN HDM'),
-                    // DEPTH (S) - ELV 625 & ELV 600
-                    ...Array(8).fill('DEPTH (S)'),
-                    // READINGS (S) - ELV 625 & ELV 600
-                    ...Array(8).fill('READINGS (S)'),
-                    // PERGERAKAN (CM) - ELV 625 & ELV 600
-                    ...Array(8).fill('PERGERAKAN (CM)')
-                    // AKSI DIHAPUS DARI EXPORT
-                ];
-                wsData.push(header1);
-                
-                // Row 2: Sub Headers (TANPA AKSI)
-                const header2 = [
-                    '', '', '', '',
-                    // PEMBACAAN HDM
-                    ...Array(3).fill('ELV.625'),
-                    ...Array(5).fill('ELV.600'),
-                    // DEPTH (S)
-                    ...Array(3).fill('ELV.625'),
-                    ...Array(5).fill('ELV.600'),
-                    // READINGS (S)
-                    ...Array(3).fill('ELV.625'),
-                    ...Array(5).fill('ELV.600'),
-                    // PERGERAKAN (CM)
-                    ...Array(3).fill('ELV.625'),
-                    ...Array(5).fill('ELV.600')
-                    // AKSI DIHAPUS DARI EXPORT
-                ];
-                wsData.push(header2);
-                
-                // Row 3: Measurement Headers (TANPA AKSI)
-                const header3 = [
-                    'TAHUN', 'PERIODE', 'TANGGAL', 'DAM',
-                    // PEMBACAAN HDM - ELV 625
-                    'HV-1', 'HV-2', 'HV-3',
-                    // PEMBACAAN HDM - ELV 600
-                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
-                    // DEPTH (S) - ELV 625
-                    'HV-1', 'HV-2', 'HV-3',
-                    // DEPTH (S) - ELV 600
-                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
-                    // READINGS (S) - ELV 625
-                    'HV-1', 'HV-2', 'HV-3',
-                    // READINGS (S) - ELV 600
-                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5',
-                    // PERGERAKAN (CM) - ELV 625
-                    'HV-1', 'HV-2', 'HV-3',
-                    // PERGERAKAN (CM) - ELV 600
-                    'HV-1', 'HV-2', 'HV-3', 'HV-4', 'HV-5'
-                    // AKSI DIHAPUS DARI EXPORT
-                ];
-                wsData.push(header3);
-                
-                // ===== DATA ROWS =====
-                filteredData.forEach(item => {
-                    const p = item.pengukuran || {};
-                    const pembacaanElv600 = item.pembacaan_elv600 || {};
-                    const pembacaanElv625 = item.pembacaan_elv625 || {};
-                    const depthElv600 = item.depth_elv600 || {};
-                    const depthElv625 = item.depth_elv625 || {};
-                    const initialReadingElv600 = item.initial_reading_elv600 || {};
-                    const initialReadingElv625 = item.initial_reading_elv625 || {};
-                    const pergerakanElv600 = item.pergerakan_elv600 || {};
-                    const pergerakanElv625 = item.pergerakan_elv625 || {};
-                    
-                    // Format tanggal untuk Excel (DD/MM/YYYY)
-                    const excelDate = p.tanggal ? formatDateForExport(p.tanggal) : '-';
-                    
-                    // Format nilai numerik - pastikan sebagai string dengan format yang benar
-                    const formatNumber = (value) => {
-                        if (value === null || value === undefined || value === '' || value === '-') {
-                            return '-';
-                        }
-                        
-                        // Konversi ke number dulu
-                        const numValue = typeof value === 'number' ? value : parseFloat(value);
-                        
-                        // Jika bukan number, return as is
-                        if (isNaN(numValue)) return value;
-                        
-                        // Format dengan 2 digit desimal dan konversi ke string
-                        return numValue.toFixed(2);
-                    };
-
-                    const row = [
-                        // Basic Info
-                        p.tahun || '-',
-                        p.periode || '-',
-                        excelDate,
-                        formatNumber(p.dma),
-                        
-                        // PEMBACAAN HDM - ELV 625
-                        formatNumber(pembacaanElv625.hv_1),
-                        formatNumber(pembacaanElv625.hv_2),
-                        formatNumber(pembacaanElv625.hv_3),
-                        
-                        // PEMBACAAN HDM - ELV 600
-                        formatNumber(pembacaanElv600.hv_1),
-                        formatNumber(pembacaanElv600.hv_2),
-                        formatNumber(pembacaanElv600.hv_3),
-                        formatNumber(pembacaanElv600.hv_4),
-                        formatNumber(pembacaanElv600.hv_5),
-                        
-                        // DEPTH (S) - ELV 625
-                        formatNumber(depthElv625.hv_1),
-                        formatNumber(depthElv625.hv_2),
-                        formatNumber(depthElv625.hv_3),
-                        
-                        // DEPTH (S) - ELV 600
-                        formatNumber(depthElv600.hv_1),
-                        formatNumber(depthElv600.hv_2),
-                        formatNumber(depthElv600.hv_3),
-                        formatNumber(depthElv600.hv_4),
-                        formatNumber(depthElv600.hv_5),
-                        
-                        // READINGS (S) - ELV 625
-                        formatNumber(initialReadingElv625.hv_1),
-                        formatNumber(initialReadingElv625.hv_2),
-                        formatNumber(initialReadingElv625.hv_3),
-                        
-                        // READINGS (S) - ELV 600
-                        formatNumber(initialReadingElv600.hv_1),
-                        formatNumber(initialReadingElv600.hv_2),
-                        formatNumber(initialReadingElv600.hv_3),
-                        formatNumber(initialReadingElv600.hv_4),
-                        formatNumber(initialReadingElv600.hv_5),
-                        
-                        // PERGERAKAN (CM) - ELV 625
-                        formatNumber(pergerakanElv625.hv_1),
-                        formatNumber(pergerakanElv625.hv_2),
-                        formatNumber(pergerakanElv625.hv_3),
-                        
-                        // PERGERAKAN (CM) - ELV 600
-                        formatNumber(pergerakanElv600.hv_1),
-                        formatNumber(pergerakanElv600.hv_2),
-                        formatNumber(pergerakanElv600.hv_3),
-                        formatNumber(pergerakanElv600.hv_4),
-                        formatNumber(pergerakanElv600.hv_5)
-                        
-                        // AKSI DIHAPUS DARI EXPORT
-                    ];
-                    wsData.push(row);
-                });
-                
-                // Buat worksheet
-                const ws = XLSX.utils.aoa_to_sheet(wsData);
-                
-                // ===== STYLING DENGAN WARNA =====
-                if (!ws['!merges']) ws['!merges'] = [];
-                
-                // Merge untuk Header Row 1 (Main Sections) - TANPA AKSI
-                const mainSections = [
-                    { start: 4, end: 11, label: 'PEMBACAAN HDM' },    // 8 columns
-                    { start: 12, end: 19, label: 'DEPTH (S)' },       // 8 columns
-                    { start: 20, end: 27, label: 'READINGS (S)' },    // 8 columns
-                    { start: 28, end: 35, label: 'PERGERAKAN (CM)' }  // 8 columns
-                ];
-                
-                mainSections.forEach(section => {
-                    ws['!merges'].push({ 
-                        s: { r: 0, c: section.start }, 
-                        e: { r: 0, c: section.end } 
-                    });
-                });
-                
-                // Merge untuk Header Row 2 (ELV Sections) - TANPA AKSI
-                const elvSections = [
-                    // PEMBACAAN HDM
-                    { start: 4, end: 6, label: 'ELV.625' },      // 3 columns
-                    { start: 7, end: 11, label: 'ELV.600' },     // 5 columns
-                    // DEPTH (S)
-                    { start: 12, end: 14, label: 'ELV.625' },    // 3 columns
-                    { start: 15, end: 19, label: 'ELV.600' },    // 5 columns
-                    // READINGS (S)
-                    { start: 20, end: 22, label: 'ELV.625' },    // 3 columns
-                    { start: 23, end: 27, label: 'ELV.600' },    // 5 columns
-                    // PERGERAKAN (CM)
-                    { start: 28, end: 30, label: 'ELV.625' },    // 3 columns
-                    { start: 31, end: 35, label: 'ELV.600' }     // 5 columns
-                ];
-                
-                elvSections.forEach(section => {
-                    ws['!merges'].push({ 
-                        s: { r: 1, c: section.start }, 
-                        e: { r: 1, c: section.end } 
-                    });
-                });
-                
-                // ===== PENGATURAN KOLOM ===== (TANPA KOLOM AKSI)
-                const colWidths = [
-                    { wch: 8 },   // TAHUN
-                    { wch: 10 },  // PERIODE
-                    { wch: 12 },  // TANGGAL
-                    { wch: 8 },   // DAM
-                    // PEMBACAAN HDM - ELV 625 (3 kolom)
-                    { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    // PEMBACAAN HDM - ELV 600 (5 kolom)
-                    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    // DEPTH (S) - ELV 625 (3 kolom)
-                    { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    // DEPTH (S) - ELV 600 (5 kolom)
-                    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    // READINGS (S) - ELV 625 (3 kolom)
-                    { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    // READINGS (S) - ELV 600 (5 kolom)
-                    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    // PERGERAKAN (CM) - ELV 625 (3 kolom)
-                    { wch: 14 }, { wch: 14 }, { wch: 14 },
-                    // PERGERAKAN (CM) - ELV 600 (5 kolom)
-                    { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }
-                    // KOLOM AKSI DIHAPUS
-                ];
-                ws['!cols'] = colWidths;
-                
-                // ===== WARNA HEADER =====
-                // Definisikan range untuk styling
-                const range = XLSX.utils.decode_range(ws['!ref']);
-                
-                // Warna untuk header rows (0, 1, 2) - TANPA AKSI
-                for (let R = 0; R < 3; R++) {
-                    for (let C = range.s.c; C <= range.e.c; C++) {
-                        const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
-                        if (!ws[cell_ref]) continue;
-                        
-                        // Inisialisasi style jika belum ada
-                        if (!ws[cell_ref].s) {
-                            ws[cell_ref].s = {};
-                        }
-                        
-                        // Background colors berdasarkan section
-                        let fillColor = '';
-                        
-                        // Row 1 - Main Sections
-                        if (R === 0) {
-                            if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
-                            else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
-                            else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
-                            else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
-                        }
-                        // Row 2 - ELV Sections
-                        else if (R === 1) {
-                            if ((C >= 4 && C <= 6) || (C >= 12 && C <= 14) || (C >= 20 && C <= 22) || (C >= 28 && C <= 30)) {
-                                fillColor = 'FF0DCAF0'; // Biru muda - ELV.625
-                            } else if ((C >= 7 && C <= 11) || (C >= 15 && C <= 19) || (C >= 23 && C <= 27) || (C >= 31 && C <= 35)) {
-                                fillColor = 'FF0DCAF0'; // Biru muda - ELV.600
-                            }
-                        }
-                        // Row 3 - Measurement Headers
-                        else if (R === 2) {
-                            if (C >= 4 && C <= 11) fillColor = 'FF0DCAF0'; // Biru muda - PEMBACAAN HDM
-                            else if (C >= 12 && C <= 19) fillColor = 'FF0D6EFD'; // Biru - DEPTH (S)
-                            else if (C >= 20 && C <= 27) fillColor = 'FF198754'; // Hijau - READINGS (S)
-                            else if (C >= 28 && C <= 35) fillColor = 'FFFFC107'; // Kuning - PERGERAKAN (CM)
-                        }
-                        
-                        // Terapkan warna background
-                        if (fillColor) {
-                            ws[cell_ref].s.fill = {
-                                fgColor: { rgb: fillColor }
-                            };
-                            
-                            // Text color - putih untuk header gelap, hitam untuk kuning
-                            if (fillColor === 'FFFFC107') {
-                                ws[cell_ref].s.font = { color: { rgb: "FF000000" }, bold: true };
-                            } else {
-                                ws[cell_ref].s.font = { color: { rgb: "FFFFFFFF" }, bold: true };
-                            }
-                            
-                            // Border untuk semua header
-                            ws[cell_ref].s.border = {
-                                top: { style: 'thin', color: { rgb: "FF000000" } },
-                                left: { style: 'thin', color: { rgb: "FF000000" } },
-                                bottom: { style: 'thin', color: { rgb: "FF000000" } },
-                                right: { style: 'thin', color: { rgb: "FF000000" } }
-                            };
-                            
-                            // Alignment center
-                            ws[cell_ref].s.alignment = { 
-                                horizontal: 'center',
-                                vertical: 'center',
-                                wrapText: true
-                            };
-                        }
-                    }
-                }
-                
-                // ===== STYLING DATA ROWS ===== (TANPA KOLOM AKSI)
-                for (let R = 3; R <= range.e.r; R++) {
-                    for (let C = range.s.c; C <= range.e.c; C++) {
-                        const cell_ref = XLSX.utils.encode_cell({r:R, c:C});
-                        if (!ws[cell_ref]) continue;
-                        
-                        // Inisialisasi style jika belum ada
-                        if (!ws[cell_ref].s) {
-                            ws[cell_ref].s = {};
-                        }
-                        
-                        // Border untuk semua cell data
-                        ws[cell_ref].s.border = {
-                            top: { style: 'thin', color: { rgb: "FFDEE2E6" } },
-                            left: { style: 'thin', color: { rgb: "FFDEE2E6" } },
-                            bottom: { style: 'thin', color: { rgb: "FFDEE2E6" } },
-                            right: { style: 'thin', color: { rgb: "FFDEE2E6" } }
-                        };
-                        
-                        // Alignment untuk data
-                        if (C <= 3) {
-                            // Kolom dasar (TAHUN, PERIODE, TANGGAL, DAM) - center
-                            ws[cell_ref].s.alignment = { 
-                                horizontal: 'center',
-                                vertical: 'center'
-                            };
-                        } else {
-                            // Semua kolom numerik - right align
-                            ws[cell_ref].s.alignment = { 
-                                horizontal: 'right',
-                                vertical: 'center'
-                            };
-                            
-                            // Format angka dengan 2 desimal
-                            const cellValue = ws[cell_ref].v;
-                            if (cellValue !== '-' && !isNaN(parseFloat(cellValue))) {
-                                ws[cell_ref].z = '0.00';
-                            }
-                        }
-                    }
-                }
-                
-                // Tambahkan worksheet ke workbook
-                XLSX.utils.book_append_sheet(wb, ws, "Data HDM");
-                
-                // Generate filename dengan timestamp
-                const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const filename = `HDM_Data_Export_${timestamp}.xlsx`;
-                
-                // Simpan file
-                XLSX.writeFile(wb, filename);
-                
-                // Show success message
-                setTimeout(() => {
-                    alert('Export berhasil! File Excel telah didownload.\n\nFile: ' + filename);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error exporting to Excel:', error);
-                alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-            } finally {
-                // Restore button state
-                this.innerHTML = originalText;
-                this.disabled = false;
+        try {
+            // Buat filter data yang akan dikirim ke server
+            const tahun = document.getElementById('tahunFilter').value || '';
+            const periode = document.getElementById('periodeFilter').value || '';
+            const dma = document.getElementById('damFilter').value || '';
+            
+            // Build URL dengan parameter filter
+            let url = '<?= base_url('hdm/export-excel/export') ?>';
+            const params = [];
+            
+            if (tahun) params.push(`tahun=${encodeURIComponent(tahun)}`);
+            if (periode) params.push(`periode=${encodeURIComponent(periode)}`);
+            if (dma) params.push(`dma=${encodeURIComponent(dma)}`);
+            
+            if (params.length > 0) {
+                url += '?' + params.join('&');
             }
-        }, 1000);
+            
+            // Redirect ke URL export
+            window.location.href = url;
+            
+            // Reset button setelah 2 detik
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.disabled = originalState;
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            alert('Terjadi kesalahan saat mengexport: ' + error.message);
+            
+            // Restore button state
+            this.innerHTML = originalText;
+            this.disabled = originalState;
+        }
     });
     
     // Add Data button
@@ -1781,25 +1318,6 @@ function renderTableBody(data) {
             }
         });
     }
-});
-
-// Fungsi untuk auto-refresh data (opsional)
-function startPolling() {
-    function poll() {
-        // Di sini bisa ditambahkan logika untuk auto-refresh data
-        console.log('Polling HDM data...');
-        
-        // Poll lagi setelah 30 detik
-        setTimeout(poll, 30000);
-    }
-    
-    // Mulai polling
-    poll();
-}
-
-// Mulai polling ketika halaman dimuat
-document.addEventListener('DOMContentLoaded', function() {
-    startPolling();
 });
 
 // Import SQL functionality (hanya untuk admin)
