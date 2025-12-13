@@ -111,6 +111,11 @@
         $routes->post('btm/import-sql', 'BTM\ImportBtmController::importSQL');
         $routes->post('btm/import-sql-file', 'BTM\ImportBtmController::importSQLFile');
         $routes->post('btm/import-data', 'BTM\ImportBtmController::importData');
+
+      // Tambahkan ini di Routes.php
+$routes->get('btm/export-excel/export', 'BTM\ExportExcelController::export');
+$routes->post('btm/export-excel/export-filtered', 'BTM\ExportExcelController::exportFiltered');
+$routes->get('btm/export-excel/test', 'BTM\ExportExcelController::test');
         
         // BTM Sub-routes
         $routes->get('btm/bt1', 'BTM\BtmController::bt1');

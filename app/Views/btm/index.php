@@ -1320,61 +1320,109 @@ function attachEventListeners() {
     });
 }
 
-// ============ EXPORT EXCEL FUNCTIONALITY ============
+// ============ EXPORT EXCEL FUNCTIONALITY - DIKOREKSI ============
 function setupExportExcel() {
-    document.getElementById('exportExcel').addEventListener('click', function() {
-        const originalText = this.innerHTML;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
+    const exportBtn = document.getElementById('exportExcel');
+    if (!exportBtn) return;
+    
+    exportBtn.addEventListener('click', function() {
+        const originalHTML = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
         this.disabled = true;
-
+        
+        // Ambil nilai filter
+        const tahunValue = document.getElementById('tahunFilter').value;
+        const periodeValue = document.getElementById('periodeFilter').value;
+        
+        // PASTIKAN URL BENAR
+        let exportUrl = '<?= base_url("btm/export-excel/export") ?>';
+        const params = [];
+        
+        if (tahunValue) {
+            params.push(`tahun=${encodeURIComponent(tahunValue)}`);
+        }
+        
+        if (periodeValue) {
+            params.push(`periode=${encodeURIComponent(periodeValue)}`);
+        }
+        
+        if (params.length > 0) {
+            exportUrl += '?' + params.join('&');
+        }
+        
+        console.log('Export URL:', exportUrl);
+        
+        // Debug: Coba buka di tab baru dulu
+        // window.open(exportUrl, '_blank');
+        
+        // Direct download
+        window.location.href = exportUrl;
+        
+        // Reset tombol setelah 3 detik
         setTimeout(() => {
-            try {
-                const table = document.getElementById('exportTable');
-                const wb = XLSX.utils.table_to_book(table, {sheet: `Data ${currentBt.toUpperCase()}`});
-                
-                const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const filename = `BTM_${currentBt.toUpperCase()}_Export_${timestamp}.xlsx`;
-                
-                XLSX.writeFile(wb, filename);
-                
-                setTimeout(() => {
-                    alert('Export berhasil! File: ' + filename);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error exporting to Excel:', error);
-                alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-            } finally {
-                this.innerHTML = originalText;
-                this.disabled = false;
-            }
-        }, 1000);
+            this.innerHTML = originalHTML;
+            this.disabled = false;
+        }, 3000);
     });
 }
 
-// ============ SCROLL INDICATOR ============
-function setupScrollIndicator() {
-    const scrollIndicator = document.getElementById('scrollIndicator');
-    const tableContainer = document.getElementById('tableContainer');
+// ============ TOAST NOTIFICATION ============
+function showToast(message, type = 'success') {
+    // Cek apakah sudah ada toast container
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 350px;';
+        document.body.appendChild(toastContainer);
+    }
     
-    let scrollTimeout;
-    if (tableContainer) {
-        tableContainer.addEventListener('scroll', function() {
-            const { scrollLeft, scrollWidth, clientWidth } = this;
-            const showHorizontal = scrollLeft > 0 || scrollLeft + clientWidth < scrollWidth;
-            
-            if (showHorizontal && scrollIndicator) {
-                scrollIndicator.style.display = 'block';
-            } else if (scrollIndicator) {
-                scrollIndicator.style.display = 'none';
-            }
-
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                if (scrollIndicator) {
-                    scrollIndicator.style.display = 'none';
+    // Tentukan kelas CSS berdasarkan tipe
+    const bgClass = type === 'success' ? 'text-bg-success' : 'text-bg-danger';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    // Buat toast element
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast show align-items-center ${bgClass} border-0`;
+    toast.style.cssText = 'margin-bottom: 10px;';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas ${icon} me-2"></i> ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Tambahkan toast ke container
+    toastContainer.appendChild(toast);
+    
+    // Auto-hide setelah 5 detik
+    setTimeout(() => {
+        const toastElement = document.getElementById(toastId);
+        if (toastElement) {
+            toastElement.classList.remove('show');
+            setTimeout(() => {
+                if (toastElement.parentNode) {
+                    toastElement.parentNode.removeChild(toastElement);
                 }
-            }, 2000);
+            }, 300);
+        }
+    }, 5000);
+    
+    // Tambahkan event listener untuk tombol close manual
+    const closeBtn = toast.querySelector('.btn-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
         });
     }
 }
