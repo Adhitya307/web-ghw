@@ -11,6 +11,7 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
+use App\Models\Rembesan\AnalisaLookBurtModel;
 
 class ExportExcelController extends BaseController
 {
@@ -19,7 +20,7 @@ class ExportExcelController extends BaseController
     
     public function exportExcelRapih()
     {
-        // Load semua data yang diperlukan
+        // Load semua data yang diperlukan untuk sheet pertama
         $data = $this->getAllData();
         
         // Debug: tampilkan jumlah data
@@ -32,7 +33,16 @@ class ExportExcelController extends BaseController
         // Gunakan data unik untuk export
         $data = $uniqueData;
         
+        // Load data untuk Analisis Look Burt
+        $analisaLookBurtModel = new AnalisaLookBurtModel();
+        $analisaData = $analisaLookBurtModel->getAll();
+        log_message('debug', 'Jumlah data Analisis Look Burt: ' . count($analisaData));
+        
         $spreadsheet = new Spreadsheet();
+        
+        // ==============================================
+        // SHEET 1: DATA REMBESAN
+        // ==============================================
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Data Rembesan');
         
@@ -205,7 +215,195 @@ class ExportExcelController extends BaseController
         ]);
         $sheet->getRowDimension($footerRow)->setRowHeight(30);
         
-        // === OUTPUT FILE ===
+        // ==============================================
+        // SHEET 2: ANALISIS LOOK BURT
+        // ==============================================
+        $sheet2 = $spreadsheet->createSheet();
+        $sheet2->setTitle('Analisis Look Burt');
+        
+        // === SET PAGE SETUP ===
+        $sheet2->getPageSetup()
+            ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
+            ->setPaperSize(PageSetup::PAPERSIZE_A4)
+            ->setFitToWidth(1)
+            ->setFitToHeight(0);
+        
+        // === SET JUDUL UTAMA ===
+        $sheet2->mergeCells('A1:H1');
+        $sheet2->setCellValue('A1', 'ANALISIS LOOK BURT 2007 - PT INDONESIA POWER');
+        $this->applyTitleStyle($sheet2, 'A1:H1');
+        $sheet2->getRowDimension(1)->setRowHeight(35);
+        
+        // === SET SUB JUDUL ===
+        $sheet2->mergeCells('A2:H2');
+        $sheet2->setCellValue('A2', 'LAPORAN ANALISIS LOOK BURT');
+        $this->applyTitleStyle($sheet2, 'A2:H2');
+        $sheet2->getRowDimension(2)->setRowHeight(30);
+        
+        // === INFORMASI TANGGAL EKSPOR ===
+        $sheet2->mergeCells('A3:H3');
+        $sheet2->setCellValue('A3', 'Diekspor pada: ' . date('d F Y H:i:s'));
+        $this->applySubtitleStyle($sheet2, 'A3:H3');
+        $sheet2->getRowDimension(3)->setRowHeight(25);
+        
+        // === HEADER TABEL ANALISIS LOOK BURT ===
+        $headerRow = 5;
+        $headers = [
+            'Tanggal',
+            'TMA Waduk',
+            'Rembesan Bendungan (Ltr/mnt)',
+            'Panjang Bendungan (M)',
+            'Rembesan per M',
+            'Ambang OK',
+            'Ambang Not OK',
+            'Keterangan'
+        ];
+        
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet2->setCellValue($col . $headerRow, $header);
+            $sheet2->getStyle($col . $headerRow)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'size' => 11,
+                    'color' => ['argb' => Color::COLOR_WHITE]
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                    'wrapText' => true
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => 'FF5B9BD5'] // Biru terang
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => 'FFFFFFFF']
+                    ]
+                ]
+            ]);
+            $col++;
+        }
+        
+        // === ISI DATA ANALISIS LOOK BURT ===
+        $row = $headerRow + 1;
+        
+        foreach ($analisaData as $index => $item) {
+            $sheet2->setCellValue('A' . $row, $item['tanggal'] ?? '-');
+            $sheet2->setCellValue('B' . $row, $this->formatNumberRaw($item['tma_waduk'] ?? null, 2));
+            $sheet2->setCellValue('C' . $row, $this->formatNumberRaw($item['rembesan_bendungan'] ?? null, 2));
+            $sheet2->setCellValue('D' . $row, $this->formatNumberRaw($item['panjang_bendungan'] ?? null, 2));
+            $sheet2->setCellValue('E' . $row, $this->formatNumberRaw($item['rembesan_per_m'] ?? null, 4));
+            $sheet2->setCellValue('F' . $row, $this->formatNumberRaw($item['nilai_ambang_ok'] ?? null, 2));
+            $sheet2->setCellValue('G' . $row, $this->formatNumberRaw($item['nilai_ambang_notok'] ?? null, 2));
+            $sheet2->setCellValue('H' . $row, $item['keterangan'] ?? '-');
+            
+            // Styling row
+            $rowStyle = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => 'FFCCCCCC']
+                    ]
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER
+                ]
+            ];
+            
+            $sheet2->getStyle('A' . $row . ':H' . $row)->applyFromArray($rowStyle);
+            
+            // Row warna alternating
+            if ($index % 2 == 0) {
+                $sheet2->getStyle('A' . $row . ':H' . $row)
+                    ->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()
+                    ->setARGB('FFF8F9FA');
+            }
+            
+            $sheet2->getRowDimension($row)->setRowHeight(25);
+            $row++;
+        }
+        
+        // === SET COLUMN WIDTH ===
+        $sheet2->getColumnDimension('A')->setWidth(12);  // Tanggal
+        $sheet2->getColumnDimension('B')->setWidth(12);  // TMA Waduk
+        $sheet2->getColumnDimension('C')->setWidth(25);  // Rembesan Bendungan
+        $sheet2->getColumnDimension('D')->setWidth(18);  // Panjang Bendungan
+        $sheet2->getColumnDimension('E')->setWidth(15);  // Rembesan per M
+        $sheet2->getColumnDimension('F')->setWidth(12);  // Ambang OK
+        $sheet2->getColumnDimension('G')->setWidth(15);  // Ambang Not OK
+        $sheet2->getColumnDimension('H')->setWidth(25);  // Keterangan
+        
+        // === APPLY NUMBER FORMATTING ===
+        if ($row > ($headerRow + 1)) {
+            // TMA Waduk - 2 desimal
+            $sheet2->getStyle('B' . ($headerRow + 1) . ':B' . ($row - 1))
+                ->getNumberFormat()
+                ->setFormatCode('0.00');
+                
+            // Rembesan Bendungan - 2 desimal
+            $sheet2->getStyle('C' . ($headerRow + 1) . ':C' . ($row - 1))
+                ->getNumberFormat()
+                ->setFormatCode('0.00');
+                
+            // Panjang Bendungan - 2 desimal
+            $sheet2->getStyle('D' . ($headerRow + 1) . ':D' . ($row - 1))
+                ->getNumberFormat()
+                ->setFormatCode('0.00');
+                
+            // Rembesan per M - 4 desimal
+            $sheet2->getStyle('E' . ($headerRow + 1) . ':E' . ($row - 1))
+                ->getNumberFormat()
+                ->setFormatCode('0.0000');
+                
+            // Ambang OK - 2 desimal
+            $sheet2->getStyle('F' . ($headerRow + 1) . ':F' . ($row - 1))
+                ->getNumberFormat()
+                ->setFormatCode('0.00');
+                
+            // Ambang Not OK - 2 desimal
+            $sheet2->getStyle('G' . ($headerRow + 1) . ':G' . ($row - 1))
+                ->getNumberFormat()
+                ->setFormatCode('0.00');
+        }
+        
+        // === FREEZE HEADERS ===
+        $sheet2->freezePane('A' . ($headerRow + 1));
+        
+        // === FOOTER ===
+        $footerRow2 = $row + 1;
+        $sheet2->mergeCells('A' . $footerRow2 . ':H' . $footerRow2);
+        $sheet2->setCellValue('A' . $footerRow2, 'Analisis Look Burt - PT Indonesia Power');
+        $sheet2->getStyle('A' . $footerRow2)->applyFromArray([
+            'font' => [
+                'italic' => true,
+                'size' => 10,
+                'color' => ['argb' => 'FF666666']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFF2F2F2']
+            ]
+        ]);
+        $sheet2->getRowDimension($footerRow2)->setRowHeight(30);
+        
+        // ==============================================
+        // SET SHEET ORDER (urutan tab di Excel)
+        // ==============================================
+        $spreadsheet->setActiveSheetIndex(0); // Set sheet pertama sebagai aktif
+        
+        // ==============================================
+        // OUTPUT FILE
+        // ==============================================
         $filename = 'Data_Rembesan_Bendungan_' . date('Ymd_His') . '.xlsx';
         
         return $this->downloadExcel($spreadsheet, $filename);
@@ -856,8 +1054,6 @@ class ExportExcelController extends BaseController
                 log_message('error', 'Error applying column styling: ' . $e->getMessage());
             }
         }
-        
-        // PERBAIKAN: Freeze panes sudah dilakukan di method utama
     }
     
     private function getNumericColumns()
