@@ -1573,37 +1573,28 @@ function attachEventListeners() {
     });
 }
 
-// ============ EXPORT EXCEL FUNCTIONALITY ============
-function setupExportExcel() {
-    document.getElementById('exportExcel').addEventListener('click', function() {
-        const originalText = this.innerHTML;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
-        this.disabled = true;
-
-        setTimeout(() => {
-            try {
-                const table = document.getElementById('exportTable');
-                const wb = XLSX.utils.table_to_book(table, {sheet: "Data Piezometer Left Bank"});
-                
-                const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const filename = `Piezometer_Left_Bank_Export_${timestamp}.xlsx`;
-                
-                XLSX.writeFile(wb, filename);
-                
-                setTimeout(() => {
-                    alert('Export berhasil! File: ' + filename);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error exporting to Excel:', error);
-                alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-            } finally {
-                this.innerHTML = originalText;
-                this.disabled = false;
-            }
-        }, 1000);
-    });
-}
+/// Ganti kode exportExcel di index.php
+document.getElementById('exportExcel').addEventListener('click', function() {
+    // Ambil nilai filter
+    const tahun = document.getElementById('tahunFilter').value;
+    const periode = document.getElementById('periodeFilter').value;
+    const dma = document.getElementById('dmaFilter').value;
+    
+    // Build URL dengan filter
+    let url = '<?= base_url('left-piez/export-excel/export') ?>';
+    const params = [];
+    
+    if (tahun) params.push('tahun=' + encodeURIComponent(tahun));
+    if (periode) params.push('periode=' + encodeURIComponent(periode));
+    if (dma) params.push('dma=' + encodeURIComponent(dma));
+    
+    if (params.length > 0) {
+        url += '?' + params.join('&');
+    }
+    
+    // Redirect ke URL export
+    window.location.href = url;
+});
 
 // ============ SCROLL INDICATOR ============
 function setupScrollIndicator() {

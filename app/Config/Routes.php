@@ -167,6 +167,11 @@ $routes->get('btm/export-excel/test', 'BTM\ExportExcelController::test');
         $routes->get('left_piez/grafik-history-l10-spz02', 'Leftpiez\GrafikHistoryL10Spz02::index');
         $routes->get('left_piez/grafik-history-l10-spz02/api-data', 'Leftpiez\GrafikHistoryL10Spz02::apiData');
         $routes->get('left_piez/grafik-history-l10-spz02/debug', 'Leftpiez\GrafikHistoryL10Spz02::debugStructure');
+        // Export Excel untuk Left Piezometer
+        $routes->get('left-piez/export-excel/export', 'LeftPiez\ExportExcelController::export', ['filter' => 'auth']);
+        $routes->post('left-piez/export-excel/export-filtered', 'LeftPiez\ExportExcelController::exportFiltered', ['filter' => 'auth']);
+        $routes->get('left-piez/export-excel', 'LeftPiez\ExportExcelController::export');
+        $routes->post('left-piez/export-excel', 'LeftPiez\ExportExcelController::export');
         
         // --- Right Piezometer Routes ---
         $routes->get('right-piez', 'Rightpiezo\RightpiezController::index');
