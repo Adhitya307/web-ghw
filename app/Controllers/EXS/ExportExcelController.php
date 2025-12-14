@@ -126,6 +126,11 @@ class ExportExcelController extends BaseController
             $consolidatedSheet->setTitle('Data Extensometer');
             $this->createConsolidatedSheet($consolidatedSheet, $pengukuran, $tahun, $periode, $dma);
             
+            // ===== SHEET 2: GRAFIK AMBANG BATAS =====
+            $grafikSheet = $spreadsheet->createSheet();
+            $grafikSheet->setTitle('Grafik Ambang');
+            $this->createGrafikAmbangSheet($grafikSheet, $pengukuran, $tahun, $periode, $dma);
+            
             // ===== SETUP PAGE MARGINS =====
             $consolidatedSheet->getPageMargins()
                 ->setTop(0.75)
@@ -133,8 +138,18 @@ class ExportExcelController extends BaseController
                 ->setLeft(0.25)
                 ->setBottom(0.75);
             
+            $grafikSheet->getPageMargins()
+                ->setTop(0.75)
+                ->setRight(0.25)
+                ->setLeft(0.25)
+                ->setBottom(0.75);
+            
             // ===== SETUP HEADER & FOOTER =====
             $this->setupExcelHeaderFooter($consolidatedSheet, $tahun, $periode, $dma);
+            $this->setupExcelHeaderFooter($grafikSheet, $tahun, $periode, $dma);
+            
+            // Set sheet utama ke Data Extensometer
+            $spreadsheet->setActiveSheetIndex(0);
             
             // ===== SAVE FILE =====
             $writer = new Xlsx($spreadsheet);
@@ -170,38 +185,9 @@ class ExportExcelController extends BaseController
     }
     
     /**
-     * Setup Excel Header & Footer yang seragam dengan HDM
+     * Create Grafik Ambang sheet
      */
-    private function setupExcelHeaderFooter($sheet, $tahun, $periode, $dma)
-    {
-        $headerFooter = $sheet->getHeaderFooter();
-        
-        // Build header text dengan format seragam HDM
-        $headerFooter->setOddHeader(
-            '&L&"Calibri,Bold"&14PT INDONESIA POWER' . 
-            '&C&"Calibri"&12DATA EXTENSOMETER MONITORING SYSTEM' .
-            '&R&"Calibri"&8' . date('d/m/Y H:i')
-        );
-        
-        // Build filter info untuk footer
-        $filterInfo = [];
-        if (!empty($tahun)) $filterInfo[] = "Tahun: $tahun";
-        if (!empty($periode)) $filterInfo[] = "Periode: $periode";
-        if (!empty($dma)) $filterInfo[] = "DMA: $dma";
-        $filterText = !empty($filterInfo) ? implode(' | ', $filterInfo) : 'Semua Data';
-        
-        // Set Footer dengan format yang lebih baik
-        $headerFooter->setOddFooter(
-            '&L&"Calibri"&8Filter: ' . $filterText .
-            '&C&"Calibri"&8Halaman &P dari &N' .
-            '&R&"Calibri"&8© ' . date('Y') . ' - Sistem Monitoring Extensometer'
-        );
-    }
-    
-    /**
-     * Create consolidated sheet dengan struktur header yang sama seperti view
-     */
-    private function createConsolidatedSheet($sheet, $pengukuran, $tahunFilter, $periodeFilter, $dmaFilter)
+    private function createGrafikAmbangSheet($sheet, $pengukuran, $tahunFilter, $periodeFilter, $dmaFilter)
     {
         // ===== SET PAGE SETUP =====
         $sheet->getPageSetup()
@@ -211,22 +197,56 @@ class ExportExcelController extends BaseController
             ->setFitToHeight(0)
             ->setHorizontalCentered(true);
         
-        // ===== HEADER UTAMA DAN SUBHEADER =====
-        $lastCol = 'AN'; // Total 42 kolom (A-AN) setelah hapus kolom AKSI
+        // Ambang batas data
+        $ambangBatas = [
+            'ex1' => ['hijau' => 80.10, 'kuning' => 104.00, 'merah' => 110.90],
+            'ex2' => ['hijau' => 46.00, 'kuning' => 80.00, 'merah' => 81.00],
+            'ex3' => ['hijau' => 80.10, 'kuning' => 104.00, 'merah' => 110.90],
+            'ex4' => ['hijau' => 46.00, 'kuning' => 80.00, 'merah' => 81.00]
+        ];
         
-        // Row 1: Judul Utama dengan informasi perusahaan (SERAGAM DENGAN HDM)
+        // Pembacaan awal data
+        $pembacaanAwal = [
+            'ex1' => ['10m' => 35.00, '20m' => 40.95, '30m' => 29.80],
+            'ex2' => ['10m' => 22.60, '20m' => 23.70, '30m' => 30.75],
+            'ex3' => ['10m' => 37.75, '20m' => 39.15, '30m' => 41.40],
+            'ex4' => ['10m' => 33.80, '20m' => 29.30, '30m' => 48.95]
+        ];
+        
+        // WARNA 
+        $headerBlue = 'FF0D6EFD';       // Biru untuk header utama
+        $headerLightGray = 'FFCED4DA';  // ABU MUDA untuk baris informasi ekspor (diperbaiki dari abu gelap)
+        $bacaanColor1 = 'FFFFFFFF';     // PUTIH untuk bacaan kolom pertama
+        $bacaanColor2 = 'FFF0F8FF';     // Biru soft untuk selang-seling
+        $amanColor = 'FF4CAF50';        // HIJAU CERAH untuk AMAN
+        $peringatanColor = 'FFFFC107';  // KUNING CERAH untuk PERINGATAN
+        $bahayaColor = 'FFF44336';      // MERAH CERAH untuk BAHAYA
+        
+        // ===== HEADER UTAMA DAN SUBHEADER =====
+        $lastCol = 'BI';
+        
+        // Row 1: Judul Utama - BIRU
         $sheet->mergeCells('A1:' . $lastCol . '1');
-        $sheet->setCellValue('A1', 'DATA EXTENSOMETER MONITORING SYSTEM - PT INDONESIA POWER');
-        $this->applyCompanyHeaderStyle($sheet, 'A1:' . $lastCol . '1');
+        $sheet->setCellValue('A1', 'GRAFIK & AMBANG BATAS EXTENSOMETER - PT INDONESIA POWER');
+        $sheet->getStyle('A1:' . $lastCol . '1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 16, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
+        ]);
         $sheet->getRowDimension(1)->setRowHeight(35);
         
-        // Row 2: Laporan Data
+        // Row 2: Laporan Data - BIRU
         $sheet->mergeCells('A2:' . $lastCol . '2');
-        $sheet->setCellValue('A2', 'LAPORAN DATA EXTENSOMETER');
-        $this->applyMainTitleStyle($sheet, 'A2:' . $lastCol . '2');
+        $sheet->setCellValue('A2', 'LAPORAN GRAFIK & AMBANG BATAS EXTENSOMETER');
+        $sheet->getStyle('A2:' . $lastCol . '2')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF0D6EFD']]]
+        ]);
         $sheet->getRowDimension(2)->setRowHeight(30);
         
-        // Row 3: Informasi Ekspor dan Filter
+        // Row 3: Informasi Ekspor dan Filter - ABU MUDA (diperbaiki dari abu gelap)
         $sheet->mergeCells('A3:' . $lastCol . '3');
         
         $filterInfo = [];
@@ -241,12 +261,798 @@ class ExportExcelController extends BaseController
             $sheet->setCellValue('A3', 'Diekspor pada: ' . date('d F Y H:i:s') . ' | Filter: Semua Data');
         }
         
-        $this->applySubtitleStyle($sheet, 'A3:' . $lastCol . '3');
+        $sheet->getStyle('A3:' . $lastCol . '3')->applyFromArray([
+            'font' => ['italic' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerLightGray]], // WARNA ABU MUDA
+            'borders' => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF0D6EFD']]]
+        ]);
         $sheet->getRowDimension(3)->setRowHeight(25);
         
-        // ===== HEADER TABEL (SAMA SEPERTI DI VIEW) =====
+        // ===== HEADER TABEL (SEMUA BIRU) =====
+        $row = 4;
+        
+        // Row 4: Main Header - DIPERBAIKI: EX-3 dan EX-4 sudah benar dari AF sampai BJ
+        $sheet->setCellValue('A' . $row, 'Rod Extensometer No.');
+        
+        // EX-1: B-P (15 kolom)
+        $sheet->mergeCells('B' . $row . ':P' . $row);
+        $sheet->setCellValue('B' . $row, 'EX-1');
+        
+        // EX-2: Q-AE (15 kolom)
+        $sheet->mergeCells('Q' . $row . ':AE' . $row);
+        $sheet->setCellValue('Q' . $row, 'EX-2');
+        
+        // EX-3: AF-AT (15 kolom) - DIPERBAIKI
+        $sheet->mergeCells('AF' . $row . ':AT' . $row);
+        $sheet->setCellValue('AF' . $row, 'EX-3');
+        
+        // EX-4: AU-BJ (15 kolom) - DIPERBAIKI
+        $sheet->mergeCells('AU' . $row . ':BI' . $row);
+        $sheet->setCellValue('AU' . $row, 'EX-4');
+        
+        // Apply style untuk Row 4 - BIRU SEMUA
+        $sheet->getStyle('A' . $row . ':BI' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+        ]);
+        $sheet->getRowDimension($row)->setRowHeight(30);
+        $row++;
+        
+        // Row 5: Zona - BIRU
+        $sheet->setCellValue('A' . $row, 'Zona');
+        $sheet->mergeCells('B' . $row . ':P' . $row);
+        $sheet->setCellValue('B' . $row, 'SPILLWAY');
+        $sheet->mergeCells('Q' . $row . ':AE' . $row);
+        $sheet->setCellValue('Q' . $row, 'SPILLWAY');
+        $sheet->mergeCells('AF' . $row . ':AT' . $row);
+        $sheet->setCellValue('AF' . $row, 'SPILLWAY');
+        $sheet->mergeCells('AU' . $row . ':BI' . $row);
+        $sheet->setCellValue('AU' . $row, 'SPILLWAY');
+        
+        $sheet->getStyle('A' . $row . ':BI' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+        ]);
+        $sheet->getRowDimension($row)->setRowHeight(25);
+        $row++;
+        
+        // Row 6: Kedalaman (m) - BIRU - DIPERBAIKI untuk EX-3 dan EX-4
+        $sheet->setCellValue('A' . $row, 'Kedalaman (m)');
+        
+        // EX-1 - 10m (B-F), 20m (G-K), 30m (L-P)
+        $sheet->mergeCells('B' . $row . ':F' . $row);
+        $sheet->setCellValue('B' . $row, '10');
+        $sheet->mergeCells('G' . $row . ':K' . $row);
+        $sheet->setCellValue('G' . $row, '20');
+        $sheet->mergeCells('L' . $row . ':P' . $row);
+        $sheet->setCellValue('L' . $row, '30');
+        
+        // EX-2 - 10m (Q-U), 20m (V-Z), 30m (AA-AE)
+        $sheet->mergeCells('Q' . $row . ':U' . $row);
+        $sheet->setCellValue('Q' . $row, '10');
+        $sheet->mergeCells('V' . $row . ':Z' . $row);
+        $sheet->setCellValue('V' . $row, '20');
+        $sheet->mergeCells('AA' . $row . ':AE' . $row);
+        $sheet->setCellValue('AA' . $row, '30');
+        
+        // EX-3 - 10m (AF-AJ), 20m (AK-AO), 30m (AP-AT) - DIPERBAIKI
+        $sheet->mergeCells('AF' . $row . ':AJ' . $row);
+        $sheet->setCellValue('AF' . $row, '10');
+        $sheet->mergeCells('AK' . $row . ':AO' . $row);
+        $sheet->setCellValue('AK' . $row, '20');
+        $sheet->mergeCells('AP' . $row . ':AT' . $row);
+        $sheet->setCellValue('AP' . $row, '30');
+        
+        // EX-4 - 10m (AU-AY), 20m (AZ-BD), 30m (BE-BI) - DIPERBAIKI
+        $sheet->mergeCells('AU' . $row . ':AY' . $row);
+        $sheet->setCellValue('AU' . $row, '10');
+        $sheet->mergeCells('AZ' . $row . ':BD' . $row);
+        $sheet->setCellValue('AZ' . $row, '20');
+        $sheet->mergeCells('BE' . $row . ':BI' . $row);
+        $sheet->setCellValue('BE' . $row, '30');
+        
+        // Tambahkan kolom BJ untuk konsistensi
+        $sheet->getStyle('BI' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+        ]);
+        
+        $sheet->getStyle('A' . $row . ':BI' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+        ]);
+        $sheet->getRowDimension($row)->setRowHeight(25);
+        $row++;
+        
+        // Row 7: Pemb.Awal (mm) - BIRU - DIPERBAIKI untuk EX-3 dan EX-4
+        $sheet->setCellValue('A' . $row, 'Pemb.Awal (mm)');
+        
+        // Fungsi untuk membuat sel pembacaan awal
+        $createPembacaanAwalCell = function($col, $value) use ($row, $sheet, $headerBlue) {
+            $sheet->setCellValue($col . $row, $value);
+            $sheet->getStyle($col . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+            ]);
+        };
+        
+        // Fungsi untuk membuat sel ambang batas
+        $createAmbangCell = function($col, $label) use ($row, $sheet, $headerBlue) {
+            $sheet->setCellValue($col . $row, $label);
+            $sheet->getStyle($col . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+            ]);
+        };
+        
+        // EX-1
+        $createPembacaanAwalCell('B', $pembacaanAwal['ex1']['10m']);
+        $sheet->mergeCells('C' . $row . ':F' . $row);
+        $createAmbangCell('C', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('G', $pembacaanAwal['ex1']['20m']);
+        $sheet->mergeCells('H' . $row . ':K' . $row);
+        $createAmbangCell('H', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('L', $pembacaanAwal['ex1']['30m']);
+        $sheet->mergeCells('M' . $row . ':P' . $row);
+        $createAmbangCell('M', 'Ambang Batas');
+        
+        // EX-2
+        $createPembacaanAwalCell('Q', $pembacaanAwal['ex2']['10m']);
+        $sheet->mergeCells('R' . $row . ':U' . $row);
+        $createAmbangCell('R', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('V', $pembacaanAwal['ex2']['20m']);
+        $sheet->mergeCells('W' . $row . ':Z' . $row);
+        $createAmbangCell('W', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('AA', $pembacaanAwal['ex2']['30m']);
+        $sheet->mergeCells('AB' . $row . ':AE' . $row);
+        $createAmbangCell('AB', 'Ambang Batas');
+        
+        // EX-3 - DIPERBAIKI
+        $createPembacaanAwalCell('AF', $pembacaanAwal['ex3']['10m']);
+        $sheet->mergeCells('AG' . $row . ':AJ' . $row);
+        $createAmbangCell('AG', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('AK', $pembacaanAwal['ex3']['20m']);
+        $sheet->mergeCells('AL' . $row . ':AO' . $row);
+        $createAmbangCell('AL', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('AP', $pembacaanAwal['ex3']['30m']);
+        $sheet->mergeCells('AQ' . $row . ':AT' . $row);
+        $createAmbangCell('AQ', 'Ambang Batas');
+        
+        // EX-4 - DIPERBAIKI
+        $createPembacaanAwalCell('AU', $pembacaanAwal['ex4']['10m']);
+        $sheet->mergeCells('AV' . $row . ':AY' . $row);
+        $createAmbangCell('AV', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('AZ', $pembacaanAwal['ex4']['20m']);
+        $sheet->mergeCells('BA' . $row . ':BD' . $row);
+        $createAmbangCell('BA', 'Ambang Batas');
+        
+        $createPembacaanAwalCell('BE', $pembacaanAwal['ex4']['30m']);
+        $sheet->mergeCells('BF' . $row . ':BI' . $row);
+        $createAmbangCell('BF', 'Ambang Batas');
+        
+        // Style untuk kolom A dan BJ
+        $sheet->getStyle('A' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+        ]);
+        
+        $sheet->getStyle('BI' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+        ]);
+        
+        $sheet->getRowDimension($row)->setRowHeight(25);
+        $row++;
+        
+        // Row 8: Koordinat - BIRU
+        $sheet->setCellValue('A' . $row, 'Koordinat');
+        
+        // Isi "-" untuk semua sel koordinat
+        $coordinateCols = $this->getAllColumns('B', 'BI');
+        
+        foreach ($coordinateCols as $col) {
+            $sheet->setCellValue($col . $row, '-');
+            $sheet->getStyle($col . $row)->applyFromArray([
+                'font' => ['size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+            ]);
+        }
+        
+        // Style untuk kolom A
+        $sheet->getStyle('A' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+        ]);
+        
+        $sheet->getRowDimension($row)->setRowHeight(25);
+        $row++;
+        
+        // Row 9: Header Bacaan & Ambang Batas DETAIL - DIPERBAIKI untuk EX-3 dan EX-4
+        $sheet->setCellValue('A' . $row, 'Tanggal');
+        
+        // Fungsi untuk membuat header detail untuk satu kedalaman (5 kolom)
+        $createDetailHeader = function($startCol, $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor) {
+            // Bacaan (mm) - BIRU
+            $sheet->setCellValue($startCol . $row, 'Bacaan (mm)');
+            $sheet->getStyle($startCol . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+            ]);
+            
+            // Hijau (mm) - HIJAU CERAH
+            $sheet->setCellValue($this->nextColumn($startCol, 1) . $row, 'Hijau (mm)');
+            $sheet->getStyle($this->nextColumn($startCol, 1) . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $amanColor]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+            ]);
+            
+            // Kuning (mm) - KUNING CERAH
+            $sheet->setCellValue($this->nextColumn($startCol, 2) . $row, 'Kuning (mm)');
+            $sheet->getStyle($this->nextColumn($startCol, 2) . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FF000000']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $peringatanColor]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+            ]);
+            
+            // Merah (mm) - MERAH CERAH
+            $sheet->setCellValue($this->nextColumn($startCol, 3) . $row, 'Merah (mm)');
+            $sheet->getStyle($this->nextColumn($startCol, 3) . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bahayaColor]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+            ]);
+            
+            // Bacaan (mm) akhir - BIRU
+            $sheet->setCellValue($this->nextColumn($startCol, 4) . $row, 'Bacaan (mm)');
+            $sheet->getStyle($this->nextColumn($startCol, 4) . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+            ]);
+        };
+        
+        // EX-1: 10m (B), 20m (G), 30m (L)
+        $createDetailHeader('B', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('G', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('L', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        
+        // EX-2: 10m (Q), 20m (V), 30m (AA)
+        $createDetailHeader('Q', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('V', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('AA', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        
+        // EX-3: 10m (AF), 20m (AK), 30m (AP) - DIPERBAIKI
+        $createDetailHeader('AF', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('AK', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('AP', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        
+        // EX-4: 10m (AU), 20m (AZ), 30m (BE) - DIPERBAIKI
+        $createDetailHeader('AU', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('AZ', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        $createDetailHeader('BE', $sheet, $row, $headerBlue, $amanColor, $peringatanColor, $bahayaColor);
+        
+        // Kolom BJ untuk konsistensi
+        $sheet->getStyle('BI' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+        ]);
+        
+        // Style untuk kolom A (Tanggal) - BIRU
+        $sheet->getStyle('A' . $row)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+        ]);
+        
+        $sheet->getRowDimension($row)->setRowHeight(22);
+        $row++;
+        
+        // ===== ISI DATA =====
+        $startDataRow = $row;
+        
+        if (empty($pengukuran)) {
+            // Jika tidak ada data
+            $sheet->mergeCells('A' . $row . ':BI' . $row);
+            $sheet->setCellValue('A' . $row, 'Tidak ada data monitoring yang tersedia');
+            $sheet->getStyle('A' . $row . ':BI' . $row)->applyFromArray([
+                'font' => ['italic' => true, 'size' => 11, 'color' => ['argb' => 'FF666666']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+            ]);
+            $sheet->getRowDimension($row)->setRowHeight(40);
+            $row++;
+        } else {
+            // Urutkan data berdasarkan tanggal ASC
+            usort($pengukuran, function($a, $b) {
+                $dateA = strtotime($a['tanggal'] ?? '1970-01-01');
+                $dateB = strtotime($b['tanggal'] ?? '1970-01-01');
+                return $dateA - $dateB;
+            });
+            
+            $rowIndex = 0;
+            foreach ($pengukuran as $p) {
+                $pid = $p['id_pengukuran'];
+                
+                // Ambil data pembacaan untuk setiap extensometer
+                $pembacaanEx1 = $this->pembacaanEx1Model->where('id_pengukuran', $pid)->first();
+                $pembacaanEx2 = $this->pembacaanEx2Model->where('id_pengukuran', $pid)->first();
+                $pembacaanEx3 = $this->pembacaanEx3Model->where('id_pengukuran', $pid)->first();
+                $pembacaanEx4 = $this->pembacaanEx4Model->where('id_pengukuran', $pid)->first();
+                
+                // Format tanggal
+                $tanggal = !empty($p['tanggal']) ? date('d/m/Y', strtotime($p['tanggal'])) : '-';
+                $sheet->setCellValue('A' . $row, $tanggal);
+                
+                // Tentukan warna baris untuk efek selang-seling
+                $isEvenRow = ($rowIndex % 2 == 0);
+                
+                // Fungsi untuk menentukan status dengan warna SOFT
+                $getStatusColorSoft = function($bacaan, $ambang) {
+                    if ($bacaan === null || $bacaan === '' || $bacaan === '-') {
+                        return 'FFE8F5E9'; // Hijau soft default
+                    }
+                    $bacaan = (float)$bacaan;
+                    
+                    // Warna SOFT
+                    if ($bacaan <= $ambang['hijau']) {
+                        return 'FFE8F5E9'; // HIJAU SOFT
+                    } elseif ($bacaan <= $ambang['kuning']) {
+                        return 'FFFFF8E1'; // KUNING SOFT
+                    } else {
+                        return 'FFFCE4EC'; // MERAH SOFT
+                    }
+                };
+                
+                // Fungsi untuk menentukan warna teks berdasarkan background SOFT
+                $getTextColorSoft = function($bgColor) {
+                    return 'FF000000'; // Selalu teks hitam untuk warna soft
+                };
+                
+                // Fungsi format number
+                $formatNumber = function($value) {
+                    if ($value === null || $value === '' || $value === '-') {
+                        return '-';
+                    }
+                    return number_format((float)$value, 2, '.', '');
+                };
+                
+                // Fungsi untuk membuat data baris untuk satu kedalaman (5 kolom)
+                $createDataRow = function($col, $bacaan, $ambang, $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2) {
+                    // Bacaan (mm) - PUTIH atau BIRU SOFT selang-seling
+                    $bacaanBgColor = $isEvenRow ? $bacaanColor1 : $bacaanColor2;
+                    $sheet->setCellValue($col . $row, $formatNumber($bacaan));
+                    $sheet->getStyle($col . $row)->applyFromArray([
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bacaanBgColor]],
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                    ]);
+                    
+                    // Hijau (mm) - WARNA SOFT untuk nilai ambang
+                    $hijauBgColor = 'FFE8F5E9'; // Hijau soft
+                    $sheet->setCellValue($this->nextColumn($col, 1) . $row, $formatNumber($ambang['hijau']));
+                    $sheet->getStyle($this->nextColumn($col, 1) . $row)->applyFromArray([
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'font' => ['color' => ['argb' => 'FF000000']],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $hijauBgColor]],
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                    ]);
+                    
+                    // Kuning (mm) - WARNA SOFT untuk nilai ambang
+                    $kuningBgColor = 'FFFFF8E1'; // Kuning soft
+                    $sheet->setCellValue($this->nextColumn($col, 2) . $row, $formatNumber($ambang['kuning']));
+                    $sheet->getStyle($this->nextColumn($col, 2) . $row)->applyFromArray([
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'font' => ['color' => ['argb' => 'FF000000']],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $kuningBgColor]],
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                    ]);
+                    
+                    // Merah (mm) - WARNA SOFT untuk nilai ambang
+                    $merahBgColor = 'FFFCE4EC'; // Merah soft
+                    $sheet->setCellValue($this->nextColumn($col, 3) . $row, $formatNumber($ambang['merah']));
+                    $sheet->getStyle($this->nextColumn($col, 3) . $row)->applyFromArray([
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'font' => ['color' => ['argb' => 'FF000000']],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $merahBgColor]],
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                    ]);
+                    
+                    // Bacaan (mm) dengan status warna SOFT
+                    $statusBgColor = $getStatusColorSoft($bacaan, $ambang);
+                    $statusTextColor = $getTextColorSoft($statusBgColor);
+                    $sheet->setCellValue($this->nextColumn($col, 4) . $row, $formatNumber($bacaan));
+                    $sheet->getStyle($this->nextColumn($col, 4) . $row)->applyFromArray([
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'font' => ['bold' => true, 'color' => ['argb' => $statusTextColor]],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $statusBgColor]],
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                    ]);
+                };
+                
+                // EX-1: 10m (B), 20m (G), 30m (L)
+                $createDataRow('B', $pembacaanEx1['pembacaan_10'] ?? null, $ambangBatas['ex1'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('G', $pembacaanEx1['pembacaan_20'] ?? null, $ambangBatas['ex1'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('L', $pembacaanEx1['pembacaan_30'] ?? null, $ambangBatas['ex1'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                
+                // EX-2: 10m (Q), 20m (V), 30m (AA)
+                $createDataRow('Q', $pembacaanEx2['pembacaan_10'] ?? null, $ambangBatas['ex2'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('V', $pembacaanEx2['pembacaan_20'] ?? null, $ambangBatas['ex2'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('AA', $pembacaanEx2['pembacaan_30'] ?? null, $ambangBatas['ex2'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                
+                // EX-3: 10m (AF), 20m (AK), 30m (AP) - DIPERBAIKI
+                $createDataRow('AF', $pembacaanEx3['pembacaan_10'] ?? null, $ambangBatas['ex3'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('AK', $pembacaanEx3['pembacaan_20'] ?? null, $ambangBatas['ex3'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('AP', $pembacaanEx3['pembacaan_30'] ?? null, $ambangBatas['ex3'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                
+                // EX-4: 10m (AU), 20m (AZ), 30m (BE) - DIPERBAIKI
+                $createDataRow('AU', $pembacaanEx4['pembacaan_10'] ?? null, $ambangBatas['ex4'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('AZ', $pembacaanEx4['pembacaan_20'] ?? null, $ambangBatas['ex4'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                $createDataRow('BE', $pembacaanEx4['pembacaan_30'] ?? null, $ambangBatas['ex4'], $sheet, $row, $formatNumber, $getStatusColorSoft, $getTextColorSoft, $isEvenRow, $bacaanColor1, $bacaanColor2);
+                
+                // Kolom BJ untuk konsistensi
+                $sheet->getStyle('BI' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $isEvenRow ? $bacaanColor1 : $bacaanColor2]],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                ]);
+                
+                // Style untuk kolom A (Tanggal) - BIRU untuk header
+                $sheet->getStyle('A' . $row)->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                ]);
+                
+                $row++;
+                $rowIndex++;
+            }
+        }
+        
+        // ===== FREEZE PANES (DIPERBAIKI: Kolom A akan tetap terlihat saat di-scroll horizontal) =====
+        // Freeze kolom A (Tanggal) dan baris 1-9 (header)
+        $sheet->freezePane('B10');
+        
+        // ===== FOOTER =====
+        if ($row > $startDataRow) {
+            $footerRow = $row;
+            $sheet->mergeCells('A' . $footerRow . ':BI' . $footerRow);
+            
+            $filterInfo = [];
+            if (!empty($tahunFilter)) $filterInfo[] = "Tahun: $tahunFilter";
+            if (!empty($periodeFilter)) $filterInfo[] = "Periode: $periodeFilter";
+            if (!empty($dmaFilter)) $filterInfo[] = "DMA: $dmaFilter";
+            
+            $totalRecords = count($pengukuran);
+            $filterText = !empty($filterInfo) ? implode(', ', $filterInfo) : 'Semua Data';
+            
+            $sheet->setCellValue('A' . $footerRow, 
+                'TOTAL REKORD: ' . $totalRecords . ' | Filter: ' . $filterText . 
+                ' | Grafik & Ambang Batas Extensometer Monitoring System - PT Indonesia Power'
+            );
+            
+            $sheet->getStyle('A' . $footerRow . ':BI' . $footerRow)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FF666666'], 'italic' => true],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF2F2F2']],
+                'borders' => ['top' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FFCCCCCC']]]
+            ]);
+            $sheet->getRowDimension($footerRow)->setRowHeight(30);
+        }
+        
+        // ===== FORMAT ANGKA =====
+        if ($row > $startDataRow) {
+            // Format kolom numerik dengan 2 desimal
+            $numericRange = 'B' . $startDataRow . ':BI' . ($row - 1); // Hingga BI karena BJ hanya untuk padding
+            $sheet->getStyle($numericRange)
+                ->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+            
+            // Set font size dan alignment
+            $sheet->getStyle($numericRange)
+                ->getFont()
+                ->setSize(10);
+            
+            $sheet->getStyle($numericRange)
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+        }
+        
+        // ===== SET COLUMN WIDTHS =====
+        $sheet->getColumnDimension('A')->setWidth(18); // Tanggal
+        $sheet->getColumnDimension('BI')->setWidth(14); // Kolom terakhir untuk padding
+        
+        // Set width untuk semua kolom data
+        for ($col = 'B'; $col <= 'BI'; $col++) {
+            $sheet->getColumnDimension($col)->setWidth(14);
+        }
+        
+        // ===== SET ROW HEIGHTS =====
+        $sheet->getRowDimension(1)->setRowHeight(40);
+        $sheet->getRowDimension(2)->setRowHeight(35);
+        $sheet->getRowDimension(3)->setRowHeight(28);
+        $sheet->getRowDimension(4)->setRowHeight(30);
+        $sheet->getRowDimension(5)->setRowHeight(28);
+        $sheet->getRowDimension(6)->setRowHeight(28);
+        $sheet->getRowDimension(7)->setRowHeight(28);
+        $sheet->getRowDimension(8)->setRowHeight(28);
+        $sheet->getRowDimension(9)->setRowHeight(25);
+        
+        // Atur tinggi baris data
+        if (!empty($pengukuran)) {
+            for ($i = 10; $i <= $row; $i++) {
+                $sheet->getRowDimension($i)->setRowHeight(22);
+            }
+        }
+        
+        // ===== SET PRINT AREA =====
+        if ($row > $startDataRow) {
+            $sheet->getPageSetup()->setPrintArea('A1:BI' . ($row - 1));
+        } else {
+            $sheet->getPageSetup()->setPrintArea('A1:BI' . $row);
+        }
+        
+        // Set wrap text untuk semua header
+        $sheet->getStyle('A4:BI9')->getAlignment()->setWrapText(true);
+    }
+    
+    /**
+     * Setup Excel Header & Footer
+     */
+    private function setupExcelHeaderFooter($sheet, $tahun, $periode, $dma)
+    {
+        $headerFooter = $sheet->getHeaderFooter();
+        
+        // Build header text
+        $headerFooter->setOddHeader(
+            '&L&"Calibri,Bold"&14PT INDONESIA POWER' . 
+            '&C&"Calibri"&12DATA EXTENSOMETER MONITORING SYSTEM' .
+            '&R&"Calibri"&8' . date('d/m/Y H:i')
+        );
+        
+        // Build filter info untuk footer
+        $filterInfo = [];
+        if (!empty($tahun)) $filterInfo[] = "Tahun: $tahun";
+        if (!empty($periode)) $filterInfo[] = "Periode: $periode";
+        if (!empty($dma)) $filterInfo[] = "DMA: $dma";
+        $filterText = !empty($filterInfo) ? implode(' | ', $filterInfo) : 'Semua Data';
+        
+        // Set Footer
+        $headerFooter->setOddFooter(
+            '&L&"Calibri"&8Filter: ' . $filterText .
+            '&C&"Calibri"&8Halaman &P dari &N' .
+            '&R&"Calibri"&8© ' . date('Y') . ' - Sistem Monitoring Extensometer'
+        );
+    }
+    
+    /**
+     * Create consolidated sheet
+     */
+    private function createConsolidatedSheet($sheet, $pengukuran, $tahunFilter, $periodeFilter, $dmaFilter)
+    {
+        // ===== SET PAGE SETUP =====
+        $sheet->getPageSetup()
+            ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
+            ->setPaperSize(PageSetup::PAPERSIZE_A3)
+            ->setFitToWidth(1)
+            ->setFitToHeight(0)
+            ->setHorizontalCentered(true);
+        
+        // ===== HEADER UTAMA DAN SUBHEADER =====
+        $lastCol = 'AN';
+        
+        // WARNA UNTUK SHEET 1
+        $headerBlue = 'FF0D6EFD';       // Biru untuk semua header utama
+        $headerLightGray = 'FFCED4DA';  // ABU MUDA untuk baris informasi ekspor (diperbaiki dari abu gelap)
+        $dataWhite = 'FFFFFFFF';        // PUTIH untuk nilai data baris ganjil
+        $dataBlueSoft = 'FFF0F8FF';     // Biru soft untuk nilai data baris genap
+        
+        // Row 1: Judul Utama - BIRU SEMUA
+        $sheet->mergeCells('A1:' . $lastCol . '1');
+        $sheet->setCellValue('A1', 'DATA EXTENSOMETER MONITORING SYSTEM - PT INDONESIA POWER');
+        $sheet->getStyle('A1:' . $lastCol . '1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 16, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(35);
+        
+        // Row 2: Laporan Data - BIRU SEMUA
+        $sheet->mergeCells('A2:' . $lastCol . '2');
+        $sheet->setCellValue('A2', 'LAPORAN DATA EXTENSOMETER');
+        $sheet->getStyle('A2:' . $lastCol . '2')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+            'borders' => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF0D6EFD']]]
+        ]);
+        $sheet->getRowDimension(2)->setRowHeight(30);
+        
+        // Row 3: Informasi Ekspor dan Filter - ABU MUDA (diperbaiki dari abu gelap)
+        $sheet->mergeCells('A3:' . $lastCol . '3');
+        
+        $filterInfo = [];
+        if (!empty($tahunFilter)) $filterInfo[] = "Tahun: $tahunFilter";
+        if (!empty($periodeFilter)) $filterInfo[] = "Periode: $periodeFilter";
+        if (!empty($dmaFilter)) $filterInfo[] = "DMA: $dmaFilter";
+        
+        if (!empty($filterInfo)) {
+            $filterText = 'Filter: ' . implode(', ', $filterInfo);
+            $sheet->setCellValue('A3', 'Diekspor pada: ' . date('d F Y H:i:s') . ' | ' . $filterText);
+        } else {
+            $sheet->setCellValue('A3', 'Diekspor pada: ' . date('d F Y H:i:s') . ' | Filter: Semua Data');
+        }
+        
+        $sheet->getStyle('A3:' . $lastCol . '3')->applyFromArray([
+            'font' => ['italic' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerLightGray]], // WARNA ABU MUDA
+            'borders' => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF0D6EFD']]]
+        ]);
+        $sheet->getRowDimension(3)->setRowHeight(25);
+        
+        // ===== HEADER TABEL (SEMUA BIRU) =====
         // Row 4-6: Table Headers (3 baris seperti di view)
-        $this->createExtensoTableHeaders($sheet);
+        $row = 4;
+        
+        // Row 4: Main Header - SEMUA BIRU
+        $mainHeaders = [
+            ['label' => 'TAHUN', 'colspan' => 1, 'rowspan' => 3, 'col' => 'A', 'color' => $headerBlue],
+            ['label' => 'PERIODE', 'colspan' => 1, 'rowspan' => 3, 'col' => 'B', 'color' => $headerBlue],
+            ['label' => 'TANGGAL', 'colspan' => 1, 'rowspan' => 3, 'col' => 'C', 'color' => $headerBlue],
+            ['label' => 'DMA', 'colspan' => 1, 'rowspan' => 3, 'col' => 'D', 'color' => $headerBlue],
+            ['label' => 'PEMBACAAN', 'colspan' => 12, 'rowspan' => 1, 'col' => 'E', 'color' => $headerBlue],
+            ['label' => 'DEFORMASI', 'colspan' => 12, 'rowspan' => 1, 'col' => 'Q', 'color' => $headerBlue],
+            ['label' => 'INITIAL READINGS', 'colspan' => 12, 'rowspan' => 1, 'col' => 'AC', 'color' => $headerBlue]
+        ];
+        
+        foreach ($mainHeaders as $header) {
+            if ($header['colspan'] == 1 && $header['rowspan'] == 3) {
+                // Header dengan rowspan 3 - BIRU
+                $cell = $header['col'] . $row;
+                $sheet->setCellValue($cell, $header['label']);
+                
+                $sheet->getStyle($cell . ':' . $header['col'] . ($row + 2))->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $header['color']]],
+                    'borders' => ['outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+                ]);
+            } else {
+                // Header dengan colspan - BIRU
+                $endCol = $this->nextColumn($header['col'], $header['colspan'] - 1);
+                $range = $header['col'] . $row . ':' . $endCol . $row;
+                $sheet->mergeCells($range);
+                $sheet->setCellValue($header['col'] . $row, $header['label']);
+                
+                $sheet->getStyle($range)->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $header['color']]],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+                ]);
+            }
+        }
+        
+        $sheet->getRowDimension($row)->setRowHeight(25);
+        
+        // Row 5: Sub Headers - SEMUA BIRU
+        $row = 5;
+        $subHeaders = [
+            // PEMBACAAN - EX-1 sampai EX-4
+            ['label' => 'EX-1', 'colspan' => 3, 'col' => 'E', 'color' => $headerBlue],
+            ['label' => 'EX-2', 'colspan' => 3, 'col' => 'H', 'color' => $headerBlue],
+            ['label' => 'EX-3', 'colspan' => 3, 'col' => 'K', 'color' => $headerBlue],
+            ['label' => 'EX-4', 'colspan' => 3, 'col' => 'N', 'color' => $headerBlue],
+            
+            // DEFORMASI - EX-1 sampai EX-4
+            ['label' => 'EX-1', 'colspan' => 3, 'col' => 'Q', 'color' => $headerBlue],
+            ['label' => 'EX-2', 'colspan' => 3, 'col' => 'T', 'color' => $headerBlue],
+            ['label' => 'EX-3', 'colspan' => 3, 'col' => 'W', 'color' => $headerBlue],
+            ['label' => 'EX-4', 'colspan' => 3, 'col' => 'Z', 'color' => $headerBlue],
+            
+            // INITIAL READINGS - EX-1 sampai EX-4
+            ['label' => 'EX-1', 'colspan' => 3, 'col' => 'AC', 'color' => $headerBlue],
+            ['label' => 'EX-2', 'colspan' => 3, 'col' => 'AF', 'color' => $headerBlue],
+            ['label' => 'EX-3', 'colspan' => 3, 'col' => 'AI', 'color' => $headerBlue],
+            ['label' => 'EX-4', 'colspan' => 3, 'col' => 'AL', 'color' => $headerBlue]
+        ];
+        
+        foreach ($subHeaders as $header) {
+            $endCol = $this->nextColumn($header['col'], $header['colspan'] - 1);
+            $range = $header['col'] . $row . ':' . $endCol . $row;
+            $sheet->mergeCells($range);
+            $sheet->setCellValue($header['col'] . $row, $header['label']);
+            
+            $sheet->getStyle($range)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $header['color']]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+            ]);
+        }
+        
+        $sheet->getRowDimension($row)->setRowHeight(22);
+        
+        // Row 6: Detail Headers - SEMUA BIRU
+        $row = 6;
+        $detailHeaders = [];
+        
+        // PEMBACAAN untuk EX-1 sampai EX-4
+        for ($ex = 1; $ex <= 4; $ex++) {
+            $startCol = $ex == 1 ? 'E' : ($ex == 2 ? 'H' : ($ex == 3 ? 'K' : 'N'));
+            $detailHeaders[] = ['label' => '10 m', 'col' => $startCol, 'color' => $headerBlue];
+            $detailHeaders[] = ['label' => '20 m', 'col' => $this->nextColumn($startCol, 1), 'color' => $headerBlue];
+            $detailHeaders[] = ['label' => '30 m', 'col' => $this->nextColumn($startCol, 2), 'color' => $headerBlue];
+        }
+        
+        // DEFORMASI untuk EX-1 sampai EX-4
+        for ($ex = 1; $ex <= 4; $ex++) {
+            $startCol = $ex == 1 ? 'Q' : ($ex == 2 ? 'T' : ($ex == 3 ? 'W' : 'Z'));
+            $detailHeaders[] = ['label' => '10 m', 'col' => $startCol, 'color' => $headerBlue];
+            $detailHeaders[] = ['label' => '20 m', 'col' => $this->nextColumn($startCol, 1), 'color' => $headerBlue];
+            $detailHeaders[] = ['label' => '30 m', 'col' => $this->nextColumn($startCol, 2), 'color' => $headerBlue];
+        }
+        
+        // INITIAL READINGS untuk EX-1 sampai EX-4
+        for ($ex = 1; $ex <= 4; $ex++) {
+            $startCol = $ex == 1 ? 'AC' : ($ex == 2 ? 'AF' : ($ex == 3 ? 'AI' : 'AL'));
+            $detailHeaders[] = ['label' => '10 m', 'col' => $startCol, 'color' => $headerBlue];
+            $detailHeaders[] = ['label' => '20 m', 'col' => $this->nextColumn($startCol, 1), 'color' => $headerBlue];
+            $detailHeaders[] = ['label' => '30 m', 'col' => $this->nextColumn($startCol, 2), 'color' => $headerBlue];
+        }
+        
+        foreach ($detailHeaders as $header) {
+            $sheet->setCellValue($header['col'] . $row, $header['label']);
+            
+            $sheet->getStyle($header['col'] . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FFFFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $header['color']]],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]]
+            ]);
+        }
+        
+        $sheet->getRowDimension($row)->setRowHeight(18);
         
         // ===== ISI DATA =====
         $row = 7; // Mulai dari row 7 (setelah header tabel)
@@ -266,6 +1072,7 @@ class ExportExcelController extends BaseController
         
         $rowCounter = 0;
         $totalRecords = 0;
+        $globalRowIndex = 0;
         
         foreach ($groupedData as $tahun => $itemsInYear) {
             $rowCount = count($itemsInYear);
@@ -300,7 +1107,7 @@ class ExportExcelController extends BaseController
                 $readingsEx3 = $this->readingsEx3Model->where('id_pengukuran', $pid)->first();
                 $readingsEx4 = $this->readingsEx4Model->where('id_pengukuran', $pid)->first();
                 
-                // Format nilai dengan 4 digit di belakang koma untuk pembacaan, deformasi, readings
+                // Format nilai dengan 4 digit di belakang koma
                 $formatNumber = function($value, $decimals = 4) {
                     if ($value === null || $value === '' || $value === '-') {
                         return '-';
@@ -311,7 +1118,7 @@ class ExportExcelController extends BaseController
                     return $value;
                 };
                 
-                // Format DMA dengan 0 desimal (bilangan bulat)
+                // Format DMA dengan 0 desimal
                 $formatDMANumber = function($value) {
                     if ($value === null || $value === '' || $value === '-') {
                         return '-';
@@ -322,22 +1129,19 @@ class ExportExcelController extends BaseController
                     return $value;
                 };
                 
-                // ===== PERBAIKAN UTAMA DI SINI =====
-                // Set nilai untuk TAHUN, PERIODE, TANGGAL, DMA untuk setiap baris
-                
-                // TAHUN - hanya di row pertama grup (rowspan)
+                // TAHUN - hanya di row pertama grup
                 if ($index === 0) {
                     $sheet->setCellValue('A' . $row, $tahun);
                 }
                 
-                // PERIODE - untuk SETIAP baris
+                // PERIODE
                 $sheet->setCellValue('B' . $row, $p['periode'] ?? '-');
                 
-                // TANGGAL - untuk SETIAP baris (FIX: sebelumnya hanya baris pertama)
+                // TANGGAL
                 $tanggal = !empty($p['tanggal']) ? date('d-m-Y', strtotime($p['tanggal'])) : '-';
                 $sheet->setCellValue('C' . $row, $tanggal);
                 
-                // DMA - untuk SETIAP baris
+                // DMA
                 $sheet->setCellValue('D' . $row, $formatDMANumber($p['dma'] ?? '-'));
                 
                 // PEMBACAAN DATA (EX1-EX4)
@@ -394,131 +1198,96 @@ class ExportExcelController extends BaseController
                 $sheet->setCellValue('AM' . $row, $formatNumber($readingsEx4['reading_20'] ?? '-'));
                 $sheet->setCellValue('AN' . $row, $formatNumber($readingsEx4['reading_30'] ?? '-'));
                 
-                // Apply warna latar belakang sesuai dengan kategori
-                // PEMBACAAN (EX1-EX4) - E-P: biru muda
-                $sheet->getStyle('E' . $row . ':P' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()
-                    ->setARGB('FFE8F4FD');
+                // ===== WARNA NILAI DATA (PUTIH dan BIRU SOFT selang-seling) =====
+                $isEvenGlobalRow = ($globalRowIndex % 2 == 0);
+                $dataBgColor = $isEvenGlobalRow ? $dataWhite : $dataBlueSoft;
+                $textColor = 'FF000000'; // Teks hitam untuk kontras
                 
-                // DEFORMASI (EX1-EX4) - Q-AB: hijau muda
-                $sheet->getStyle('Q' . $row . ':AB' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()
-                    ->setARGB('FFF0F9EB');
-                
-                // INITIAL READINGS (EX1-EX4) - AC-AN: kuning muda
-                $sheet->getStyle('AC' . $row . ':AN' . $row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()
-                    ->setARGB('FFFFF2CC');
-                
-                // Apply borders dan alignment untuk semua cell kecuali A (TAHUN) yang akan di-merge
-                $sheet->getStyle('B' . $row . ':AN' . $row)->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['argb' => 'FFCCCCCC']
-                        ]
-                    ],
-                    'alignment' => [
-                        'vertical' => Alignment::VERTICAL_CENTER
-                    ]
+                // Apply warna latar belakang untuk semua kolom data (E-AN)
+                $sheet->getStyle('E' . $row . ':AN' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $dataBgColor]],
+                    'font' => ['color' => ['argb' => $textColor]],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
                 ]);
                 
-                // Atur alignment khusus untuk kolom numerik (E-AN) ke kanan
+                // Apply alignment untuk kolom numerik (E-AN) ke kanan
                 $sheet->getStyle('E' . $row . ':AN' . $row)
                     ->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
                 
-                // Atur alignment untuk kolom B, C, D (PERIODE, TANGGAL, DMA) ke center
+                // Apply borders untuk kolom B-D
+                $sheet->getStyle('B' . $row . ':D' . $row)->applyFromArray([
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]]
+                ]);
+                
+                // Atur alignment untuk kolom B, C, D ke center
                 $sheet->getStyle('B' . $row . ':D' . $row)
                     ->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
                 
                 $row++;
                 $rowCounter++;
+                $globalRowIndex++;
             }
             
-            // Setelah selesai loop untuk grup tahun ini, lakukan merge cells hanya untuk kolom A (TAHUN)
+            // Merge cells untuk kolom A (TAHUN) saja
             $lastRowInGroup = $row - 1;
             
-            // Merge cells hanya untuk kolom A (TAHUN)
             if ($rowCount > 1) {
                 $sheet->mergeCells('A' . $firstRowInGroup . ':A' . $lastRowInGroup);
                 
-                // Apply style untuk merged cells kolom A (TAHUN)
-                $mergeStyle = [
-                    'font' => ['bold' => true, 'size' => 11],
+                // Apply style untuk merged cells kolom A (TAHUN) - BIRU
+                $sheet->getStyle('A' . $firstRowInGroup . ':A' . $lastRowInGroup)->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'borders' => [
-                        'outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]
-                    ],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']]
-                ];
+                    'borders' => ['outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFFFFFFF']]],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
+                ]);
                 
-                $sheet->getStyle('A' . $firstRowInGroup . ':A' . $lastRowInGroup)->applyFromArray($mergeStyle);
-                
-                // Kolom B, C, D TIDAK di-merge karena memiliki nilai yang berbeda per baris
-                // Beri style untuk kolom B, C, D di setiap baris dalam grup
+                // Kolom B, C, D TIDAK di-merge
                 for ($i = $firstRowInGroup; $i <= $lastRowInGroup; $i++) {
-                    // PERIODE - Kolom B
+                    // PERIODE - Kolom B (BIRU)
                     $sheet->getStyle('B' . $i)->applyFromArray([
-                        'font' => ['bold' => true, 'size' => 11],
+                        'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
                         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                        'borders' => [
-                            'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]
-                        ],
-                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']]
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
                     ]);
                     
-                    // TANGGAL - Kolom C
+                    // TANGGAL - Kolom C (BIRU)
                     $sheet->getStyle('C' . $i)->applyFromArray([
-                        'font' => ['bold' => true, 'size' => 11],
+                        'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
                         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                        'borders' => [
-                            'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]
-                        ],
-                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']]
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
                     ]);
                     
-                    // DMA - Kolom D
+                    // DMA - Kolom D (BIRU)
                     $sheet->getStyle('D' . $i)->applyFromArray([
-                        'font' => ['bold' => true, 'size' => 11],
+                        'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
                         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                        'borders' => [
-                            'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]
-                        ],
-                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF5E6FF']]
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
                     ]);
                 }
             } else {
-                // Jika hanya 1 row, beri style untuk semua kolom A-D
+                // Jika hanya 1 row
                 $singleRowStyle = [
-                    'font' => ['bold' => true, 'size' => 11],
+                    'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'borders' => [
-                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]
-                    ]
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
                 ];
                 
-                $sheet->getStyle('A' . $firstRowInGroup)->applyFromArray(array_merge($singleRowStyle, [
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']]
-                ]));
-                $sheet->getStyle('B' . $firstRowInGroup)->applyFromArray(array_merge($singleRowStyle, [
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']]
-                ]));
-                $sheet->getStyle('C' . $firstRowInGroup)->applyFromArray(array_merge($singleRowStyle, [
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']]
-                ]));
-                $sheet->getStyle('D' . $firstRowInGroup)->applyFromArray(array_merge($singleRowStyle, [
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF5E6FF']]
-                ]));
+                $sheet->getStyle('A' . $firstRowInGroup . ':D' . $firstRowInGroup)->applyFromArray($singleRowStyle);
             }
         }
         
-        // ===== STYLING KOLOM =====
-        $this->applyExtensoColumnStyling($sheet);
+        // ===== FREEZE PANES =====
+        // Freeze kolom A-D dan baris 1-6 (header)
+        $sheet->freezePane('E7');
         
         // ===== FORMAT ANGKA =====
         if ($row > 7) {
@@ -528,21 +1297,66 @@ class ExportExcelController extends BaseController
                 ->getNumberFormat()
                 ->setFormatCode('#,##0.0000');
             
-            // Format kolom D dengan 0 desimal (bilangan bulat)
+            // Format kolom D dengan 0 desimal
             $range0Decimal = 'D7:D' . ($row - 1);
             $sheet->getStyle($range0Decimal)
                 ->getNumberFormat()
                 ->setFormatCode('#,##0');
+                
+            // Set font size untuk data numerik
+            $sheet->getStyle('E7:AN' . ($row - 1))
+                ->getFont()
+                ->setSize(10);
         }
         
-        // ===== PERBAIKAN FOOTER SEPERTI BTM =====
+        // ===== SET COLUMN WIDTHS =====
+        $columnWidths = [
+            'A' => 15,   // TAHUN
+            'B' => 15,   // PERIODE
+            'C' => 20,   // TANGGAL
+            'D' => 15,   // DMA
+            
+            // PEMBACAAN (EX1-EX4) - 12 kolom
+            'E' => 18, 'F' => 18, 'G' => 18,
+            'H' => 18, 'I' => 18, 'J' => 18,
+            'K' => 18, 'L' => 18, 'M' => 18,
+            'N' => 18, 'O' => 18, 'P' => 18,
+            
+            // DEFORMASI (EX1-EX4) - 12 kolom
+            'Q' => 18, 'R' => 18, 'S' => 18,
+            'T' => 18, 'U' => 18, 'V' => 18,
+            'W' => 18, 'X' => 18, 'Y' => 18,
+            'Z' => 18, 'AA' => 18, 'AB' => 18,
+            
+            // INITIAL READINGS (EX1-EX4) - 12 kolom
+            'AC' => 18, 'AD' => 18, 'AE' => 18,
+            'AF' => 18, 'AG' => 18, 'AH' => 18,
+            'AI' => 18, 'AJ' => 18, 'AK' => 18,
+            'AL' => 18, 'AM' => 18, 'AN' => 18,
+        ];
+        
+        foreach ($columnWidths as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
+        }
+        
+        // ===== SET ROW HEIGHTS =====
+        $sheet->getRowDimension(1)->setRowHeight(35);
+        $sheet->getRowDimension(2)->setRowHeight(30);
+        $sheet->getRowDimension(3)->setRowHeight(25);
+        $sheet->getRowDimension(4)->setRowHeight(30);
+        $sheet->getRowDimension(5)->setRowHeight(25);
+        $sheet->getRowDimension(6)->setRowHeight(22);
+        
+        // Atur tinggi baris data
+        for ($i = 7; $i <= $row; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(20);
+        }
+        
+        // ===== FOOTER =====
         if ($row > 7) {
-            // FOOTER dengan format seperti BTM
             $footerRow = $row;
             $sheet->mergeCells('A' . $footerRow . ':' . $lastCol . $footerRow);
-            $sheet->setCellValue('A' . $footerRow, 'TOTAL REKORD: ' . $totalRecords . ' | Extensometer Monitoring System - PT Indonesia Power');
             
-            // Tambahkan informasi filter di footer
             $filterInfo = [];
             if (!empty($tahunFilter)) $filterInfo[] = "Tahun: $tahunFilter";
             if (!empty($periodeFilter)) $filterInfo[] = "Periode: $periodeFilter";
@@ -569,14 +1383,11 @@ class ExportExcelController extends BaseController
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['argb' => 'FFF2F2F2']
-                ]
+                ],
+                'borders' => ['top' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FFCCCCCC']]]
             ]);
             $sheet->getRowDimension($footerRow)->setRowHeight(30);
         }
-        
-        // ===== FREEZE PANES =====
-        // Freeze kolom A-D (Tahun, Periode, Tanggal, DMA) dan baris 1-6 (header)
-        $sheet->freezePane('E7');
         
         // ===== SET PRINT AREA =====
         if ($row > 7) {
@@ -585,350 +1396,8 @@ class ExportExcelController extends BaseController
             $sheet->getPageSetup()->setPrintArea('A1:AN6');
         }
         
-        // ===== AUTO SIZE KOLOM =====
-        foreach (range('A', 'AN') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-    }
-    
-    /**
-     * Create Extenso table headers (3 baris) sesuai dengan view
-     */
-    private function createExtensoTableHeaders($sheet)
-    {
-        $row = 4;
-        
-        // Warna untuk setiap section (sesuai dengan CSS di view)
-        $blueLight = 'FFE8F4FD'; // Biru muda untuk PEMBACAAN
-        $greenLight = 'FFF0F9EB'; // Hijau muda untuk DEFORMASI
-        $yellowLight = 'FFFFF2CC'; // Kuning muda untuk INITIAL READINGS
-        $purpleLight = 'FFF5E6FF'; // Ungu muda untuk DMA
-        
-        // Row 4: Main Header (baris pertama dari header tabel)
-        $mainHeaders = [
-            ['label' => 'TAHUN', 'colspan' => 1, 'rowspan' => 3, 'col' => 'A', 'color' => $blueLight],
-            ['label' => 'PERIODE', 'colspan' => 1, 'rowspan' => 3, 'col' => 'B', 'color' => $blueLight],
-            ['label' => 'TANGGAL', 'colspan' => 1, 'rowspan' => 3, 'col' => 'C', 'color' => $blueLight],
-            ['label' => 'DMA', 'colspan' => 1, 'rowspan' => 3, 'col' => 'D', 'color' => $purpleLight],
-            ['label' => 'PEMBACAAN', 'colspan' => 12, 'rowspan' => 1, 'col' => 'E', 'color' => $blueLight],
-            ['label' => 'DEFORMASI', 'colspan' => 12, 'rowspan' => 1, 'col' => 'Q', 'color' => $greenLight],
-            ['label' => 'INITIAL READINGS', 'colspan' => 12, 'rowspan' => 1, 'col' => 'AC', 'color' => $yellowLight]
-            // Kolom AKSI dihapus
-        ];
-        
-        foreach ($mainHeaders as $header) {
-            if ($header['colspan'] == 1 && $header['rowspan'] == 3) {
-                // Header dengan rowspan 3
-                $cell = $header['col'] . $row;
-                $sheet->setCellValue($cell, $header['label']);
-                $this->applyHeaderStyleRowspan3($sheet, $cell . ':' . $header['col'] . ($row + 2), $header['color']);
-            } else {
-                // Header dengan colspan
-                $endCol = $this->nextColumn($header['col'], $header['colspan'] - 1);
-                $range = $header['col'] . $row . ':' . $endCol . $row;
-                $sheet->mergeCells($range);
-                $sheet->setCellValue($header['col'] . $row, $header['label']);
-                
-                $this->applyMainHeaderStyle($sheet, $range, $header['color']);
-            }
-        }
-        
-        $sheet->getRowDimension($row)->setRowHeight(25);
-        
-        // Row 5: Sub Headers (baris kedua - EX-1 sampai EX-4)
-        $row = 5;
-        $subHeaders = [
-            // PEMBACAAN - EX-1 sampai EX-4
-            ['label' => 'EX-1', 'colspan' => 3, 'col' => 'E', 'color' => $blueLight],
-            ['label' => 'EX-2', 'colspan' => 3, 'col' => 'H', 'color' => $blueLight],
-            ['label' => 'EX-3', 'colspan' => 3, 'col' => 'K', 'color' => $blueLight],
-            ['label' => 'EX-4', 'colspan' => 3, 'col' => 'N', 'color' => $blueLight],
-            
-            // DEFORMASI - EX-1 sampai EX-4
-            ['label' => 'EX-1', 'colspan' => 3, 'col' => 'Q', 'color' => $greenLight],
-            ['label' => 'EX-2', 'colspan' => 3, 'col' => 'T', 'color' => $greenLight],
-            ['label' => 'EX-3', 'colspan' => 3, 'col' => 'W', 'color' => $greenLight],
-            ['label' => 'EX-4', 'colspan' => 3, 'col' => 'Z', 'color' => $greenLight],
-            
-            // INITIAL READINGS - EX-1 sampai EX-4
-            ['label' => 'EX-1', 'colspan' => 3, 'col' => 'AC', 'color' => $yellowLight],
-            ['label' => 'EX-2', 'colspan' => 3, 'col' => 'AF', 'color' => $yellowLight],
-            ['label' => 'EX-3', 'colspan' => 3, 'col' => 'AI', 'color' => $yellowLight],
-            ['label' => 'EX-4', 'colspan' => 3, 'col' => 'AL', 'color' => $yellowLight]
-        ];
-        
-        foreach ($subHeaders as $header) {
-            $endCol = $this->nextColumn($header['col'], $header['colspan'] - 1);
-            $range = $header['col'] . $row . ':' . $endCol . $row;
-            $sheet->mergeCells($range);
-            $sheet->setCellValue($header['col'] . $row, $header['label']);
-            
-            $this->applySubHeaderStyle($sheet, $range, $header['color']);
-        }
-        
-        $sheet->getRowDimension($row)->setRowHeight(22);
-        
-        // Row 6: Detail Headers (baris ketiga - 10 m, 20 m, 30 m untuk setiap EX)
-        $row = 6;
-        $detailHeaders = [];
-        
-        // Kolom A-D sudah rowspan 3, jadi kosong
-        
-        // PEMBACAAN untuk EX-1 sampai EX-4
-        for ($ex = 1; $ex <= 4; $ex++) {
-            $startCol = $ex == 1 ? 'E' : ($ex == 2 ? 'H' : ($ex == 3 ? 'K' : 'N'));
-            $detailHeaders[] = ['label' => '10 m', 'col' => $startCol, 'color' => $blueLight];
-            $detailHeaders[] = ['label' => '20 m', 'col' => $this->nextColumn($startCol, 1), 'color' => $blueLight];
-            $detailHeaders[] = ['label' => '30 m', 'col' => $this->nextColumn($startCol, 2), 'color' => $blueLight];
-        }
-        
-        // DEFORMASI untuk EX-1 sampai EX-4
-        for ($ex = 1; $ex <= 4; $ex++) {
-            $startCol = $ex == 1 ? 'Q' : ($ex == 2 ? 'T' : ($ex == 3 ? 'W' : 'Z'));
-            $detailHeaders[] = ['label' => '10 m', 'col' => $startCol, 'color' => $greenLight];
-            $detailHeaders[] = ['label' => '20 m', 'col' => $this->nextColumn($startCol, 1), 'color' => $greenLight];
-            $detailHeaders[] = ['label' => '30 m', 'col' => $this->nextColumn($startCol, 2), 'color' => $greenLight];
-        }
-        
-        // INITIAL READINGS untuk EX-1 sampai EX-4
-        for ($ex = 1; $ex <= 4; $ex++) {
-            $startCol = $ex == 1 ? 'AC' : ($ex == 2 ? 'AF' : ($ex == 3 ? 'AI' : 'AL'));
-            $detailHeaders[] = ['label' => '10 m', 'col' => $startCol, 'color' => $yellowLight];
-            $detailHeaders[] = ['label' => '20 m', 'col' => $this->nextColumn($startCol, 1), 'color' => $yellowLight];
-            $detailHeaders[] = ['label' => '30 m', 'col' => $this->nextColumn($startCol, 2), 'color' => $yellowLight];
-        }
-        
-        foreach ($detailHeaders as $header) {
-            $sheet->setCellValue($header['col'] . $row, $header['label']);
-            $this->applyDetailHeaderStyle($sheet, $header['col'] . $row, $header['color']);
-        }
-        
-        $sheet->getRowDimension($row)->setRowHeight(18);
-    }
-    
-    /**
-     * Apply company header style (SERAGAM DENGAN HDM)
-     */
-    private function applyCompanyHeaderStyle($sheet, $range)
-    {
-        $sheet->getStyle($range)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 16,
-                'color' => ['argb' => Color::COLOR_WHITE],
-                'name' => 'Calibri'
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF2F75B5'] // Biru sama seperti HDM
-            ]
-        ]);
-    }
-    
-    /**
-     * Apply main title style
-     */
-    private function applyMainTitleStyle($sheet, $range)
-    {
-        $sheet->getStyle($range)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 14,
-                'color' => ['argb' => 'FF2C3E50'],
-                'name' => 'Calibri'
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FFE8F4FD']
-            ],
-            'borders' => [
-                'bottom' => [
-                    'borderStyle' => Border::BORDER_MEDIUM,
-                    'color' => ['argb' => 'FF2F75B5']
-                ]
-            ]
-        ]);
-    }
-    
-    /**
-     * Apply subtitle style
-     */
-    private function applySubtitleStyle($sheet, $range)
-    {
-        $sheet->getStyle($range)->applyFromArray([
-            'font' => [
-                'italic' => true,
-                'size' => 10,
-                'color' => ['argb' => 'FF666666']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FFF2F2F2']
-            ]
-        ]);
-    }
-    
-    /**
-     * Apply main header style
-     */
-    private function applyMainHeaderStyle($sheet, $range, $color)
-    {
-        $sheet->getStyle($range)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 11,
-                'color' => ['argb' => 'FF2C3E50']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-                'wrapText' => true
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => $color]
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FFCCCCCC']
-                ]
-            ]
-        ]);
-    }
-    
-    /**
-     * Apply header style with rowspan 3 (TANPA BORDER di tengah untuk rowspan)
-     */
-    private function applyHeaderStyleRowspan3($sheet, $range, $color)
-    {
-        $sheet->getStyle($range)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 10,
-                'color' => ['argb' => 'FF2C3E50']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-                'wrapText' => true
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => $color]
-            ],
-            'borders' => [
-                'outline' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FFCCCCCC']
-                ]
-            ]
-        ]);
-    }
-    
-    /**
-     * Apply sub header style
-     */
-    private function applySubHeaderStyle($sheet, $range, $color)
-    {
-        $sheet->getStyle($range)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 9,
-                'color' => ['argb' => 'FF2C3E50']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-                'wrapText' => true
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => $color]
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FFCCCCCC']
-                ]
-            ]
-        ]);
-    }
-    
-    /**
-     * Apply detail header style
-     */
-    private function applyDetailHeaderStyle($sheet, $cell, $color)
-    {
-        $sheet->getStyle($cell)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 8,
-                'color' => ['argb' => 'FF2C3E50']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => $color]
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FFCCCCCC']
-                ]
-            ]
-        ]);
-    }
-    
-    /**
-     * Apply column styling untuk sheet extensometer
-     */
-    private function applyExtensoColumnStyling($sheet)
-    {
-        // Set column widths
-        $columnWidths = [
-            'A' => 8,   // TAHUN
-            'B' => 10,  // PERIODE
-            'C' => 12,  // TANGGAL
-            'D' => 8,   // DMA
-            
-            // PEMBACAAN (EX1-EX4) - 12 kolom
-            'E' => 10, 'F' => 10, 'G' => 10,
-            'H' => 10, 'I' => 10, 'J' => 10,
-            'K' => 10, 'L' => 10, 'M' => 10,
-            'N' => 10, 'O' => 10, 'P' => 10,
-            
-            // DEFORMASI (EX1-EX4) - 12 kolom
-            'Q' => 10, 'R' => 10, 'S' => 10,
-            'T' => 10, 'U' => 10, 'V' => 10,
-            'W' => 10, 'X' => 10, 'Y' => 10,
-            'Z' => 10, 'AA' => 10, 'AB' => 10,
-            
-            // INITIAL READINGS (EX1-EX4) - 12 kolom
-            'AC' => 10, 'AD' => 10, 'AE' => 10,
-            'AF' => 10, 'AG' => 10, 'AH' => 10,
-            'AI' => 10, 'AJ' => 10, 'AK' => 10,
-            'AL' => 10, 'AM' => 10, 'AN' => 10,
-        ];
-        
-        foreach ($columnWidths as $column => $width) {
-            $sheet->getColumnDimension($column)->setWidth($width);
-        }
+        // Set wrap text untuk semua header
+        $sheet->getStyle('A4:AN6')->getAlignment()->setWrapText(true);
     }
     
     /**
@@ -941,6 +1410,23 @@ class ExportExcelController extends BaseController
             $column++;
         }
         return $column;
+    }
+    
+    /**
+     * Helper function to get all columns between start and end
+     */
+    private function getAllColumns($start, $end)
+    {
+        $columns = [];
+        $current = $start;
+        
+        while ($current !== $end) {
+            $columns[] = $current;
+            $current = $this->nextColumn($current, 1);
+        }
+        $columns[] = $end;
+        
+        return $columns;
     }
     
     /**
