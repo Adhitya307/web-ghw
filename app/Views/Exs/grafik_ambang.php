@@ -9,10 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Export Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    
     <style>
         .table th {
             background-color: #f8f9fa;
@@ -408,10 +404,6 @@ $fullName = $session->get('fullName');
                     <i class="fas fa-database"></i> Import SQL
                 </button>
             <?php endif; ?>
-            
-            <button type="button" class="btn btn-outline-success" id="exportExcel">
-                <i class="fas fa-file-excel me-1"></i> Export Excel
-            </button>
         </div>
 
         <div class="table-controls">
@@ -1013,9 +1005,6 @@ $fullName = $session->get('fullName');
 
 <!-- Bootstrap & Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
 <script>
 // Data dan state management
 let isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
@@ -1115,36 +1104,6 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.forEach(tooltipTriggerEl => {
         new bootstrap.Tooltip(tooltipTriggerEl);
     });
-});
-
-// ============ EXPORT EXCEL FUNCTIONALITY ============
-document.getElementById('exportExcel').addEventListener('click', function() {
-    const originalText = this.innerHTML;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
-    this.disabled = true;
-
-    setTimeout(() => {
-        try {
-            const table = document.getElementById('exportTable');
-            const wb = XLSX.utils.table_to_book(table, {sheet: "Grafik & Ambang Batas"});
-            
-            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            const filename = `Extensometer_Grafik_Ambang_Export_${timestamp}.xlsx`;
-            
-            XLSX.writeFile(wb, filename);
-            
-            setTimeout(() => {
-                alert('Export berhasil! File: ' + filename);
-            }, 500);
-            
-        } catch (error) {
-            console.error('Error exporting to Excel:', error);
-            alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-        } finally {
-            this.innerHTML = originalText;
-            this.disabled = false;
-        }
-    }, 1000);
 });
 
 // ============ IMPORT SQL FUNCTIONALITY ============
