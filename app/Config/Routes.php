@@ -139,6 +139,8 @@ $routes->get('btm/export-excel/test', 'BTM\ExportExcelController::test');
         $routes->delete('extenso/delete/(:num)', 'EXS\ExtensoController::delete/$1');
         $routes->get('extenso/export', 'EXS\ExtensoController::exportExcel');
         $routes->get('extenso/grafik-ambang', 'EXS\ExtensoController::grafikAmbang');
+        $routes->get('extenso/export-excel/export', 'EXS\ExportExcelController::export');
+        $routes->post('extenso/export-excel/export-filtered', 'EXS\ExportExcelController::exportFiltered');
         
         // --- Left Piezometer Routes ---
         $routes->get('left-piez', '\App\Controllers\LeftPiez\PiezometerController::index');

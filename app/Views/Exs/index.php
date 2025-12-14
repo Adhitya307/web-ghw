@@ -9,11 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Export Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    
     <style>
         /* Styling khusus untuk aksi tabel */
         .action-cell {
@@ -518,6 +513,64 @@
             flex: 1;
             min-width: 120px;
         }
+        
+        /* Toast notification untuk export */
+        .toast-export {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            min-width: 300px;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .toast-export.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast-export.hide {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .toast-export .toast-body {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .toast-export.success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+        }
+        
+        .toast-export.error {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+        }
+        
+        .toast-export.warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+        }
+        
+        .toast-export.info {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+        }
+        
+        .toast-export i {
+            font-size: 22px;
+        }
     </style>
 </head>
 <body>
@@ -599,7 +652,7 @@ $fullName = $session->get('fullName');
                 </button>
             <?php endif; ?>
             
-            <button type="button" class="btn btn-outline-success" id="exportExcel">
+            <button type="button" class="btn btn-outline-success" id="exportExcelBtn">
                 <i class="fas fa-file-excel me-1"></i> Export Excel
             </button>
         </div>
@@ -608,6 +661,9 @@ $fullName = $session->get('fullName');
             <div class="input-group" style="max-width: 300px;">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                 <input type="text" class="form-control" placeholder="Cari data..." id="searchInput">
+            </div>
+            <div class="text-muted small">
+                <i class="fas fa-sort-amount-down me-1"></i> Data diurutkan berdasarkan tanggal (tua → baru)
             </div>
         </div>
     </div>
@@ -702,6 +758,14 @@ $fullName = $session->get('fullName');
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification untuk Export -->
+    <div id="exportToast" class="toast-export" style="display: none;">
+        <div class="toast-body">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span id="exportToastText">Mempersiapkan export...</span>
         </div>
     </div>
 
@@ -878,7 +942,7 @@ $fullName = $session->get('fullName');
                     <i class="fas fa-exclamation-triangle text-warning me-2"></i>
                     Konfirmasi Hapus Data
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Apakah Anda yakin ingin menghapus data Extensometer ini?</p>
@@ -899,19 +963,15 @@ $fullName = $session->get('fullName');
 
 <!-- Bootstrap & Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 // Data dan state management
 let allData = <?= json_encode($pengukuran ?? []) ?>;
 let isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;
 let deleteId = null;
-let originalTableHTML = null; // Untuk menyimpan struktur tabel asli
+let originalTableHTML = null;
 
-// Variabel global untuk modal hak akses
+// Variabel global untuk modal
 const accessWarningModal = new bootstrap.Modal(document.getElementById('accessWarningModal'));
 const warningTitle = document.getElementById('warningTitle');
 const warningMessage = document.getElementById('warningMessage');
@@ -961,19 +1021,41 @@ function formatNumber(value) {
         return '-';
     }
     
-    // Konversi ke number dulu
     const numValue = typeof value === 'number' ? value : parseFloat(value);
-    
-    // Jika bukan number, return as is
     if (isNaN(numValue)) return value;
     
-    // Jika angka sangat kecil, gunakan notasi E
     if (Math.abs(numValue) < 0.0001 && numValue != 0) {
         return numValue.toExponential(4);
     }
     
-    // Format dengan 4 digit di belakang koma
     return numValue.toFixed(4);
+}
+
+// ============ FUNGSI PENGURUTAN DATA ============
+function sortDataByDateAsc(data) {
+    if (!data || data.length === 0) return data;
+    
+    return [...data].sort((a, b) => {
+        const aDate = a['pengukuran']['tanggal'] || '';
+        const bDate = b['pengukuran']['tanggal'] || '';
+        const aYear = parseInt(a['pengukuran']['tahun']) || 0;
+        const bYear = parseInt(b['pengukuran']['tahun']) || 0;
+        const aPeriode = a['pengukuran']['periode'] || '';
+        const bPeriode = b['pengukuran']['periode'] || '';
+        
+        // Urut berdasarkan tanggal (terkecil ke terbesar)
+        if (aDate && bDate) {
+            return new Date(aDate) - new Date(bDate);
+        } else if (aDate && !bDate) {
+            return -1;
+        } else if (!aDate && bDate) {
+            return 1;
+        }
+        
+        // Fallback ke tahun dan periode jika tanggal sama
+        if (aYear !== bYear) return aYear - bYear;
+        return aPeriode.localeCompare(bPeriode);
+    });
 }
 
 // ============ FUNGSI FILTER DENGAN DMA ============
@@ -984,7 +1066,6 @@ function initializeFilter() {
     searchInput = document.getElementById('searchInput');
     resetFilter = document.getElementById('resetFilter');
     
-    // Event listeners untuk filter
     tahunFilter.addEventListener('change', filterTable);
     periodeFilter.addEventListener('change', filterTable);
     dmaFilter.addEventListener('change', filterTable);
@@ -1003,13 +1084,11 @@ function filterTable() {
     let currentYear = null;
     let yearStartRow = null;
     
-    // Fase 1: Kelompokkan baris berdasarkan tahun
     rows.forEach(row => {
         if (row.classList.contains('no-data')) return;
         
         const tahunCell = row.querySelector('td.sticky');
         if (tahunCell && tahunCell.hasAttribute('data-year-header')) {
-            // Ini adalah baris pertama dari grup tahun
             currentYear = tahunCell.textContent.toLowerCase();
             yearStartRow = row;
             
@@ -1027,13 +1106,11 @@ function filterTable() {
         }
     });
     
-    // Fase 2: Hitung baris yang visible untuk setiap tahun
     Object.keys(yearGroups).forEach(tahun => {
         const group = yearGroups[tahun];
         group.visibleCount = 0;
         
         group.rows.forEach(row => {
-            // Ambil data dari baris untuk filtering
             const periode = row.cells[1]?.textContent.toLowerCase() || '';
             const dma = row.cells[3]?.textContent.toLowerCase() || '';
             const rowText = row.textContent.toLowerCase();
@@ -1045,7 +1122,6 @@ function filterTable() {
             
             const isVisible = tahunMatch && periodeMatch && dmaMatch && searchMatch;
             
-            // Set tampilan baris
             if (isVisible) {
                 row.style.display = '';
                 group.visibleCount++;
@@ -1054,20 +1130,16 @@ function filterTable() {
             }
         });
         
-        // Fase 3: Update rowspan untuk header tahun
         const yearCell = group.yearCell;
         const visibleCount = group.visibleCount;
         
         if (tahunValue && tahun !== tahunValue) {
-            // Jika filter tahun aktif dan tahun ini tidak cocok
             yearCell.style.display = 'none';
             yearCell.removeAttribute('rowspan');
         } else if (visibleCount > 0) {
-            // Tampilkan header tahun dengan rowspan yang sesuai
             yearCell.style.display = '';
             yearCell.setAttribute('rowspan', visibleCount);
             
-            // Sembunyikan duplikat header tahun di baris berikutnya
             for (let i = 1; i < group.rows.length; i++) {
                 const duplicateCell = group.rows[i].querySelector('td.sticky');
                 if (duplicateCell) {
@@ -1076,7 +1148,6 @@ function filterTable() {
                 }
             }
         } else {
-            // Sembunyikan header tahun jika tidak ada baris yang visible
             yearCell.style.display = 'none';
             yearCell.removeAttribute('rowspan');
         }
@@ -1088,11 +1159,7 @@ function resetAllFilters() {
     periodeFilter.value = '';
     dmaFilter.value = '';
     searchInput.value = '';
-    
-    // Render ulang tabel dari data asli
     renderTableData();
-    
-    // Re-initialize filter
     initializeFilter();
 }
 
@@ -1100,7 +1167,10 @@ function resetAllFilters() {
 function renderTableData() {
     const tbody = document.getElementById('dataTableBody');
     
-    if (allData.length === 0) {
+    // Sort data berdasarkan tanggal dari terkecil ke terbesar
+    const sortedData = sortDataByDateAsc(allData);
+    
+    if (sortedData.length === 0) {
         tbody.innerHTML = `
             <tr class="no-data">
                 <td colspan="41" class="text-center py-4">
@@ -1119,9 +1189,8 @@ function renderTableData() {
     
     let html = '';
     
-    // Kelompokkan data berdasarkan tahun
     const groupedByYear = {};
-    allData.forEach((item, index) => {
+    sortedData.forEach((item, index) => {
         const year = item['pengukuran']['tahun'] || '-';
         if (!groupedByYear[year]) {
             groupedByYear[year] = [];
@@ -1129,10 +1198,8 @@ function renderTableData() {
         groupedByYear[year].push({ item, index });
     });
     
-    // Urutkan tahun dari yang terkecil ke terbesar
-    const sortedYears = Object.keys(groupedByYear).sort();
+    const sortedYears = Object.keys(groupedByYear).sort((a, b) => parseInt(a) - parseInt(b));
     
-    // Render data dengan rowspan untuk tahun yang sama
     sortedYears.forEach(year => {
         const yearData = groupedByYear[year];
         const rowspan = yearData.length;
@@ -1146,8 +1213,6 @@ function renderTableData() {
             
             const pid = p.id_pengukuran ?? null;
             const dmaValue = p.dma || '-';
-            
-            // Format tanggal untuk tampilan
             const displayDate = p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID') : '-';
             
             html += `
@@ -1159,32 +1224,27 @@ function renderTableData() {
                     <td class="sticky-3">${displayDate}</td>
                     <td class="sticky-4 dma-cell">${dmaValue}</td>
                     
-                    <!-- PEMBACAAN DATA (EX1-EX4) -->
                     ${[1,2,3,4].map(i => `
                         <td class="number-cell">${formatNumber(pembacaan[`ex${i}`]?.pembacaan_10)}</td>
                         <td class="number-cell">${formatNumber(pembacaan[`ex${i}`]?.pembacaan_20)}</td>
                         <td class="number-cell">${formatNumber(pembacaan[`ex${i}`]?.pembacaan_30)}</td>
                     `).join('')}
                     
-                    <!-- DEFORMASI DATA (EX1-EX4) -->
                     ${[1,2,3,4].map(i => `
                         <td class="number-cell">${formatNumber(deformasi[`ex${i}`]?.deformasi_10)}</td>
                         <td class="number-cell">${formatNumber(deformasi[`ex${i}`]?.deformasi_20)}</td>
                         <td class="number-cell">${formatNumber(deformasi[`ex${i}`]?.deformasi_30)}</td>
                     `).join('')}
                     
-                    <!-- INITIAL READINGS DATA (EX1-EX4) -->
                     ${[1,2,3,4].map(i => `
                         <td class="number-cell">${formatNumber(readings[`ex${i}`]?.reading_10)}</td>
                         <td class="number-cell">${formatNumber(readings[`ex${i}`]?.reading_20)}</td>
                         <td class="number-cell">${formatNumber(readings[`ex${i}`]?.reading_30)}</td>
                     `).join('')}
                     
-                    <!-- Action Buttons -->
                     <td class="action-cell">
                         <div class="d-flex justify-content-center">
                             ${isAdmin ? `
-                                <!-- Tombol untuk Admin -->
                                 <a href="<?= base_url('extenso/edit/') ?>${pid}" class="btn-action btn-edit" 
                                    data-bs-toggle="tooltip" 
                                    data-bs-placement="top" 
@@ -1199,7 +1259,6 @@ function renderTableData() {
                                     <i class="fas fa-trash"></i>
                                 </button>
                             ` : `
-                                <!-- Tombol untuk User Biasa dengan modal peringatan -->
                                 <button type="button" class="btn-action btn-disabled" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-placement="top" 
@@ -1223,16 +1282,12 @@ function renderTableData() {
     });
     
     tbody.innerHTML = html;
-    
-    // Simpan HTML asli untuk reset
     originalTableHTML = tbody.innerHTML;
-    
     attachEventListeners();
 }
 
 // ============ ATTACH EVENT LISTENERS ============
 function attachEventListeners() {
-    // Add Data button
     const addDataBtn = document.getElementById('addData');
     const addDataEmptyBtn = document.getElementById('addDataEmpty');
     
@@ -1256,7 +1311,6 @@ function attachEventListeners() {
         });
     }
     
-    // Delete Data - hanya untuk admin
     if (isAdmin) {
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         
@@ -1267,7 +1321,6 @@ function attachEventListeners() {
             });
         });
 
-        // Confirm Delete
         document.getElementById('confirmDelete').addEventListener('click', function() {
             if (deleteId) {
                 fetch('<?= base_url('extenso/delete') ?>/' + deleteId, {
@@ -1296,40 +1349,124 @@ function attachEventListeners() {
         });
     }
     
-    // Re-initialize tooltips
     const newTooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     newTooltipTriggerList.forEach(tooltipTriggerEl => {
         new bootstrap.Tooltip(tooltipTriggerEl);
     });
 }
 
-// ============ EXPORT EXCEL FUNCTIONALITY ============
-function setupExportExcel() {
-    document.getElementById('exportExcel').addEventListener('click', function() {
-        const originalText = this.innerHTML;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
-        this.disabled = true;
-
+// ============ TOAST NOTIFICATION ============
+function showToast(message, type = 'info', duration = 5000) {
+    const toast = document.getElementById('exportToast');
+    const toastText = document.getElementById('exportToastText');
+    
+    // Set message and type
+    toastText.innerHTML = message;
+    toast.className = `toast-export ${type} show`;
+    toast.style.display = 'block';
+    
+    // Force reflow
+    toast.offsetHeight;
+    
+    // Auto hide
+    setTimeout(() => {
+        toast.className = 'toast-export hide';
         setTimeout(() => {
+            toast.style.display = 'none';
+        }, 300);
+    }, duration);
+    
+    return toast;
+}
+
+// ============ EXPORT EXCEL FUNCTIONALITY (TANPA MODAL) ============
+function setupExportExcel() {
+    const exportBtn = document.getElementById('exportExcelBtn');
+    
+    if (!exportBtn) return;
+    
+    exportBtn.addEventListener('click', function() {
+        // Tampilkan toast notifikasi
+        showToast('<i class="fas fa-spinner fa-spin me-2"></i>Mempersiapkan export Excel...', 'info', 0);
+        
+        // Ambil nilai filter
+        const tahun = document.getElementById('tahunFilter').value;
+        const periode = document.getElementById('periodeFilter').value;
+        const dma = document.getElementById('dmaFilter').value;
+        
+        // Buat URL untuk export
+        let exportUrl = '<?= base_url('extenso/export-excel/export') ?>';
+        const params = new URLSearchParams();
+        
+        if (tahun) params.append('tahun', tahun);
+        if (periode) params.append('periode', periode);
+        if (dma) params.append('dma', dma);
+        
+        const queryString = params.toString();
+        if (queryString) {
+            exportUrl += '?' + queryString;
+        }
+        
+        // Tambahkan timestamp untuk menghindari cache
+        exportUrl += (queryString ? '&' : '?') + '_t=' + Date.now();
+        
+        // Buat elemen iframe untuk download
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = exportUrl;
+        document.body.appendChild(iframe);
+        
+        // Cek apakah download berhasil
+        let downloadCheckInterval;
+        let downloadTimeout;
+        
+        // Timeout untuk download
+        downloadTimeout = setTimeout(() => {
+            clearInterval(downloadCheckInterval);
+            if (iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+            showToast('<i class="fas fa-exclamation-circle me-2"></i>Export timeout. Silakan coba lagi.', 'error', 5000);
+        }, 60000); // 60 detik timeout lebih lama untuk data besar
+        
+        // Cek apakah iframe sudah selesai loading
+        iframe.onload = function() {
+            clearTimeout(downloadTimeout);
+            clearInterval(downloadCheckInterval);
+            
+            // Beri waktu untuk download mulai
+            setTimeout(() => {
+                showToast('<i class="fas fa-check-circle me-2"></i>Export berhasil! File sedang didownload.', 'success', 5000);
+                if (iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+            }, 2000);
+        };
+        
+        iframe.onerror = function() {
+            clearTimeout(downloadTimeout);
+            clearInterval(downloadCheckInterval);
+            showToast('<i class="fas fa-exclamation-circle me-2"></i>Gagal memuat file export.', 'error', 5000);
+            if (iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+        };
+        
+        // Cek berkala apakah download sudah dimulai
+        downloadCheckInterval = setInterval(() => {
             try {
-                const table = document.getElementById('exportTable');
-                const wb = XLSX.utils.table_to_book(table, {sheet: "Data Extensometer"});
-                
-                const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const filename = `Extensometer_Data_Export_${timestamp}.xlsx`;
-                
-                XLSX.writeFile(wb, filename);
-                
-                setTimeout(() => {
-                    alert('Export berhasil! File: ' + filename);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error exporting to Excel:', error);
-                alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-            } finally {
-                this.innerHTML = originalText;
-                this.disabled = false;
+                if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+                    clearTimeout(downloadTimeout);
+                    clearInterval(downloadCheckInterval);
+                    showToast('<i class="fas fa-check-circle me-2"></i>Export berhasil! File sedang didownload.', 'success', 5000);
+                    setTimeout(() => {
+                        if (iframe.parentNode) {
+                            iframe.parentNode.removeChild(iframe);
+                        }
+                    }, 3000);
+                }
+            } catch (e) {
+                // Ignore cross-origin errors
             }
         }, 1000);
     });
@@ -1337,7 +1474,6 @@ function setupExportExcel() {
 
 // ============ SCROLL INDICATOR ============
 function setupScrollIndicator() {
-    const scrollIndicator = document.getElementById('scrollIndicator');
     const tableContainer = document.getElementById('tableContainer');
     
     let scrollTimeout;
@@ -1346,18 +1482,10 @@ function setupScrollIndicator() {
             const { scrollLeft, scrollWidth, clientWidth } = this;
             const showHorizontal = scrollLeft > 0 || scrollLeft + clientWidth < scrollWidth;
             
-            if (showHorizontal && scrollIndicator) {
-                document.getElementById('scrollText').textContent = 'Scroll horizontal untuk melihat lebih banyak data';
-                scrollIndicator.style.display = 'block';
-            } else if (scrollIndicator) {
-                scrollIndicator.style.display = 'none';
-            }
-
+            // Bisa ditambahkan scroll indicator jika diperlukan
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                if (scrollIndicator) {
-                    scrollIndicator.style.display = 'none';
-                }
+                // Cleanup jika diperlukan
             }, 2000);
         });
     }
@@ -1371,7 +1499,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Render data tabel
+    // Render data tabel (default: tanggal terkecil ke terbesar)
     renderTableData();
     
     // Setup filter dengan DMA
@@ -1391,8 +1519,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!btnImportSQL) return;
     
     btnImportSQL.addEventListener('click', function() {
-        console.log('[EXTENSO IMPORT] Tombol Import diklik.');
-
         const sqlFileInput = document.getElementById('sqlFile');
         const importProgress = document.getElementById('importProgress');
         const importStatus = document.getElementById('importStatus');
@@ -1400,35 +1526,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
         importStatus.style.display = 'none';
 
-        // === Validasi file ===
         if (!sqlFileInput.files || sqlFileInput.files.length === 0) {
-            console.warn('[EXTENSO IMPORT] Tidak ada file dipilih.');
             showImportStatus('❌ Pilih file SQL terlebih dahulu', 'danger');
             return;
         }
 
         const file = sqlFileInput.files[0];
-        console.log('[EXTENSO IMPORT] File terpilih:', file.name, '-', (file.size / 1024).toFixed(2), 'KB');
-
         if (!file.name.toLowerCase().endsWith('.sql')) {
-            console.warn('[EXTENSO IMPORT] File bukan .sql');
             showImportStatus('❌ File harus berformat .sql', 'danger');
             return;
         }
 
         if (file.size > 50 * 1024 * 1024) {
-            console.warn('[EXTENSO IMPORT] File lebih dari 50MB');
             showImportStatus('❌ Ukuran file maksimal 50MB', 'danger');
             return;
         }
 
         if (file.size === 0) {
-            console.warn('[EXTENSO IMPORT] File kosong');
             showImportStatus('❌ File kosong', 'danger');
             return;
         }
 
-        // === Progress Bar ===
         importProgress.style.display = 'block';
         const progressBar = importProgress.querySelector('.progress-bar');
         progressBar.style.width = '0%';
@@ -1436,12 +1554,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         btnImport.disabled = true;
         btnImport.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
-        console.log('[EXTENSO IMPORT] Memulai upload ke server...');
 
         const formData = new FormData();
         formData.append('sql_file', file);
 
-        // Simulasi progress sementara
         let progress = 0;
         const progressInterval = setInterval(() => {
             progress += 2;
@@ -1451,7 +1567,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 100);
 
-        // === Fetch API ===
         fetch('<?= base_url('extenso/importSQL') ?>', {
             method: 'POST',
             body: formData,
@@ -1465,18 +1580,14 @@ document.addEventListener('DOMContentLoaded', function() {
             clearInterval(progressInterval);
             progressBar.style.width = '100%';
             progressBar.textContent = '100%';
-            console.log('[EXTENSO IMPORT] Response diterima:', response.status);
-
+            
             if (!response.ok) {
                 throw new Error(`HTTP Error: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log('[EXTENSO IMPORT] Response JSON:', data);
-
             if (data.success) {
-                console.log('[EXTENSO IMPORT] Import SQL sukses');
                 showImportStatus('✅ ' + data.message, 'success');
 
                 if (data.stats) {
@@ -1509,16 +1620,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     importStatus.innerHTML += detailHtml;
                 }
 
-                // Auto-refresh 3 detik setelah sukses
                 setTimeout(() => {
-                    console.log('[EXTENSO IMPORT] Reload halaman setelah sukses.');
                     const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
                     if (modal) modal.hide();
                     window.location.reload();
                 }, 3000);
 
             } else {
-                console.error('[EXTENSO IMPORT] Import gagal:', data.message);
                 showImportStatus('❌ ' + data.message, 'danger');
                 if (data.error_display) {
                     importStatus.innerHTML += `
@@ -1532,18 +1640,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             clearInterval(progressInterval);
-            console.error('[EXTENSO IMPORT ERROR]', error);
             showImportStatus('❌ Terjadi kesalahan: ' + error.message, 'danger');
         })
         .finally(() => {
-            console.log('[EXTENSO IMPORT] Proses import selesai (finally).');
             setTimeout(() => {
                 btnImport.disabled = false;
                 btnImport.innerHTML = '<i class="fas fa-upload me-1"></i> Import';
             }, 2000);
         });
 
-        // === Helper: tampilkan status ===
         function showImportStatus(message, type) {
             importStatus.style.display = 'block';
             importStatus.className = `alert alert-${type} alert-dismissible fade show`;
@@ -1554,7 +1659,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Reset form ketika modal ditutup
     const importModal = document.getElementById('importModal');
     if (importModal) {
         importModal.addEventListener('hidden.bs.modal', function() {
@@ -1569,7 +1673,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Validasi file ketika dipilih
     const sqlFileInput = document.getElementById('sqlFile');
     if (sqlFileInput) {
         sqlFileInput.addEventListener('change', function(e) {
@@ -1590,25 +1693,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 <?php endif; ?>
-
-// Fungsi untuk auto-refresh data (opsional)
-function startPolling() {
-    function poll() {
-        // Di sini bisa ditambahkan logika untuk auto-refresh data
-        console.log('Polling Extensometer data...');
-        
-        // Poll lagi setelah 30 detik
-        setTimeout(poll, 30000);
-    }
-    
-    // Mulai polling
-    poll();
-}
-
-// Mulai polling ketika halaman dimuat
-document.addEventListener('DOMContentLoaded', function() {
-    startPolling();
-});
 </script>
 </body>
 </html>
