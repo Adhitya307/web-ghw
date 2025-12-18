@@ -170,8 +170,7 @@ $routes->get('btm/export-excel/test', 'BTM\ExportExcelController::test');
         // Export Excel untuk Left Piezometer
         $routes->get('left-piez/export-excel/export', 'LeftPiez\ExportExcelController::export', ['filter' => 'auth']);
         $routes->post('left-piez/export-excel/export-filtered', 'LeftPiez\ExportExcelController::exportFiltered', ['filter' => 'auth']);
-        $routes->get('left-piez/export-excel', 'LeftPiez\ExportExcelController::export');
-        $routes->post('left-piez/export-excel', 'LeftPiez\ExportExcelController::export');
+        
         
         // --- Right Piezometer Routes ---
         $routes->get('right-piez', 'Rightpiezo\RightpiezController::index');
@@ -183,6 +182,8 @@ $routes->get('btm/export-excel/test', 'BTM\ExportExcelController::test');
         $routes->post('right-piez/calculate/(:num)', 'Rightpiezo\RightpiezController::calculate/$1');
         $routes->post('right-piez/import-sql', 'Rightpiezo\RightpiezController::importSql');
         $routes->post('right-piez/check-duplicate-edit', 'Rightpiezo\RightpiezController::checkDuplicateEdit');
+        $routes->get('rightpiezo/export-excel', 'Rightpiezo\ExportExcelController::export');
+        $routes->post('rightpiezo/export-excel', 'Rightpiezo\ExportExcelController::export');
         
         // --- INCLINO ROUTES (PROTECTED) ---
         $routes->group('inclino', function($routes) {

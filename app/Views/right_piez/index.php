@@ -1227,34 +1227,56 @@ document.addEventListener('DOMContentLoaded', function () {
     ensureActionColumnVisible();
     setTimeout(ensureActionColumnVisible, 300);
 
-    // Export Excel
+    // Export Excel - MENGGUNAKAN CONTROLLER BARU
     document.getElementById('exportExcel').addEventListener('click', function() {
         const originalText = this.innerHTML;
+        const originalButton = this;
+        
         this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
         this.disabled = true;
 
+        // Ambil nilai filter
+        const tahunFilter = document.getElementById('tahunFilter').value;
+        const periodeFilter = document.getElementById('periodeFilter').value;
+        const tmaFilter = document.getElementById('tmaFilter').value;
+        
+        // Buat URL dengan parameter filter
+        let exportUrl = '<?= base_url("rightpiezo/export-excel") ?>';
+        const params = [];
+        
+        if (tahunFilter) params.push(`tahun=${encodeURIComponent(tahunFilter)}`);
+        if (periodeFilter) params.push(`periode=${encodeURIComponent(periodeFilter)}`);
+        if (tmaFilter) params.push(`tma=${encodeURIComponent(tmaFilter)}`);
+        
+        if (params.length > 0) {
+            exportUrl += '?' + params.join('&');
+        }
+        
+        // Buat elemen anchor untuk download
+        const anchor = document.createElement('a');
+        anchor.style.display = 'none';
+        anchor.href = exportUrl;
+        anchor.download = 'Piezometer_Right_Bank_Export_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.xlsx';
+        
+        // Tambahkan anchor ke body dan klik
+        document.body.appendChild(anchor);
+        anchor.click();
+        
+        // Hapus anchor setelah download
         setTimeout(() => {
-            try {
-                const table = document.getElementById('exportTable');
-                const wb = XLSX.utils.table_to_book(table, {sheet: "Data Piezometer"});
-                
-                const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const filename = `Right_Piezometer_Data_Export_${timestamp}.xlsx`;
-                
-                XLSX.writeFile(wb, filename);
-                
-                setTimeout(() => {
-                    alert('Export berhasil! File: ' + filename);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error exporting to Excel:', error);
-                alert('Terjadi kesalahan saat mengexport data: ' + error.message);
-            } finally {
-                this.innerHTML = originalText;
-                this.disabled = false;
-            }
+            document.body.removeChild(anchor);
+            originalButton.innerHTML = originalText;
+            originalButton.disabled = false;
+            
+            // Tampilkan notifikasi sukses
+            showToast('success', 'Export berhasil! File sedang didownload.');
         }, 1000);
+        
+        // Fallback timeout
+        setTimeout(() => {
+            originalButton.innerHTML = originalText;
+            originalButton.disabled = false;
+        }, 10000);
     });
 
     // Delete Data (hanya untuk admin)

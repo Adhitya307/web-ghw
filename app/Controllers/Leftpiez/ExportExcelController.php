@@ -43,113 +43,190 @@ class ExportExcelController extends BaseController
      * Export Excel dengan header yang sama persis seperti di view
      */
     public function export()
-    {
-        // Cek login dari session
-        $session = session();
-        if (!$session->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+{
+    // Cek login dari session
+    $session = session();
+    if (!$session->get('isLoggedIn')) {
+        return redirect()->to('/auth/login');
+    }
+
+    try {
+        // ===== OPTIMASI MEMORY =====
+        ini_set('memory_limit', '1024M'); // Tingkatkan memory limit
+        ini_set('max_execution_time', 300); // Tingkatkan waktu eksekusi
+        gc_enable(); // Aktifkan garbage collection
+        
+        // Get filter parameters
+        $tahun = $this->request->getGet('tahun');
+        $periode = $this->request->getGet('periode');
+        $dma = $this->request->getGet('dma');
+        
+        // ===== OPTIMASI QUERY =====
+        // Batasi data jika terlalu banyak
+        $query = $this->pengukuranModel->orderBy('tahun', 'ASC')
+                                       ->orderBy('periode', 'ASC')
+                                       ->orderBy('tanggal', 'ASC');
+        
+        // Apply filters if provided
+        if (!empty($tahun)) {
+            $query->where('tahun', $tahun);
         }
+        
+        if (!empty($periode)) {
+            $query->where('periode', $periode);
+        }
+        
+        if (!empty($dma)) {
+            $query->where('dma', $dma);
+        }
+        
+        // Batasi data untuk menghindari memory overflow
+        $query->limit(1000); // Maksimal 1000 record
+        
+        $pengukuranData = $query->findAll();
+        
+        // Jika data terlalu banyak, beri peringatan
+        $totalRecords = count($pengukuranData);
+        if ($totalRecords > 1000) {
+            log_message('warning', 'Data pengukuran melebihi 1000 record, hanya menampilkan 1000 record pertama');
+        }
+        
+        // Buat spreadsheet baru
+        $spreadsheet = new Spreadsheet();
+        
+        // ===== OPTIMASI MEMORY PHPSPREADSHEET =====
+        $spreadsheet->getProperties()
+            ->setCreator("PT Indonesia Power")
+            ->setLastModifiedBy("Piezometer Monitoring System")
+            ->setTitle("Laporan Piezometer Left Bank")
+            ->setSubject("Data Piezometer")
+            ->setDescription("Laporan ekspor data piezometer Left Bank")
+            ->setKeywords("piezometer left bank indonesia power");
+            
+        // ===== SETUP DEFAULT STYLE =====
+        $spreadsheet->getDefaultStyle()
+            ->getFont()
+            ->setName('Calibri')
+            ->setSize(9);
+        
+        // ===== SHEET 1: DATA PIEZOMETER UTAMA =====
+        $mainSheet = $spreadsheet->getActiveSheet();
+        $mainSheet->setTitle('Data Piezometer');
+        $this->createMainSheet($mainSheet, $pengukuranData, $tahun, $periode, $dma);
+        
+        // ===== SHEET 2: GRAFIK HISTORY L1-L3 =====
+        $sheet2 = $spreadsheet->createSheet();
+        $sheet2->setTitle('Grafik History L1-L3');
+        $this->createGrafikHistoryL1L3Sheet($sheet2, $pengukuranData, $tahun, $periode, $dma);
+        
+        // ===== SHEET 3: GRAFIK HISTORY L4-L6 =====
+        $sheet3 = $spreadsheet->createSheet();
+        $sheet3->setTitle('Grafik History L4-L6');
+        $this->createGrafikHistoryL4L6Sheet($sheet3, $pengukuranData, $tahun, $periode, $dma);
+        
+        // ===== SHEET 4: GRAFIK HISTORY L7-L9 =====
+        $sheet4 = $spreadsheet->createSheet();
+        $sheet4->setTitle('Grafik History L7-L9');
+        $this->createGrafikHistoryL7L9Sheet($sheet4, $pengukuranData, $tahun, $periode, $dma);
+        
+        // ===== SHEET 5: GRAFIK HISTORY L10-SPZ02 =====
+        $sheet5 = $spreadsheet->createSheet();
+        $sheet5->setTitle('Grafik History L10-SPZ02');
+        $this->createGrafikHistoryL10SPZ02Sheet($sheet5, $pengukuranData, $tahun, $periode, $dma);
+        
+        // Set sheet utama kembali
+        $spreadsheet->setActiveSheetIndex(0);
+        
+        // ===== SETUP PAGE MARGINS =====
+        foreach ($spreadsheet->getAllSheets() as $sheet) {
+            $sheet->getPageMargins()
+                ->setTop(0.75)
+                ->setRight(0.25)
+                ->setLeft(0.25)
+                ->setBottom(0.75);
+        }
+        
+        // ===== OPTIMASI MEMORY SEBELUM OUTPUT =====
+        gc_collect_cycles(); // Force garbage collection
+        
+        // ===== SAVE FILE =====
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'Piezometer_Left_Bank_Export_' . date('Ymd_His') . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        header('Cache-Control: max-age=1');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: cache, must-revalidate');
+        header('Pragma: public');
+        
+        $writer->save('php://output');
+        
+        // ===== CLEANUP MEMORY =====
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet, $writer);
+        gc_collect_cycles();
+        
+        exit();
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error exporting Excel: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        
+        // Jika AJAX request, kembalikan JSON
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengexport: ' . $e->getMessage()
+            ]);
+        }
+        
+        // Jika bukan AJAX, redirect dengan flashdata
+        session()->setFlashdata('error', 'Terjadi kesalahan saat mengexport: ' . $e->getMessage());
+        return redirect()->back();
+    }
+}
 
-        try {
-            // Get filter parameters
-            $tahun = $this->request->getGet('tahun');
-            $periode = $this->request->getGet('periode');
-            $dma = $this->request->getGet('dma');
-            
-            // Build query dengan filter
-            $query = $this->pengukuranModel->orderBy('tahun', 'ASC')
-                                           ->orderBy('periode', 'ASC')
-                                           ->orderBy('tanggal', 'ASC');
-            
-            // Apply filters if provided
-            if (!empty($tahun)) {
-                $query->where('tahun', $tahun);
-            }
-            
-            if (!empty($periode)) {
-                $query->where('periode', $periode);
-            }
-            
-            if (!empty($dma)) {
-                $query->where('dma', $dma);
-            }
-            
-            $pengukuranData = $query->findAll();
-
-            // Buat spreadsheet baru
-            $spreadsheet = new Spreadsheet();
-            
-            // ===== SETUP DEFAULT STYLE =====
-            $spreadsheet->getDefaultStyle()
-                ->getFont()
-                ->setName('Calibri')
-                ->setSize(9);
-            
-            // ===== SHEET 1: DATA PIEZOMETER UTAMA =====
-            $mainSheet = $spreadsheet->getActiveSheet();
-            $mainSheet->setTitle('Data Piezometer');
-            $this->createMainSheet($mainSheet, $pengukuranData, $tahun, $periode, $dma);
-            
-            // ===== SHEET 2: GRAFIK HISTORY L1-L3 =====
-            $sheet2 = $spreadsheet->createSheet();
-            $sheet2->setTitle('Grafik History L1-L3');
-            $this->createGrafikHistoryL1L3Sheet($sheet2, $pengukuranData, $tahun, $periode, $dma);
-            
-            // ===== SHEET 3: GRAFIK HISTORY L4-L6 =====
-            $sheet3 = $spreadsheet->createSheet();
-            $sheet3->setTitle('Grafik History L4-L6');
-            $this->createGrafikHistoryL4L6Sheet($sheet3, $pengukuranData, $tahun, $periode, $dma);
-            
-            // ===== SHEET 4: GRAFIK HISTORY L7-L9 =====
-            $sheet4 = $spreadsheet->createSheet();
-            $sheet4->setTitle('Grafik History L7-L9');
-            $this->createGrafikHistoryL7L9Sheet($sheet4, $pengukuranData, $tahun, $periode, $dma);
-            
-            // Set sheet utama kembali
-            $spreadsheet->setActiveSheetIndex(0);
-            
-            // ===== SETUP PAGE MARGINS =====
-            foreach ($spreadsheet->getAllSheets() as $sheet) {
-                $sheet->getPageMargins()
-                    ->setTop(0.75)
-                    ->setRight(0.25)
-                    ->setLeft(0.25)
-                    ->setBottom(0.75);
-            }
-            
-            // ===== SAVE FILE =====
-            $writer = new Xlsx($spreadsheet);
-            $filename = 'Piezometer_Left_Bank_Export_' . date('Ymd_His') . '.xlsx';
-            
-            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            header('Content-Disposition: attachment;filename="' . $filename . '"');
-            header('Cache-Control: max-age=0');
-            header('Cache-Control: max-age=1');
-            header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-            header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-            header('Cache-Control: cache, must-revalidate');
-            header('Pragma: public');
-            
-            $writer->save('php://output');
-            exit();
-            
-        } catch (\Exception $e) {
-            log_message('error', 'Error exporting Excel: ' . $e->getMessage());
-            
-            // Jika AJAX request, kembalikan JSON
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan saat mengexport: ' . $e->getMessage()
-                ]);
-            }
-            
-            // Jika bukan AJAX, redirect dengan flashdata
-            session()->setFlashdata('error', 'Terjadi kesalahan saat mengexport: ' . $e->getMessage());
-            return redirect()->back();
+/**
+ * Helper function untuk konversi yang aman
+ */
+private function safeConvert($value, $conversionFactor = 0.3048)
+{
+    if ($value === null || $value === '' || $value === '-') {
+        return 0;
+    }
+    
+    // Pastikan $value adalah numeric
+    if (!is_numeric($value)) {
+        // Coba bersihkan string
+        $value = str_replace(',', '.', $value);
+        $value = preg_replace('/[^0-9.-]/', '', $value);
+        
+        if (!is_numeric($value)) {
+            return 0;
         }
     }
     
+    return (float)$value * $conversionFactor;
+}
+
+/**
+ * Helper function untuk format angka yang aman
+ */
+private function safeNumberFormat($value, $decimals = 2)
+{
+    if ($value === null || $value === '' || $value === '-') {
+        return '0.00';
+    }
+    
+    if (!is_numeric($value)) {
+        return '0.00';
+    }
+    
+    return number_format((float)$value, $decimals);
+}
     /**
      * Create Main Sheet dengan struktur header sama persis seperti view
      */
@@ -1185,7 +1262,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('G' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('G' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -1231,7 +1308,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('M' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('M' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -1277,7 +1354,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('S' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('S' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -1441,7 +1518,7 @@ class ExportExcelController extends BaseController
                 $status_L03 = $getStatus($t_psmetrik_L03, 'L03');
                 $sheet->setCellValue('S' . $currentRow, number_format($t_psmetrik_L03, 2));
                 
-                // Apply warna latar untuk kolom status
+                // Apply warna latar untuk kolom status (background berwarna, teks hitam)
                 $this->applyStatusColor($sheet, 'G' . $currentRow, $status_L01);
                 $this->applyStatusColor($sheet, 'M' . $currentRow, $status_L02);
                 $this->applyStatusColor($sheet, 'S' . $currentRow, $status_L03);
@@ -1901,7 +1978,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('G' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('G' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -1947,7 +2024,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('M' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('M' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -1993,7 +2070,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('S' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('S' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -2160,7 +2237,7 @@ class ExportExcelController extends BaseController
                 $status_L06 = $getStatusL4L6($t_psmetrik_L06, 'L06');
                 $sheet->setCellValue('S' . $currentRow, number_format($t_psmetrik_L06, 2));
                 
-                // Apply warna latar untuk kolom status
+                // Apply warna latar untuk kolom status (background berwarna, teks hitam)
                 $this->applyStatusColor($sheet, 'G' . $currentRow, $status_L04);
                 $this->applyStatusColor($sheet, 'M' . $currentRow, $status_L05);
                 $this->applyStatusColor($sheet, 'S' . $currentRow, $status_L06);
@@ -2609,7 +2686,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('G' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('G' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -2652,7 +2729,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('M' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('M' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -2695,7 +2772,7 @@ class ExportExcelController extends BaseController
         
         $sheet->setCellValue('S' . $currentRow, 'T.Psmetrik(El.m)');
         $sheet->getStyle('S' . $currentRow)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
         ]);
@@ -2858,7 +2935,7 @@ class ExportExcelController extends BaseController
                 $status_L09 = $getStatusL7L9($t_psmetrik_L09, 'L09');
                 $sheet->setCellValue('S' . $currentRow, number_format($t_psmetrik_L09, 2));
                 
-                // Apply warna latar untuk kolom status
+                // Apply warna latar untuk kolom status (background berwarna, teks hitam)
                 $this->applyStatusColor($sheet, 'G' . $currentRow, $status_L07);
                 $this->applyStatusColor($sheet, 'M' . $currentRow, $status_L08);
                 $this->applyStatusColor($sheet, 'S' . $currentRow, $status_L09);
@@ -3007,6 +3084,643 @@ class ExportExcelController extends BaseController
             $sheet->setCellValue('A' . $footerRow, 
                 'TOTAL REKORD: ' . $totalRecords . 
                 ' | Grafik History L7-L9 | Piezometer Monitoring System - PT Indonesia Power'
+            );
+            
+            $sheet->getStyle('A' . $footerRow . ':S' . $footerRow)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FF666666'], 'italic' => true],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF2F2F2']],
+                'borders' => [
+                    'top' => [
+                        'borderStyle' => Border::BORDER_MEDIUM,
+                        'color' => ['argb' => 'FFCCCCCC']
+                    ],
+                    'bottom' => [
+                        'borderStyle' => Border::BORDER_MEDIUM,
+                        'color' => ['argb' => 'FFCCCCCC']
+                    ]
+                ]
+            ]);
+            $sheet->getRowDimension($footerRow)->setRowHeight(25);
+        }
+        
+        // ===== SET PRINT AREA =====
+        if ($currentRow > $startDataRow) {
+            $sheet->getPageSetup()->setPrintArea('A1:S' . ($currentRow - 1));
+        } else {
+            $sheet->getPageSetup()->setPrintArea('A1:S10');
+        }
+        
+        // ===== SETUP HEADER & FOOTER =====
+        $this->setupExcelHeaderFooter($sheet, $tahunFilter, $periodeFilter, $dmaFilter);
+    }
+    
+    /**
+     * Create Sheet untuk Grafik History L10-SPZ02 dengan struktur sama persis seperti sheet lainnya
+     */
+    private function createGrafikHistoryL10SPZ02Sheet($sheet, $pengukuranData, $tahunFilter, $periodeFilter, $dmaFilter)
+    {
+        // ===== SET PAGE SETUP =====
+        $sheet->getPageSetup()
+            ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
+            ->setPaperSize(PageSetup::PAPERSIZE_A4)
+            ->setFitToWidth(1)
+            ->setFitToHeight(0)
+            ->setHorizontalCentered(true);
+        
+        // ===== WARNA =====
+        $headerBlue = 'FF0D6EFD';          // Biru untuk header utama
+        $headerLightBlue = 'FFE3F2FD';     // Biru muda untuk header
+        $bgAman = 'FFD4EDDA';             // Hijau muda untuk AMAN
+        $bgPeringatan = 'FFFFF3CD';       // Kuning muda untuk PERINGATAN
+        $bgBahaya = 'FFF8D7DA';           // Merah muda untuk BAHAYA
+        $headerAman = 'FF28A745';         // Hijau untuk header AMAN
+        $headerPeringatan = 'FFFFC107';   // Kuning untuk header PERINGATAN
+        $headerBahaya = 'FFDC3545';       // Merah untuk header BAHAYA
+        $headerLightGray = 'FFCED4DA';    // Abu muda untuk informasi
+        $dataWhite = 'FFFFFFFF';          // Putih untuk data baris ganjil
+        $dataLightGray = 'FFF8F9FA';      // Abu muda untuk data baris genap
+        
+        // ===== JUDUL UTAMA =====
+        $lastCol = 'S'; // Total kolom: A sampai S (18 kolom)
+        
+        // Row 1: Judul Utama
+        $sheet->mergeCells('A1:' . $lastCol . '1');
+        $sheet->setCellValue('A1', 'PIEZOMETER - GRAFIK HISTORY L10-SPZ02 - PT INDONESIA POWER');
+        $sheet->getStyle('A1:' . $lastCol . '1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(30);
+        
+        // Row 2: Laporan Data
+        $sheet->mergeCells('A2:' . $lastCol . '2');
+        $sheet->setCellValue('A2', 'GRAFIK HISTORY DATA PIEZOMETER L10-SPZ02');
+        $sheet->getStyle('A2:' . $lastCol . '2')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 12, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]]
+        ]);
+        $sheet->getRowDimension(2)->setRowHeight(25);
+        
+        // Row 3: Informasi Ekspor dan Filter
+        $sheet->mergeCells('A3:' . $lastCol . '3');
+        
+        $filterInfo = [];
+        if (!empty($tahunFilter)) $filterInfo[] = "Tahun: $tahunFilter";
+        if (!empty($periodeFilter)) $filterInfo[] = "Periode: $periodeFilter";
+        if (!empty($dmaFilter)) $filterInfo[] = "DMA: $dmaFilter";
+        
+        if (!empty($filterInfo)) {
+            $filterText = 'Filter: ' . implode(', ', $filterInfo);
+            $sheet->setCellValue('A3', 'Diekspor pada: ' . date('d F Y H:i:s') . ' | ' . $filterText);
+        } else {
+            $sheet->setCellValue('A3', 'Diekspor pada: ' . date('d F Y H:i:s') . ' | Filter: Semua Data');
+        }
+        
+        $sheet->getStyle('A3:' . $lastCol . '3')->applyFromArray([
+            'font' => ['italic' => true, 'size' => 9, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerLightGray]]
+        ]);
+        $sheet->getRowDimension(3)->setRowHeight(20);
+        
+        // ===== HEADER TABEL =====
+        $currentRow = 4;
+        $headerStartRow = $currentRow;
+        $headerEndRow = $currentRow + 6; // Row 10 adalah baris terakhir header
+        
+        // ===== ROW 4: Main Headers =====
+        $sheet->setCellValue('A' . $currentRow, 'Pisometer No.');
+        $sheet->mergeCells('A' . $currentRow . ':A' . ($currentRow + 1));
+        $this->applyRowspanStyle($sheet, 'A' . $currentRow, 'A' . ($currentRow + 1), $headerLightBlue);
+        
+        $sheet->setCellValue('B' . $currentRow, 'L-10');
+        $sheet->mergeCells('B' . $currentRow . ':G' . $currentRow);
+        $this->applyColspanStyle($sheet, 'B' . $currentRow, 'G' . $currentRow, $headerBlue);
+        
+        $sheet->setCellValue('H' . $currentRow, 'SPZ-02');
+        $sheet->mergeCells('H' . $currentRow . ':M' . $currentRow);
+        $this->applyColspanStyle($sheet, 'H' . $currentRow, 'M' . $currentRow, $headerBlue);
+        
+        // Kolom N-S tidak digunakan (untuk konsistensi layout)
+        $sheet->setCellValue('N' . $currentRow, '');
+        $sheet->mergeCells('N' . $currentRow . ':S' . $currentRow);
+        $this->applyColspanStyle($sheet, 'N' . $currentRow, 'S' . $currentRow, 'FFE3F2FD');
+        
+        $currentRow++;
+        
+        // ===== ROW 5: Sub Headers =====
+        $sheet->setCellValue('B' . $currentRow, 'Downstream');
+        $sheet->mergeCells('B' . $currentRow . ':G' . $currentRow);
+        $this->applyColspanStyle($sheet, 'B' . $currentRow, 'G' . $currentRow, $headerLightBlue);
+        
+        $sheet->setCellValue('H' . $currentRow, 'Downstream');
+        $sheet->mergeCells('H' . $currentRow . ':M' . $currentRow);
+        $this->applyColspanStyle($sheet, 'H' . $currentRow, 'M' . $currentRow, $headerLightBlue);
+        
+        $sheet->setCellValue('N' . $currentRow, '');
+        $sheet->mergeCells('N' . $currentRow . ':S' . $currentRow);
+        $this->applyColspanStyle($sheet, 'N' . $currentRow, 'S' . $currentRow, 'FFE3F2FD');
+        
+        $currentRow++;
+        
+        // ===== ROW 6: Data Headers =====
+        $sheet->setCellValue('A' . $currentRow, 'Elev.Piso.Atas(El.m)');
+        $sheet->getStyle('A' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1976D2']]
+        ]);
+        
+        // L-10: 580.36 dengan colspan 2
+        $sheet->setCellValue('B' . $currentRow, '580.36');
+        $sheet->mergeCells('B' . $currentRow . ':C' . $currentRow);
+        $this->applyColspanStyle($sheet, 'B' . $currentRow, 'C' . $currentRow, $headerLightBlue);
+        
+        // L-10 Ambang Batas dengan colspan 4 dan rowspan 4 (D6:G9)
+        $sheet->setCellValue('D' . $currentRow, 'Ambang Batas');
+        $sheet->mergeCells('D' . $currentRow . ':G' . ($currentRow + 3));
+        
+        // SPZ-02: 700.08 dengan colspan 2
+        $sheet->setCellValue('H' . $currentRow, '700.08');
+        $sheet->mergeCells('H' . $currentRow . ':I' . $currentRow);
+        $this->applyColspanStyle($sheet, 'H' . $currentRow, 'I' . $currentRow, $headerLightBlue);
+        
+        // SPZ-02 Ambang Batas dengan colspan 4 dan rowspan 4 (J6:M9)
+        $sheet->setCellValue('J' . $currentRow, 'Ambang Batas');
+        $sheet->mergeCells('J' . $currentRow . ':M' . ($currentRow + 3));
+        
+        // Kosongkan kolom N-S
+        $sheet->setCellValue('N' . $currentRow, '');
+        $sheet->mergeCells('N' . $currentRow . ':S' . ($currentRow + 3));
+        
+        $currentRow++;
+        
+        // ===== ROW 7: Kedalaman =====
+        $sheet->setCellValue('A' . $currentRow, 'Kedalaman(m)');
+        $sheet->getStyle('A' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1976D2']]
+        ]);
+        
+        // L-10: 51.50
+        $sheet->setCellValue('B' . $currentRow, '51.50');
+        $sheet->mergeCells('B' . $currentRow . ':C' . $currentRow);
+        $this->applyColspanStyle($sheet, 'B' . $currentRow, 'C' . $currentRow, $headerLightBlue);
+        
+        // SPZ-02: 70.00
+        $sheet->setCellValue('H' . $currentRow, '70.00');
+        $sheet->mergeCells('H' . $currentRow . ':I' . $currentRow);
+        $this->applyColspanStyle($sheet, 'H' . $currentRow, 'I' . $currentRow, $headerLightBlue);
+        
+        $currentRow++;
+        
+        // ===== ROW 8: Koordinat X =====
+        $sheet->setCellValue('A' . $currentRow, 'Koordinat X(m)');
+        $sheet->getStyle('A' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1976D2']]
+        ]);
+        
+        // L-10: 5.958,64
+        $sheet->setCellValue('B' . $currentRow, '5.958,64');
+        $sheet->mergeCells('B' . $currentRow . ':C' . $currentRow);
+        $this->applyColspanStyle($sheet, 'B' . $currentRow, 'C' . $currentRow, $headerLightBlue);
+        
+        // SPZ-02: 6.095,66
+        $sheet->setCellValue('H' . $currentRow, '6.095,66');
+        $sheet->mergeCells('H' . $currentRow . ':I' . $currentRow);
+        $this->applyColspanStyle($sheet, 'H' . $currentRow, 'I' . $currentRow, $headerLightBlue);
+        
+        $currentRow++;
+        
+        // ===== ROW 9: Koordinat Y =====
+        $sheet->setCellValue('A' . $currentRow, 'Koordinat Y(m)');
+        $sheet->getStyle('A' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1976D2']]
+        ]);
+        
+        // L-10: (8.413,89)
+        $sheet->setCellValue('B' . $currentRow, '(8.413,89)');
+        $sheet->mergeCells('B' . $currentRow . ':C' . $currentRow);
+        $this->applyColspanStyle($sheet, 'B' . $currentRow, 'C' . $currentRow, $headerLightBlue);
+        
+        // SPZ-02: (9.004,50)
+        $sheet->setCellValue('H' . $currentRow, '(9.004,50)');
+        $sheet->mergeCells('H' . $currentRow . ':I' . $currentRow);
+        $this->applyColspanStyle($sheet, 'H' . $currentRow, 'I' . $currentRow, $headerLightBlue);
+        
+        $currentRow++;
+        
+        // ===== ROW 10: Final Headers =====
+        // Kolom A: Tanggal
+        $sheet->setCellValue('A' . $currentRow, 'Tanggal');
+        $sheet->getStyle('A' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1976D2']]
+        ]);
+        
+        // ===== L-10 Columns =====
+        $sheet->setCellValue('B' . $currentRow, 'Bacaan(m)');
+        $sheet->getStyle('B' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
+        ]);
+        
+        $sheet->setCellValue('C' . $currentRow, 'T.Psmetrik(El.m)');
+        $sheet->getStyle('C' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
+        ]);
+        
+        $sheet->setCellValue('D' . $currentRow, 'Aman');
+        $sheet->getStyle('D' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerAman]]
+        ]);
+        
+        $sheet->setCellValue('E' . $currentRow, 'Peringatan');
+        $sheet->getStyle('E' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerPeringatan]]
+        ]);
+        
+        $sheet->setCellValue('F' . $currentRow, 'Bahaya');
+        $sheet->getStyle('F' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBahaya]]
+        ]);
+        
+        $sheet->setCellValue('G' . $currentRow, 'T.Psmetrik(El.m)');
+        $sheet->getStyle('G' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
+        ]);
+        
+        // ===== SPZ-02 Columns =====
+        $sheet->setCellValue('H' . $currentRow, 'Bacaan(m)');
+        $sheet->getStyle('H' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
+        ]);
+        
+        $sheet->setCellValue('I' . $currentRow, 'T.Psmetrik(El.m)');
+        $sheet->getStyle('I' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
+        ]);
+        
+        $sheet->setCellValue('J' . $currentRow, 'Aman');
+        $sheet->getStyle('J' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerAman]]
+        ]);
+        
+        $sheet->setCellValue('K' . $currentRow, 'Peringatan');
+        $sheet->getStyle('K' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerPeringatan]]
+        ]);
+        
+        $sheet->setCellValue('L' . $currentRow, 'Bahaya');
+        $sheet->getStyle('L' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBahaya]]
+        ]);
+        
+        $sheet->setCellValue('M' . $currentRow, 'T.Psmetrik(El.m)');
+        $sheet->getStyle('M' . $currentRow)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0D6EFD']]
+        ]);
+        
+        // ===== Kolom N-S (kosong) =====
+        for ($col = 'N'; $col <= 'S'; $col++) {
+            $sheet->setCellValue($col . $currentRow, '');
+            $sheet->getStyle($col . $currentRow)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE3F2FD']],
+                'borders' => [
+                    'outline' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => 'FF000000']
+                    ]
+                ]
+            ]);
+        }
+        
+        // ===== ISI DATA AMBANG BATAS DI AREA ROW 6-9 =====
+        // Isi data ambang batas untuk L-10 (D6:G9)
+        $this->fillAmbangBatasDataL10($sheet, 'D6', 'G9');
+        
+        // Isi data ambang batas untuk SPZ-02 (J6:M9)
+        $this->fillAmbangBatasDataSPZ02($sheet, 'J6', 'M9');
+        
+        // ===== APPLY BORDER UNTUK HEADER AREA =====
+        $headerOuterRange = 'A' . $headerStartRow . ':S' . $headerEndRow;
+        $sheet->getStyle($headerOuterRange)->applyFromArray([
+            'borders' => [
+                'outline' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000']
+                ]
+            ]
+        ]);
+        
+        // ===== GARIS PEMISAH ANTARA HEADER DAN DATA =====
+        $headerBottomRange = 'A' . $headerEndRow . ':S' . $headerEndRow;
+        $sheet->getStyle($headerBottomRange)->applyFromArray([
+            'borders' => [
+                'bottom' => [
+                    'borderStyle' => Border::BORDER_MEDIUM,
+                    'color' => ['argb' => 'FF000000']
+                ]
+            ]
+        ]);
+        
+        // ===== ISI DATA =====
+        $currentRow = $headerEndRow + 1;
+        $startDataRow = $currentRow;
+        
+        if (empty($pengukuranData)) {
+            // Jika tidak ada data
+            $sheet->mergeCells('A' . $currentRow . ':S' . $currentRow);
+            $sheet->setCellValue('A' . $currentRow, 'Tidak ada data untuk Grafik History L10-SPZ02');
+            $sheet->getStyle('A' . $currentRow . ':S' . $currentRow)->applyFromArray([
+                'font' => ['italic' => true, 'size' => 11, 'color' => ['argb' => 'FF666666']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFF8F9FA']],
+                'borders' => [
+                    'outline' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => 'FFCCCCCC']
+                    ]
+                ]
+            ]);
+            $sheet->getRowDimension($currentRow)->setRowHeight(40);
+            $currentRow++;
+        } else {
+            // Urutkan berdasarkan tanggal
+            usort($pengukuranData, function($a, $b) {
+                $dateA = strtotime($a['tanggal']);
+                $dateB = strtotime($b['tanggal']);
+                return $dateA - $dateB;
+            });
+            
+            foreach ($pengukuranData as $p) {
+                $pid = $p['id_pengukuran'];
+                
+                // Ambil data terkait
+                $pembacaanData = $this->pembacaanModel->getSemuaByPengukuran($pid);
+                $perhitunganData = $this->perhitunganModel->where('id_pengukuran', $pid)->findAll();
+                
+                // Format tanggal
+                $tanggal = !empty($p['tanggal']) ? date('d/m/Y', strtotime($p['tanggal'])) : '-';
+                $sheet->setCellValue('A' . $currentRow, $tanggal);
+                
+                // Fungsi untuk mendapatkan status warna untuk L10-SPZ02
+                $getStatusL10SPZ02 = function($t_psmetrik, $type) {
+                    switch($type) {
+                        case 'L10':
+                            // L-10: Aman ≤560.86 - 565.35, Peringatan 565.36 - 569.65, Bahaya ≥569.66
+                            // (sama dengan L-4 karena nilai elevasi sama)
+                            if ($t_psmetrik <= 565.35) return 'aman';
+                            if ($t_psmetrik <= 569.65) return 'peringatan';
+                            return 'bahaya';
+                        case 'SPZ02':
+                            // SPZ-02: Aman ≤691.46 - 692.35, Peringatan 692.36 - 695.35, Bahaya ≥695.36
+                            // (sama dengan L-5 karena nilai elevasi mirip)
+                            if ($t_psmetrik <= 692.35) return 'aman';
+                            if ($t_psmetrik <= 695.35) return 'peringatan';
+                            return 'bahaya';
+                        default:
+                            return 'aman';
+                    }
+                };
+                
+// ===== L-10 Data =====
+$bacaan_L10 = $pembacaanData['L10']['feet'] ?? 0;
+
+// Gunakan safeConvert untuk menghindari TypeError
+$bacaan_L10_m = $this->safeConvert($bacaan_L10, 0.3048);
+$sheet->setCellValue('B' . $currentRow, $this->safeNumberFormat($bacaan_L10_m, 2));
+
+$t_psmetrik_L10 = 0;
+foreach ($perhitunganData as $perhitungan) {
+    if ($perhitungan['tipe_piezometer'] == 'L10') {
+        $t_psmetrik_L10 = $perhitungan['t_psmetrik'] ?? 0;
+        break;
+    }
+}
+$sheet->setCellValue('C' . $currentRow, $this->safeNumberFormat($t_psmetrik_L10, 2));
+
+$sheet->setCellValue('D' . $currentRow, '560.86');  // Aman
+$sheet->setCellValue('E' . $currentRow, '565.36');  // Peringatan
+$sheet->setCellValue('F' . $currentRow, '569.66');  // Bahaya
+
+$status_L10 = $getStatusL10SPZ02($t_psmetrik_L10, 'L10');
+$sheet->setCellValue('G' . $currentRow, $this->safeNumberFormat($t_psmetrik_L10, 2));
+
+// ===== SPZ-02 Data =====
+$bacaan_SPZ02 = $pembacaanData['SPZ02']['feet'] ?? 0;
+
+// Gunakan safeConvert untuk menghindari TypeError
+$bacaan_SPZ02_m = $this->safeConvert($bacaan_SPZ02, 0.3048);
+$sheet->setCellValue('H' . $currentRow, $this->safeNumberFormat($bacaan_SPZ02_m, 2));
+
+$t_psmetrik_SPZ02 = 0;
+foreach ($perhitunganData as $perhitungan) {
+    if ($perhitungan['tipe_piezometer'] == 'SPZ02') {
+        $t_psmetrik_SPZ02 = $perhitungan['t_psmetrik'] ?? 0;
+        break;
+    }
+}
+$sheet->setCellValue('I' . $currentRow, $this->safeNumberFormat($t_psmetrik_SPZ02, 2));
+
+$sheet->setCellValue('J' . $currentRow, '691.46');  // Aman
+$sheet->setCellValue('K' . $currentRow, '692.36');  // Peringatan
+$sheet->setCellValue('L' . $currentRow, '695.36');  // Bahaya
+
+$status_SPZ02 = $getStatusL10SPZ02($t_psmetrik_SPZ02, 'SPZ02');
+$sheet->setCellValue('M' . $currentRow, $this->safeNumberFormat($t_psmetrik_SPZ02, 2));
+                
+                // Kolom N-S (kosong)
+                for ($col = 'N'; $col <= 'S'; $col++) {
+                    $sheet->setCellValue($col . $currentRow, '');
+                }
+                
+                // Apply warna latar untuk kolom status (background berwarna, teks hitam)
+                $this->applyStatusColor($sheet, 'G' . $currentRow, $status_L10);
+                $this->applyStatusColor($sheet, 'M' . $currentRow, $status_SPZ02);
+                
+                $currentRow++;
+            }
+            
+            // ===== APPLY STYLES UNTUK DATA =====
+            if ($currentRow > $startDataRow) {
+                $dataAreaStart = $startDataRow;
+                $dataAreaEnd = $currentRow - 1;
+                $dataAreaRange = 'A' . $dataAreaStart . ':S' . $dataAreaEnd;
+                
+                // 1. Apply warna latar belakang untuk semua data (selang-seling)
+                for ($row = $dataAreaStart; $row <= $dataAreaEnd; $row++) {
+                    $isEvenRow = (($row - $dataAreaStart) % 2 == 0);
+                    $rowBgColor = $isEvenRow ? $dataWhite : $dataLightGray;
+                    $rowRange = 'A' . $row . ':S' . $row;
+                    
+                    $sheet->getStyle($rowRange)->applyFromArray([
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $rowBgColor]]
+                    ]);
+                }
+                
+                // 2. Apply border untuk semua sel data
+                $sheet->getStyle($dataAreaRange)->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['argb' => 'FFCCCCCC']
+                        ]
+                    ]
+                ]);
+                
+                // 3. Apply warna khusus untuk kolom ambang batas
+                $amanColumns = ['D', 'J'];
+                $peringatanColumns = ['E', 'K'];
+                $bahayaColumns = ['F', 'L'];
+                
+                foreach ($amanColumns as $col) {
+                    $colRange = $col . $dataAreaStart . ':' . $col . $dataAreaEnd;
+                    $sheet->getStyle($colRange)->applyFromArray([
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bgAman]],
+                        'font' => ['bold' => true, 'color' => ['argb' => 'FF155724']]
+                    ]);
+                }
+                
+                foreach ($peringatanColumns as $col) {
+                    $colRange = $col . $dataAreaStart . ':' . $col . $dataAreaEnd;
+                    $sheet->getStyle($colRange)->applyFromArray([
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bgPeringatan]],
+                        'font' => ['bold' => true, 'color' => ['argb' => 'FF856404']]
+                    ]);
+                }
+                
+                foreach ($bahayaColumns as $col) {
+                    $colRange = $col . $dataAreaStart . ':' . $col . $dataAreaEnd;
+                    $sheet->getStyle($colRange)->applyFromArray([
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bgBahaya]],
+                        'font' => ['bold' => true, 'color' => ['argb' => 'FF721C24']]
+                    ]);
+                }
+                
+                // 4. Apply warna latar untuk kolom kosong N-S
+                $emptyRange = 'N' . $dataAreaStart . ':S' . $dataAreaEnd;
+                $sheet->getStyle($emptyRange)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE3F2FD']]
+                ]);
+                
+                // 5. Alignment untuk kolom numerik (kanan)
+                $numericColumns = array_merge(
+                    $this->getColumnRange('B', 'M')
+                );
+                
+                foreach ($numericColumns as $col) {
+                    $colRange = $col . $dataAreaStart . ':' . $col . $dataAreaEnd;
+                    $sheet->getStyle($colRange)
+                        ->getAlignment()
+                        ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
+                        ->setVertical(Alignment::VERTICAL_CENTER);
+                }
+                
+                // 6. Alignment untuk kolom tanggal (tengah)
+                $sheet->getStyle('A' . $dataAreaStart . ':A' . $dataAreaEnd)
+                    ->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+            }
+        }
+        
+        // ===== FREEZE PANES =====
+        $sheet->freezePane('A11'); // Freeze header rows, mulai data di row 11
+        
+        // ===== FORMAT ANGKA =====
+        if ($currentRow > $startDataRow) {
+            // Format semua kolom numerik dengan 2 desimal
+            $numericRange = 'B' . $startDataRow . ':M' . ($currentRow - 1);
+            $sheet->getStyle($numericRange)
+                ->getNumberFormat()
+                ->setFormatCode('0.00');
+        }
+        
+        // ===== SET COLUMN WIDTHS =====
+        $columnWidths = [
+            'A' => 12,  // Tanggal
+            'B' => 10,  // Bacaan L10
+            'C' => 14,  // T.Psmetrik L10
+            'D' => 8,   // Aman L10
+            'E' => 10,  // Peringatan L10
+            'F' => 8,   // Bahaya L10
+            'G' => 14,  // Status L10
+            'H' => 10,  // Bacaan SPZ02
+            'I' => 14,  // T.Psmetrik SPZ02
+            'J' => 8,   // Aman SPZ02
+            'K' => 10,  // Peringatan SPZ02
+            'L' => 8,   // Bahaya SPZ02
+            'M' => 14,  // Status SPZ02
+            'N' => 8,   // Kosong
+            'O' => 8,   // Kosong
+            'P' => 8,   // Kosong
+            'Q' => 8,   // Kosong
+            'R' => 8,   // Kosong
+            'S' => 8    // Kosong
+        ];
+        
+        foreach ($columnWidths as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
+        }
+        
+        // ===== SET ROW HEIGHTS =====
+        for ($i = 1; $i <= 3; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(18);
+        }
+        
+        for ($i = 4; $i <= 10; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(16);
+        }
+        
+        if (!empty($pengukuranData)) {
+            for ($i = $startDataRow; $i < $currentRow; $i++) {
+                $sheet->getRowDimension($i)->setRowHeight(16);
+            }
+        }
+        
+        // ===== FOOTER =====
+        if ($currentRow > $startDataRow) {
+            $footerRow = $currentRow;
+            $sheet->mergeCells('A' . $footerRow . ':S' . $footerRow);
+            
+            $totalRecords = count($pengukuranData);
+            
+            $sheet->setCellValue('A' . $footerRow, 
+                'TOTAL REKORD: ' . $totalRecords . 
+                ' | Grafik History L10-SPZ02 | Piezometer Monitoring System - PT Indonesia Power'
             );
             
             $sheet->getStyle('A' . $footerRow . ':S' . $footerRow)->applyFromArray([
@@ -3203,63 +3917,66 @@ class ExportExcelController extends BaseController
     }
     
     /**
-     * Generic method untuk fill ambang batas area
+     * Fill Ambang Batas Data untuk L-10
      */
-    private function fillAmbangBatasArea($sheet, $startCell, $endCell, $data, $title = 'Ambang Batas')
+    private function fillAmbangBatasDataL10($sheet, $startCell, $endCell)
     {
         list($startCol, $startRow) = $this->cellToCoords($startCell);
         list($endCol, $endRow) = $this->cellToCoords($endCell);
         
-        // Set background untuk area Ambang Batas
-        $sheet->getStyle($startCell . ':' . $endCell)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE3F2FD']],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000']
-                ]
-            ]
-        ]);
+        // Data untuk L-10 (sama dengan L-4 karena nilai elevasi sama)
+        $data = [
+            ['title' => 'Aman (El.m)', 'range' => '≤ 560.86 - 565.35', 'color' => 'FF28A745'],
+            ['title' => 'Peringatan (El.m)', 'range' => '565.36 - 569.65', 'color' => 'FFFFC107'],
+            ['title' => 'Bahaya (El.m)', 'range' => '≥ 569.66', 'color' => 'FFDC3545']
+        ];
         
-        // Split area menjadi 4 baris
-        $rowHeight = ($endRow - $startRow + 1) / 4;
+        $this->fillAmbangBatasArea($sheet, $startCell, $endCell, $data, 'Ambang Batas');
+    }
+    
+    /**
+     * Fill Ambang Batas Data untuk SPZ-02
+     */
+    private function fillAmbangBatasDataSPZ02($sheet, $startCell, $endCell)
+    {
+        list($startCol, $startRow) = $this->cellToCoords($startCell);
+        list($endCol, $endRow) = $this->cellToCoords($endCell);
         
-        // Baris 1: Judul "Ambang Batas"
-        $titleRowStart = $startRow;
-        $titleRowEnd = $startRow + $rowHeight - 1;
-        $titleRange = $startCol . $titleRowStart . ':' . $endCol . $titleRowEnd;
+        // Data untuk SPZ-02 (sama dengan L-5 karena nilai elevasi mirip)
+        $data = [
+            ['title' => 'Aman (El.m)', 'range' => '≤ 691.46 - 692.35', 'color' => 'FF28A745'],
+            ['title' => 'Peringatan (El.m)', 'range' => '692.36 - 695.35', 'color' => 'FFFFC107'],
+            ['title' => 'Bahaya (El.m)', 'range' => '≥ 695.36', 'color' => 'FFDC3545']
+        ];
         
-        $sheet->mergeCells($titleRange);
-        $sheet->setCellValue($startCol . $titleRowStart, $title);
-        $sheet->getStyle($titleRange)->applyFromArray([
-            'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-                'wrapText' => true
-            ]
-        ]);
-        
-        // Baris 2-4: Data Aman, Peringatan, Bahaya
-        for ($i = 0; $i < 3; $i++) {
-            $dataRowStart = $startRow + (($i + 1) * $rowHeight);
-            $dataRowEnd = $dataRowStart + $rowHeight - 1;
-            $dataRange = $startCol . $dataRowStart . ':' . $endCol . $dataRowEnd;
-            
-            $cellValue = $data[$i]['title'] . "\n" . $data[$i]['range'];
-            
-            $sheet->mergeCells($dataRange);
-            $sheet->setCellValue($startCol . $dataRowStart, $cellValue);
-            $sheet->getStyle($dataRange)->applyFromArray([
-                'font' => ['bold' => true, 'size' => 7, 'color' => ['argb' => Color::COLOR_WHITE]],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                    'wrapText' => true
-                ],
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $data[$i]['color']]],
+        $this->fillAmbangBatasArea($sheet, $startCell, $endCell, $data, 'Ambang Batas');
+    }
+    
+    /**
+     * Generic method untuk fill ambang batas area
+     */
+    /**
+ * Generic method untuk fill ambang batas area - OPTIMIZED VERSION
+ */
+private function fillAmbangBatasArea($sheet, $startCell, $endCell, $data, $title = 'Ambang Batas')
+{
+    list($startCol, $startRow) = $this->cellToCoords($startCell);
+    list($endCol, $endRow) = $this->cellToCoords($endCell);
+    
+    // HITUNG DIMENSI AREA
+    $totalRows = $endRow - $startRow + 1; // Biasanya 4 rows (D6:G9)
+    $totalCols = $this->columnToIndex($endCol) - $this->columnToIndex($startCol) + 1;
+    
+    // SET BACKGROUND UNTUK SELURUH AREA (lebih efisien)
+    $bgColor = 'FFE3F2FD'; // Biru muda
+    for ($row = $startRow; $row <= $endRow; $row++) {
+        for ($colIdx = 0; $colIdx < $totalCols; $colIdx++) {
+            $col = $this->indexToColumn($this->columnToIndex($startCol) + $colIdx);
+            $cell = $col . $row;
+            $sheet->getStyle($cell)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bgColor]],
                 'borders' => [
-                    'allBorders' => [
+                    'outline' => [
                         'borderStyle' => Border::BORDER_THIN,
                         'color' => ['argb' => 'FF000000']
                     ]
@@ -3268,24 +3985,99 @@ class ExportExcelController extends BaseController
         }
     }
     
-    /**
- * Apply warna status untuk kolom T.Psmetrik - background berwarna, teks hitam
- */
-private function applyStatusColor($sheet, $cell, $status)
-{
-    $colors = [
-        'aman' => ['bg' => 'FFD4EDDA', 'text' => 'FF000000'], // Background hijau, teks hitam
-        'peringatan' => ['bg' => 'FFFFF3CD', 'text' => 'FF000000'], // Background kuning, teks hitam
-        'bahaya' => ['bg' => 'FFF8D7DA', 'text' => 'FF000000'] // Background merah, teks hitam
-    ];
+    // TULISKAN DATA TANPA MERGE CELLS YANG TERLALU BANYAK
+    // Baris 1: Judul - hanya merge horizontal
+    $titleRow = $startRow;
+    $titleRange = $startCol . $titleRow . ':' . $endCol . $titleRow;
+    $sheet->mergeCells($titleRange);
+    $sheet->setCellValue($startCol . $titleRow, $title);
+    $sheet->getStyle($titleRange)->applyFromArray([
+        'font' => ['bold' => true, 'size' => 8, 'color' => ['argb' => 'FF000000']],
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER
+        ]
+    ]);
     
-    if (isset($colors[$status])) {
-        $sheet->getStyle($cell)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $colors[$status]['bg']]],
-            'font' => ['bold' => true, 'color' => ['argb' => $colors[$status]['text']]]
+    // Baris 2-4: Data Aman, Peringatan, Bahaya - TIDAK PERLU MERGE VERTIKAL
+    // Gunakan sel individual untuk setiap baris data
+    for ($i = 0; $i < 3; $i++) {
+        $dataRow = $startRow + $i + 1; // +1 karena baris pertama untuk judul
+        $dataRange = $startCol . $dataRow . ':' . $endCol . $dataRow;
+        
+        // Merge hanya horizontal (tidak vertikal)
+        $sheet->mergeCells($dataRange);
+        
+        $cellValue = $data[$i]['title'] . " " . $data[$i]['range'];
+        $sheet->setCellValue($startCol . $dataRow, $cellValue);
+        $sheet->getStyle($dataRange)->applyFromArray([
+            'font' => ['bold' => true, 'size' => 7, 'color' => ['argb' => Color::COLOR_WHITE]],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $data[$i]['color']]],
+            'borders' => [
+                'outline' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000']
+                ]
+            ]
         ]);
     }
 }
+
+/**
+ * Convert column letter to index (0-based)
+ */
+private function columnToIndex($column)
+{
+    $column = strtoupper($column);
+    $length = strlen($column);
+    $index = 0;
+    
+    for ($i = 0; $i < $length; $i++) {
+        $index = $index * 26 + (ord($column[$i]) - ord('A') + 1);
+    }
+    
+    return $index - 1; // 0-based
+}
+
+/**
+ * Convert index to column letter
+ */
+private function indexToColumn($index)
+{
+    $column = '';
+    $index++; // Convert to 1-based
+    
+    while ($index > 0) {
+        $modulo = ($index - 1) % 26;
+        $column = chr(65 + $modulo) . $column;
+        $index = (int)(($index - $modulo) / 26);
+    }
+    
+    return $column;
+}
+    
+    /**
+     * Apply warna status untuk kolom T.Psmetrik - background berwarna, teks hitam
+     */
+    private function applyStatusColor($sheet, $cell, $status)
+    {
+        $colors = [
+            'aman' => ['bg' => 'FFD4EDDA', 'text' => 'FF000000'], // Background hijau, teks hitam
+            'peringatan' => ['bg' => 'FFFFF3CD', 'text' => 'FF000000'], // Background kuning, teks hitam
+            'bahaya' => ['bg' => 'FFF8D7DA', 'text' => 'FF000000'] // Background merah, teks hitam
+        ];
+        
+        if (isset($colors[$status])) {
+            $sheet->getStyle($cell)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $colors[$status]['bg']]],
+                'font' => ['bold' => true, 'color' => ['argb' => $colors[$status]['text']]]
+            ]);
+        }
+    }
     
     /**
      * Apply style untuk sel dengan rowspan
