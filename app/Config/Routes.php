@@ -236,3 +236,5 @@ $routes->get('inclino/profilea/exportToExcel', 'Inclino\ProfileAController::expo
 $routes->get('inclino/profileb', 'Inclino\ProfileBController::view');
 $routes->get('inclino/profileb/getDataByYear', 'Inclino\ProfileBController::getDataByYear');
 $routes->get('inclino/profileb/exportToExcel', 'Inclino\ProfileBController::exportToExcel');
+// Route untuk export Excel InclinoMeter
+$routes->get('inclino/export/excel', 'Inclino\ExportExcelController::export');

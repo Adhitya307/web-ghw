@@ -2226,22 +2226,65 @@ function resetCSVForm() {
 }
 <?php endif; ?>
 
-// Export to Excel
+// Export to Excel - UPDATE UNTUK MENGGUNAKAN CONTROLLER BARU
 function exportToExcel() {
-    if (!currentData || currentData.length === 0) {
-        showAlert('warning', 'Tidak ada data untuk diexport');
+    const tahun = document.getElementById('tahunFilter').value;
+    const bulan = document.getElementById('bulanFilter').value;
+    const tanggal = document.getElementById('tanggalFilter').value;
+    
+    // Validasi minimal filter
+    if (!tahun) {
+        showAlert('warning', 'Pilih tahun terlebih dahulu');
         return;
     }
     
-    try {
-        const table = document.getElementById('inclinoTable');
-        const wb = XLSX.utils.table_to_book(table, {sheet: "InclinoMeter Data"});
-        XLSX.writeFile(wb, `inclinometer_data_${new Date().toISOString().slice(0,10)}.xlsx`);
-        showAlert('success', 'Data berhasil diexport');
-    } catch (error) {
-        console.error('Export error:', error);
-        showAlert('danger', 'Gagal mengexport data');
+    // Build URL dengan parameter filter
+    let url = '<?= base_url("inclino/export/excel") ?>?';
+    const params = [];
+    
+    if (tahun) params.push(`year=${tahun}`);
+    if (bulan && bulan !== "") params.push(`month=${bulan}`);
+    
+    // Parse tanggal jika dipilih
+    if (tanggal && tanggal !== "" && tanggal !== "Semua Tanggal") {
+        const parts = tanggal.split('-');
+        if (parts.length === 3) {
+            params.push(`day=${parts[0]}`); // Day adalah bagian pertama
+        }
     }
+    
+    // Tambahkan parameter borehole jika ada (sesuai dengan controller)
+    // Note: Controller saat ini belum mengambil borehole dari filter, 
+    // bisa ditambahkan jika diperlukan
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    // Tampilkan loading
+    showLoading(true);
+    
+    // Download file
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'InclinoMeter_Data.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Sembunyikan loading setelah delay
+    setTimeout(() => {
+        showLoading(false);
+        showAlert('success', 'Data sedang diexport. File akan otomatis terdownload.');
+    }, 1000);
+
+    // Tampilkan loading untuk export
+function showLoading(show) {
+    const loading = document.getElementById('tableLoading');
+    if (loading) {
+        loading.style.display = show ? 'flex' : 'none';
+    }
+}
 }
 </script>
 </body>
