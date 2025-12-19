@@ -326,44 +326,6 @@
       margin: 0 auto;
       border-radius: 2px;
     }
-    
-    /* Style untuk Footer - DITAMBAHKAN */
-    .main-footer {
-      background: #101820 !important; /* Warna sesuai kode kedua */
-      color: #ccc;
-      padding: 2rem 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .footer-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .footer-logo {
-      height: 50px;
-      width: auto;
-    }
-    
-    .footer-text {
-      font-size: 0.9rem;
-      text-align: center;
-      flex-grow: 1;
-    }
-    
-    .footer-text strong {
-      color: white;
-    }
-    
-    .footer-copyright {
-      font-size: 0.8rem;
-      color: #888;
-      text-align: center;
-      margin-top: 1.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
 
     /* Responsive adjustments */
     @media (max-width: 992px) {
@@ -687,26 +649,7 @@
         </div>
       </section>
     </main>
-
-    <!-- Footer - DITAMBAHKAN KARENA FILE FOOTER EKSTERNAL MUNGKIN TIDAK SESUAI -->
-    <footer class="main-footer">
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-logo-container">
-            <img src="<?= base_url('img/logo_indonesia_power.png') ?>" alt="Logo Indonesia Power" class="footer-logo">
-          </div>
-          <div class="footer-text">
-            <strong>PT Indonesia Power - Unit Bisnis Pembangkitan Saguling</strong><br>
-            Sistem Monitoring Operasional PLTA Saguling
-          </div>
-        </div>
-        <div class="footer-copyright">
-          &copy; 2024 PT Indonesia Power. Hak Cipta Dilindungi Undang-Undang.
-        </div>
-      </div>
-    </footer>
-  </div>
-
+<?= $this->include('layouts/footer'); ?>
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
