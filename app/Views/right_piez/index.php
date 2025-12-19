@@ -593,7 +593,7 @@ if (!$isLoggedIn) {
                                 $uniqueYears[] = $year;
                             }
                         }
-                        rsort($uniqueYears);
+                        sort($uniqueYears); // ASC untuk tahun
                         foreach ($uniqueYears as $year):
                     ?>
                         <option value="<?= esc($year) ?>"><?= esc($year) ?></option>
@@ -852,44 +852,47 @@ if (!$isLoggedIn) {
                     <?php 
                     $titikList = ['R-01', 'R-02', 'R-03', 'R-04', 'R-05', 'R-06', 'R-07', 'R-08', 'R-09', 'R-10', 'R-11', 'R-12', 'IPZ-01', 'PZ-04'];
                     
-                    // Urutkan data berdasarkan tahun dan tanggal
-                    usort($pengukuran, function($a, $b) {
-                        $tahunA = $a['pengukuran']['tahun'] ?? 0;
-                        $tahunB = $b['pengukuran']['tahun'] ?? 0;
-                        
-                        if ($tahunA != $tahunB) {
-                            return $tahunB - $tahunA; // Urutkan tahun descending
+                    // KELOMPOKKAN DATA BERDASARKAN TAHUN
+                    $groupedByYear = [];
+                    foreach($pengukuran as $item) {
+                        $year = $item['pengukuran']['tahun'] ?? '-';
+                        if (!isset($groupedByYear[$year])) {
+                            $groupedByYear[$year] = [];
                         }
-                        
-                        $dateA = strtotime($a['pengukuran']['tanggal'] ?? '1970-01-01');
-                        $dateB = strtotime($b['pengukuran']['tanggal'] ?? '1970-01-01');
-                        
-                        return $dateB - $dateA; // Urutkan tanggal descending
-                    });
+                        $groupedByYear[$year][] = $item;
+                    }
                     
-                    $lastYear = null;
-                    ?>
+                    // URUTKAN TAHUN ASCENDING
+                    ksort($groupedByYear);
                     
-                    <?php foreach($pengukuran as $item): 
-                        $p = $item['pengukuran'];
-                        $currentYear = $p['tahun'] ?? null;
-                        $showYear = $currentYear !== $lastYear;
-                        $lastYear = $currentYear;
+                    // LOOP MELALUI SETIAP TAHUN
+                    foreach($groupedByYear as $year => $yearData): 
+                        // URUTKAN DATA DALAM TAHUN BERDASARKAN TANGGAL ASCENDING (lama ke baru)
+                        usort($yearData, function($a, $b) {
+                            $dateA = strtotime($a['pengukuran']['tanggal'] ?? '1970-01-01');
+                            $dateB = strtotime($b['pengukuran']['tanggal'] ?? '1970-01-01');
+                            return $dateA - $dateB; // Urutkan tanggal ascending (lama ke baru)
+                        });
                         
-                        $metrik = $item['metrik'] ?? [];
-                        $initial = $item['initial'] ?? [];
-                        $perhitungan = $item['perhitungan'] ?? [];
-                        $pembacaan = $item['pembacaan'] ?? [];
+                        $rowCount = count($yearData);
+                        $firstRow = true;
+                        
+                        // LOOP MELALUI SETIAP DATA DALAM TAHUN
+                        foreach($yearData as $index => $item): 
+                            $p = $item['pengukuran'];
+                            
+                            $metrik = $item['metrik'] ?? [];
+                            $initial = $item['initial'] ?? [];
+                            $perhitungan = $item['perhitungan'] ?? [];
+                            $pembacaan = $item['pembacaan'] ?? [];
                     ?>
                     <tr data-pid="<?= $p['id_pengukuran'] ?>" data-tahun="<?= esc($p['tahun'] ?? '') ?>" data-periode="<?= esc($p['periode'] ?? '') ?>" data-tma="<?= esc($p['tma'] ?? '') ?>">
                         <!-- Basic Information - WARNA BIRU MUDA -->
-                        <td class="sticky bg-info-column year-cell">
-                            <?php if ($showYear): ?>
-                                <strong><?= esc($p['tahun'] ?? '-') ?></strong>
-                            <?php else: ?>
-                                <!-- Kosongkan jika tahun sama dengan sebelumnya -->
-                            <?php endif; ?>
-                        </td>
+                        <?php if ($firstRow): ?>
+                            <td class="sticky bg-info-column" rowspan="<?= $rowCount ?>">
+                                <strong><?= esc($year) ?></strong>
+                            </td>
+                        <?php endif; ?>
                         <td class="sticky-2 bg-info-column"><?= esc($p['periode'] ?? '-') ?></td>
                         <td class="sticky-3 bg-info-column"><?= $p['tanggal'] ? date('d/m/Y', strtotime($p['tanggal'])) : '-' ?></td>
                         <td class="sticky-4 bg-info-column"><?= formatNumberAsIs($p['tma']) ?></td>
@@ -952,7 +955,11 @@ if (!$isLoggedIn) {
                             </div>
                         </td>
                     </tr>
-                    <?php endforeach; ?>
+                    <?php 
+                        $firstRow = false;
+                        endforeach; // End loop data dalam tahun
+                    endforeach; // End loop tahun
+                    ?>
                 <?php endif; ?>
             </tbody>
         </table>
@@ -1160,6 +1167,9 @@ function filterTable() {
 
     const rows = document.querySelectorAll('#dataTableBody tr[data-pid]');
     let visibleCount = 0;
+    let currentYear = null;
+    let yearRowspan = 0;
+    let yearStartRow = null;
     
     rows.forEach(row => {
         const tahun = row.getAttribute('data-tahun')?.toLowerCase() || '';
@@ -1175,32 +1185,41 @@ function filterTable() {
 
         const isVisible = tahunMatch && periodeMatch && tmaMatch && titikMatch && searchMatch;
         
+        // Handle rowspan untuk tahun
+        const yearCell = row.querySelector('td.sticky');
+        if (yearCell && yearCell.hasAttribute('rowspan')) {
+            currentYear = tahun;
+            yearRowspan = parseInt(yearCell.getAttribute('rowspan'));
+            yearStartRow = row;
+        }
+        
         if (isVisible) {
             row.style.display = '';
             visibleCount++;
         } else {
             row.style.display = 'none';
+            if (yearCell && yearCell.hasAttribute('rowspan')) {
+                // Kurangi rowspan jika baris ini disembunyikan
+                yearRowspan--;
+                yearCell.setAttribute('rowspan', yearRowspan);
+                if (yearRowspan === 0) {
+                    yearStartRow.style.display = 'none';
+                }
+            }
         }
     });
-    
-    // Update tampilan tahun yang duplikat
-    updateYearDisplay();
 }
 
 // Fungsi untuk update tampilan tahun (menyembunyikan duplikat)
 function updateYearDisplay() {
-    const yearCells = document.querySelectorAll('#dataTableBody .year-cell');
-    let lastVisibleYear = null;
+    const yearCells = document.querySelectorAll('#dataTableBody td.sticky');
+    let lastYear = null;
     
     yearCells.forEach(cell => {
-        const row = cell.closest('tr');
-        if (row.style.display !== 'none') {
-            const yearContent = cell.textContent.trim();
-            if (yearContent && yearContent === lastVisibleYear) {
-                cell.innerHTML = ''; // Kosongkan jika tahun sama dengan sebelumnya
-            } else {
-                lastVisibleYear = yearContent;
-            }
+        if (cell.hasAttribute('rowspan')) {
+            lastYear = cell.textContent.trim();
+        } else {
+            cell.style.display = 'none';
         }
     });
 }
