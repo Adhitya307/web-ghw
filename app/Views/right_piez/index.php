@@ -645,28 +645,6 @@ if (!$isLoggedIn) {
                 </select>
             </div>
 
-            <!-- Titik Piezometer -->
-            <div class="filter-item">
-                <label for="titikFilter" class="form-label">Titik Piezometer</label>
-                <select id="titikFilter" class="form-select">
-                    <option value="">Semua Titik</option>
-                    <option value="R-01">R-01</option>
-                    <option value="R-02">R-02</option>
-                    <option value="R-03">R-03</option>
-                    <option value="R-04">R-04</option>
-                    <option value="R-05">R-05</option>
-                    <option value="R-06">R-06</option>
-                    <option value="R-07">R-07</option>
-                    <option value="R-08">R-08</option>
-                    <option value="R-09">R-09</option>
-                    <option value="R-10">R-10</option>
-                    <option value="R-11">R-11</option>
-                    <option value="R-12">R-12</option>
-                    <option value="IPZ-01">IPZ-01</option>
-                    <option value="PZ-04">PZ-04</option>
-                </select>
-            </div>
-
             <!-- Reset -->
             <div class="filter-item" style="align-self: flex-end;">
                 <button id="resetFilter" class="btn btn-secondary">
@@ -1162,7 +1140,6 @@ function filterTable() {
     const tahunValue = document.getElementById('tahunFilter').value.toLowerCase();
     const periodeValue = document.getElementById('periodeFilter').value.toLowerCase();
     const tmaValue = document.getElementById('tmaFilter').value.toLowerCase();
-    const titikValue = document.getElementById('titikFilter').value.toLowerCase();
     const searchValue = document.getElementById('searchInput').value.toLowerCase();
 
     const rows = document.querySelectorAll('#dataTableBody tr[data-pid]');
@@ -1180,10 +1157,9 @@ function filterTable() {
         const tahunMatch = !tahunValue || tahun === tahunValue;
         const periodeMatch = !periodeValue || periode === periodeValue;
         const tmaMatch = !tmaValue || tma === tmaValue;
-        const titikMatch = !titikValue || rowText.includes(titikValue);
         const searchMatch = !searchValue || rowText.includes(searchValue);
 
-        const isVisible = tahunMatch && periodeMatch && tmaMatch && titikMatch && searchMatch;
+        const isVisible = tahunMatch && periodeMatch && tmaMatch && searchMatch;
         
         // Handle rowspan untuk tahun
         const yearCell = row.querySelector('td.sticky');
@@ -1381,21 +1357,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const tahunFilter = document.getElementById('tahunFilter');
     const periodeFilter = document.getElementById('periodeFilter');
     const tmaFilter = document.getElementById('tmaFilter');
-    const titikFilter = document.getElementById('titikFilter');
     const searchInput = document.getElementById('searchInput');
     const resetFilter = document.getElementById('resetFilter');
 
     tahunFilter.addEventListener('change', filterTable);
     periodeFilter.addEventListener('change', filterTable);
     tmaFilter.addEventListener('change', filterTable);
-    titikFilter.addEventListener('change', filterTable);
     searchInput.addEventListener('input', filterTable);
     
     resetFilter.addEventListener('click', () => {
         tahunFilter.value = '';
         periodeFilter.value = '';
         tmaFilter.value = '';
-        titikFilter.value = '';
         searchInput.value = '';
         filterTable();
     });
